@@ -1,0 +1,3 @@
+[submodule "ngram-movers-distance"]
+	path = ngram-movers-distance
+	url = https://github.com/averykhoo/ngram-movers-distance
