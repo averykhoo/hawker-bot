@@ -71,7 +71,7 @@ def get_resource(resource_id: str):
 
 if __name__ == '__main__':
     pprint(query_onemap('Punggol Town Hub Hawker Centre'))
-    pprint(convert(35955.52, 43336.13))
+    pprint(convert(39318.07, 32112.26))
 
     # for resource_name, resource_id in RESOURCE_IDS.items():
     #     df = get_resource(resource_id)
