@@ -20,7 +20,7 @@ class Hawker:
     # addressfloornumber: Optional[str]  # missing
     addressblockhousenumber: Optional[str]
     addressstreetname: Optional[str]
-    addressbuildingname: Optional[str]
+    addressbuildingname: Optional[str]  # located in this building
     addresspostalcode: Optional[int]  # 6 digits max
 
     region: Optional[str]  # REGION
