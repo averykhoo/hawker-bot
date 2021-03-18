@@ -53,13 +53,11 @@ class Hawker:
 
     region: Optional[str] = None  # REGION
     photourl: Optional[str] = None  # PHOTOURL
+
     no_of_food_stalls: int = 0  # if missing, assume zero available
     no_of_market_stalls: int = 0  # if missing, assume zero available
-
     rnr_status: Optional[str] = None  # repairs & redecoration (contains dates!)
-
-    # est_original_completion_date: Optional[str]  # probably when it was built? parse as '%d/%m/%Y' or '%Y'
-    est_original_completion_year: Optional[int] = None
+    est_original_completion_date: Optional[str] = None  # probably when it was built? parse as '%d/%m/%Y' or '%Y'
 
     # ignored stuff
     # approximate_gfa: float  # gross floor area
@@ -83,3 +81,11 @@ class Hawker:
             _flag, start_date, _to, end_date = self.rnr_status.split()  # "<R&R> 01/11/2020 to 28/02/2021"
             return DateRange(datetime.datetime.strptime(start_date, '%d/%m/%Y').date(),
                              datetime.datetime.strptime(end_date, '%d/%m/%Y').date())
+
+    @property
+    def est_original_completion_year(self) -> Optional[int]:
+        if self.est_original_completion_date is None:
+            return None
+        year = self.est_original_completion_date[-4:]
+        assert year.isdigit()
+        return int(year)
