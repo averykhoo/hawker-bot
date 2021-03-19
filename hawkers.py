@@ -5,6 +5,11 @@ from enum import auto
 from enum import unique
 from typing import Optional
 
+from geographiclib.constants import Constants
+from geographiclib.geodesic import Geodesic
+
+WGS84 = Geodesic(Constants.WGS84_a, Constants.WGS84_f)
+
 
 @dataclass
 class DateRange:
@@ -83,9 +88,28 @@ class Hawker:
                              datetime.datetime.strptime(end_date, '%d/%m/%Y').date())
 
     @property
-    def est_original_completion_year(self) -> Optional[int]:
+    def estimated_original_completion_date(self) -> Optional[datetime.date]:
+        if self.est_original_completion_date is None:
+            return None
+        if len(self.est_original_completion_date) == 4:
+            return datetime.datetime.strptime(f'1/1/{self.est_original_completion_date}', '%d/%m/%Y')
+        else:
+            return datetime.datetime.strptime(self.est_original_completion_date, '%d/%m/%Y')
+
+    @property
+    def estimated_original_completion_year(self) -> Optional[int]:
         if self.est_original_completion_date is None:
             return None
         year = self.est_original_completion_date[-4:]
         assert year.isdigit()
         return int(year)
+
+    def distance_from(self, latitude: float, longitude: float) -> float:
+        """
+        uses vincenty algorithm
+        slower than haversine, but more accurate
+        """
+        return WGS84.Inverse(latitude, longitude, self.latitude, self.longitude)['s12']
+
+    def name_similarity(self, text:str)->float:
+        return
