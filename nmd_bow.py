@@ -11,7 +11,7 @@ def bow_ngram_movers_distance(bag_of_words_1: Union[str, Iterable[str]],
                               bag_of_words_2: Union[str, Iterable[str]],
                               n: int = 2,
                               invert: bool = False,
-                              ) -> int:
+                              ) -> float:
     """
     calculates the n-gram mover's distance between two bags of words (for some specified n)
     case-sensitive by default, so lowercase/casefold the input words for case-insensitive results
