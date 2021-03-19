@@ -1,6 +1,9 @@
 git pull
 
-echo "starting..."
+mkdir -p logs
 DATE=$(date "+%Y-%m-%d--%H-%M-%S")
-python hawker_bot.py &> "$DATE.log"
+echo "to view stdout, tail ./logs/$DATE.log"
+
+echo "starting..."
+python hawker_bot.py &> "logs/$DATE.log"
 echo "stopped"
