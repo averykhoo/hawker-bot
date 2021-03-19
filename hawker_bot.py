@@ -33,9 +33,11 @@ def _search(query, effective_message):
     if query.isdigit():
         for hawker in hawkers:
             if hawker.addresspostalcode == int(query):
+                effective_message.reply_text(f'Displaying zip code match for "{query}"')
                 effective_message.reply_markdown(hawker.to_markdown())
                 return
 
+    effective_message.reply_text(f'Displaying top 5 results for "{query}"')
     results = sorted(hawkers, key=lambda x: x.text_similarity(query), reverse=True)
     print(query)
     for hawker in results[:5]:
@@ -127,7 +129,6 @@ def handle_text(update: Update, context: CallbackContext):
     Send a message when the command /help is issued.
     """
     query = update.effective_message.text.strip()
-    update.effective_message.reply_text(f'Displaying top 5 results for "{query}"')
     _search(query, update.effective_message)
 
 
