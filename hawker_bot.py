@@ -67,7 +67,17 @@ def cmd_help(update: Update, context: CallbackContext):
     """
     Send a message when the command /help is issued.
     """
-    update.effective_message.reply_text('help not implemented')
+    update.effective_message.reply_markdown('  \n'.join([
+        '*Usage:*',
+        '/START start using the bot (you\'ve already done this)',
+        '/HELP this command',
+        '/TODAY list hawker centers closed today',
+        '/TOMORROW list hawker centers closed tomorrow',
+        '/WEEK list hawker centers closed this week',
+        '/NEXTWEEK list hawker centers closed next week',
+        'sending a text message will return matching hawker centers',
+        'sending a location will return nearby hawker centers',
+    ]))
 
 
 def cmd_search(update: Update, context: CallbackContext):
