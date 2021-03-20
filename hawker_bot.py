@@ -110,7 +110,7 @@ def _fix_zip(query, effective_message=None):
     return zip_code
 
 
-def _search(query, effective_message):
+def _search(query, effective_message, threshold=0.6):
     if not query:
         effective_message.reply_text('no search query received')
         logging.info('QUERY_BLANK')
@@ -128,7 +128,7 @@ def _search(query, effective_message):
             return
 
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
-    results = [result for result in results if result[1] > (0.5, 0)]  # filter out bad matches
+    results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
         effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"')
         for hawker, score in results[:5]:
