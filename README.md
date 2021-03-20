@@ -13,7 +13,6 @@
 *   get user timezone
 *   commands
     *   closed: search only closed soon
-    *   zip: search nearby geocoded zip codes
     *   follow unfollow
     *   stop/exit/quit/mute 
     *   delete-all-data

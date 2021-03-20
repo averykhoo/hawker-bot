@@ -133,8 +133,8 @@ def cmd_zip(update: Update, context: CallbackContext):
 
     loc = locate_zip(f'{zip_code:06d}')
     if loc:
-        lat, lon = loc
-        update.effective_message.reply_text(f'Displaying nearest 5 results to zip code "{zip_code}"')
+        lat, lon, address = loc
+        update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"')
         _nearby(lat, lon, update.effective_message)
     else:
         update.effective_message.reply_text(f'Zip code "{zip_code}" not found')
