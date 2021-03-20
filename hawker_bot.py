@@ -20,23 +20,88 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Postal_districts
+    '01', '02', '03', '04', '05', '06',  # Raffles Place, Cecil, Marina, People's Park
+    '07', '08',  # Anson, Tanjong Pagar
+    '14', '15', '16',  # Bukit Merah, Queenstown, Tiong Bahru
+    '09', '10',  # Telok Blangah, Harbourfront
+    '11', '12', '13',  # Pasir Panjang, Hong Leong Garden, Clementi New Town
+    '17',  # High Street, Beach Road (part)
+    '18', '19',  # Middle Road, Golden Mile
+    '20', '21',  # Little India, Farrer Park, Jalan Besar, Lavender
+    '22', '23',  # Orchard, Cairnhill, River Valley
+    '24', '25', '26', '27',  # Ardmore, Bukit Timah, Holland Road, Tanglin
+    '28', '29', '30',  # Watten Estate, Novena, Thomson
+    '31', '32', '33',  # Balestier, Toa Payoh, Serangoon
+    '34', '35', '36', '37',  # Macpherson, Braddell, Potong Pasir, Bidadari
+    '38', '39', '40', '41',  # Geylang, Eunos, Aljunied
+    '42', '43', '44', '45',  # Katong, Joo Chiat, Amber Road
+    '46', '47', '48',  # Bedok, Upper East Coast, Eastwood, Kew Drive
+    '49', '50', '81',  # Loyang, Changi
+    '51', '52',  # Simei, Tampines, Pasir Ris
+    '53', '54', '55', '82',  # Serangoon Garden, Hougang, Punggol
+    '56', '57',  # Bishan, Ang Mo Kio
+    '58', '59',  # Upper Bukit Timah, Clementi Park, Ulu Pandan
+    '60', '61', '62', '63', '64',  # Penjuru, Jurong, Pioneer, Tuas
+    '65', '66', '67', '68',  # Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang
+    '69', '70', '71',  # Lim Chu Kang, Tengah
+    '72', '73',  # Kranji, Woodgrove, Woodlands
+    '77', '78',  # Upper Thomson, Springleaf
+    '75', '76',  # Yishun, Sembawang, Senoko
+    '79', '80',  # Seletar
+}
+
+
+def _fix_zip(query, effective_message=None):
+    if not query:
+        if effective_message is not None:
+            effective_message.reply_markdown('  \n'.join([
+                'No zip code provided',
+                '`/zip` usage example:',
+                '`/zip 078881`',
+            ]))
+        return None
+
+    if not query.isdigit():
+        if effective_message is not None:
+            effective_message.reply_markdown('  \n'.join([
+                f'Invalid zip code provided: "{query}"',
+                'Zip code must be digits 0-9',
+                '`/zip` usage example:',
+                '`/zip 078881`',
+            ]))
+        return None  # text
+
+    # sanity check zip code
+    zip_code = f'{int(query):06d}'
+    if len(zip_code) > 6 or zip_code[:2] not in ZIP_PREFIXES:
+        if effective_message is not None:
+            effective_message.reply_markdown('  \n'.join([
+                f'Zip code provided cannot possibly exist in Singapore: "{zip_code}"',
+                '`/zip` usage example:',
+                '`/zip 078881`',
+            ]))
+        return None  # invalid postal code
+
+    return zip_code
+
 
 def _search(query, effective_message):
-    """
-    Send a message when the command /help is issued.
-    """
     query = effective_message.text.strip()
 
     if not query:
         effective_message.reply_text('no search query received')
         return
 
-    if query.isdigit():
-        for hawker in hawkers:
-            if hawker.addresspostalcode == int(query):
-                effective_message.reply_text(f'Displaying zip code match for "{query}"')
-                effective_message.reply_markdown(hawker.to_markdown())
-                return
+    # try exact match for zip code
+    zip_code = _fix_zip(query)
+    if zip_code:
+        results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
+        if results:
+            effective_message.reply_text(f'Displaying zip code match for "{zip_code}"')
+            for result in results:
+                effective_message.reply_markdown(result.to_markdown())
+            return
 
     effective_message.reply_text(f'Displaying top 5 results for "{query}"')
     results = sorted(hawkers, key=lambda x: x.text_similarity(query), reverse=True)
@@ -49,7 +114,7 @@ def _search(query, effective_message):
 def _closed(date, effective_message, date_name):
     lines = [f'Closed {date_name}:']
 
-    for hawker in hawkers:
+    for hawker in sorted(hawkers, key=lambda x: x.name):
         if hawker.closed_on_dates(date):
             lines.append(f'{len(lines)}.  {hawker.name}')
             continue
@@ -124,20 +189,21 @@ def cmd_zip(update: Update, context: CallbackContext):
     assert query.lower().startswith(expected_cmd)
     query = query[len(expected_cmd):].strip()
 
-    if not query.isdigit():
-        return None  # blank or text
+    zip_code = _fix_zip(query, update.effective_message)
+    if not zip_code:
+        return None
 
-    zip_code = int(query)
-    if zip_code < 10001 or zip_code > 999999:
+    loc = locate_zip(zip_code)
+    if not loc:
+        update.effective_message.reply_markdown('  \n'.join([
+            f'Zip code not found: "{zip_code}"',
+        ]))
         return None  # invalid postal code
 
-    loc = locate_zip(f'{zip_code:06d}')
-    if loc:
-        lat, lon, address = loc
-        update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"')
-        _nearby(lat, lon, update.effective_message)
-    else:
-        update.effective_message.reply_text(f'Zip code "{zip_code}" not found')
+    # found!
+    lat, lon, address = loc
+    update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"')
+    _nearby(lat, lon, update.effective_message)
 
 
 def cmd_today(update: Update, context: CallbackContext):
@@ -198,6 +264,9 @@ if __name__ == '__main__':
     df = pd.read_csv('data/hawker-centres/hawker-centres.csv')
     for i, row in df.iterrows():
         hawkers.append(Hawker.from_row(row))
+
+    # # filter to useful hawker centers
+    # hawkers = [hawker for hawker in hawkers if hawker.no_of_food_stalls > 0]
 
     df = pd.read_csv('data/dates-of-hawker-centres-closure/dates-of-hawker-centres-closure--2021-03-18--22-52-07.csv')
     for i, row in df.iterrows():
