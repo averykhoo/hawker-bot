@@ -81,7 +81,7 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
-        logging.debug('blank zip code')
+            logging.info('ZIPCODE_BLANK')
         return None
 
     if not query.isdigit():
@@ -92,7 +92,7 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
-        logging.debug(f'non-numeric zip code: {query}')
+            logging.info(f'ZIPCODE_NON_NUMERIC="{query}"')
         return None  # text
 
     # sanity check zip code
@@ -104,17 +104,16 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
-        logging.debug(f'zip code not in Singapore list: {query}')
+            logging.info(f'ZIPCODE_NON_EXISTENT="{query}"')
         return None  # invalid postal code
 
     return zip_code
 
 
 def _search(query, effective_message):
-    query = effective_message.text.strip()
-
     if not query:
         effective_message.reply_text('no search query received')
+        logging.info('QUERY_BLANK')
         return
 
     # try exact match for zip code
@@ -124,14 +123,21 @@ def _search(query, effective_message):
         if results:
             effective_message.reply_text(f'Displaying zip code match for "{zip_code}"')
             for result in results:
+                logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
                 effective_message.reply_markdown(result.to_markdown())
             return
 
-    effective_message.reply_text(f'Displaying top 5 results for "{query}"')
-    results = sorted(hawkers, key=lambda x: x.text_similarity(query), reverse=True)
-    for hawker in results[:5]:
-        logging.info(f'query="{query}" similarity={hawker.text_similarity(query)} result="{hawker.name}"')
-        effective_message.reply_markdown(hawker.to_markdown())
+    results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
+    results = [result for result in results if result[1] > (0.5, 0)]  # filter out bad matches
+    if results:
+        effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"')
+        for hawker, score in results[:5]:
+            logging.info(f'QUERY="{query}" SIMILARITY={hawker.text_similarity(query)} RESULT="{hawker.name}"')
+            effective_message.reply_markdown(hawker.to_markdown())
+
+    else:
+        logging.info(f'QUERY_NO_RESULTS="{query}"')
+        effective_message.reply_text(f'Zero results found for "{query}"')
 
 
 def _closed(date, effective_message, date_name):
@@ -139,6 +145,7 @@ def _closed(date, effective_message, date_name):
 
     for hawker in sorted(hawkers, key=lambda x: x.name):
         if hawker.closed_on_dates(date):
+            logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
             lines.append(f'{len(lines)}.  {hawker.name}')
             continue
 
@@ -149,11 +156,10 @@ def _nearby(lat, lon, effective_message):
     print(lat, lon)
     assert isinstance(lat, float), lat
     assert isinstance(lon, float), lon
-    results = sorted(hawkers, key=lambda x: x.distance_from(lat, lon))
-    for result in results[:5]:
-        logging.info(f'lat="{lat}" similarity={hawker.text_similarity(query)} result="{hawker.name}"')
-        print(result.distance_from(lat, lon), result.name)
-        text = f'{int(result.distance_from(lat, lon))} meters away:  \n' + result.to_markdown()
+    results = sorted([(hawker, hawker.distance_from(lat, lon)) for hawker in hawkers], key=lambda x: x[1])
+    for result, distance in results[:5]:
+        logging.info(f'LAT={lat} LON={lon} DISTANCE={distance} RESULT="{result.name}"')
+        text = f'{round(distance)} meters away:  \n' + result.to_markdown()
         effective_message.reply_markdown(text)
 
 
@@ -166,6 +172,7 @@ def cmd_start(update: Update, context: CallbackContext):
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
+        '/ZIP <zipcode> list hawker centers near a zipcode',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]))
@@ -176,12 +183,13 @@ def cmd_help(update: Update, context: CallbackContext):
     assert isinstance(context, CallbackContext)
     update.effective_message.reply_markdown('  \n'.join([
         '*Usage:*',
-        '/START start using the bot (you\'ve already done this)',
+        "/START start using the bot (you've already done this)",
         '/HELP list all commands (this command)',
         '/TODAY list hawker centers closed today',
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
+        '/ZIP <zipcode> list hawker centers near a zipcode',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]))
@@ -219,6 +227,7 @@ def cmd_zip(update: Update, context: CallbackContext):
 
     loc = locate_zip(zip_code)
     if not loc:
+        logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
         update.effective_message.reply_markdown('  \n'.join([
             f'Zip code not found: "{zip_code}"',
         ]))
@@ -227,6 +236,7 @@ def cmd_zip(update: Update, context: CallbackContext):
     # found!
     lat, lon, address = loc
     update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"')
+    logging.info(f'ZIPCODE={zip_code} LAT={lat} LON={lon} ADDRESS="{address}"')
     _nearby(lat, lon, update.effective_message)
 
 
@@ -266,6 +276,7 @@ def location(update: Update, context: CallbackContext):
 def ignore(update: Update, context: CallbackContext):
     print(context)
     print(update)
+    logging.warning('INVALID_MESSAGE_TYPE')
     update.effective_message.reply_text('cannot handle this message type')
 
 
@@ -275,12 +286,12 @@ def error(update: Update, context: CallbackContext):
     """
     print(update)
     print(context)
-    logging.warning(f'Update "{update}" caused error "{context.error}"')
+    logging.warning(f'ERROR="{context.error}"')
     raise context.error
 
 
-def print_msg(update: Update, context: CallbackContext):
-    print(update)
+def log_message(update: Update, context: CallbackContext):
+    logging.debug(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
 
 
 if __name__ == '__main__':
@@ -306,34 +317,36 @@ if __name__ == '__main__':
 
     updater = Updater(secrets['hawker_centre_bot_token'])
 
+    # log message
+    updater.dispatcher.add_handler(MessageHandler(Filters.all, log_message), 1)
+
     # handle commands
-    updater.dispatcher.add_handler(CommandHandler('start', cmd_start))
-    updater.dispatcher.add_handler(CommandHandler('help', cmd_help))
-    updater.dispatcher.add_handler(CommandHandler('share', cmd_share))
-    updater.dispatcher.add_handler(CommandHandler('about', cmd_about))
+    updater.dispatcher.add_handler(CommandHandler('start', cmd_start), 2)
+    updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
+    updater.dispatcher.add_handler(CommandHandler('share', cmd_share), 2)
+    updater.dispatcher.add_handler(CommandHandler('about', cmd_about), 2)
 
     # by date
-    updater.dispatcher.add_handler(CommandHandler('today', cmd_today))
-    updater.dispatcher.add_handler(CommandHandler('tomorrow', cmd_tomorrow))
-    updater.dispatcher.add_handler(CommandHandler('week', cmd_this_week))
-    updater.dispatcher.add_handler(CommandHandler('this', cmd_this_week))
-    updater.dispatcher.add_handler(CommandHandler('thisweek', cmd_this_week))
-    updater.dispatcher.add_handler(CommandHandler('this_week', cmd_this_week))
-    updater.dispatcher.add_handler(CommandHandler('next', cmd_next_week))
-    updater.dispatcher.add_handler(CommandHandler('nextweek', cmd_next_week))
-    updater.dispatcher.add_handler(CommandHandler('next_week', cmd_next_week))
+    updater.dispatcher.add_handler(CommandHandler('today', cmd_today), 2)
+    updater.dispatcher.add_handler(CommandHandler('tomorrow', cmd_tomorrow), 2)
+    updater.dispatcher.add_handler(CommandHandler('week', cmd_this_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('this', cmd_this_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('thisweek', cmd_this_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('this_week', cmd_this_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('next', cmd_next_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('nextweek', cmd_next_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('next_week', cmd_next_week), 2)
 
     # by name / zip code
-    updater.dispatcher.add_handler(CommandHandler('search', cmd_search))
-    updater.dispatcher.add_handler(CommandHandler('zip', cmd_zip))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text))
+    updater.dispatcher.add_handler(CommandHandler('search', cmd_search), 2)
+    updater.dispatcher.add_handler(CommandHandler('zip', cmd_zip), 2)
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text), 2)
 
     # by location
-    updater.dispatcher.add_handler(MessageHandler(Filters.location, location))
+    updater.dispatcher.add_handler(MessageHandler(Filters.location, location), 2)
 
     # handle non-commands
-    updater.dispatcher.add_handler(MessageHandler(Filters.all, ignore))
-    updater.dispatcher.add_handler(MessageHandler(Filters.all, print_msg), 2)
+    updater.dispatcher.add_handler(MessageHandler(Filters.all, ignore), 2)
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
