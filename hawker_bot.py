@@ -1,6 +1,8 @@
 import datetime
 import json
 import logging
+import sys
+from pathlib import Path
 
 import pandas as pd
 from telegram import Update
@@ -10,15 +12,34 @@ from telegram.ext import Filters
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
-# Enable logging
 from data.hawker_data import locate_zip
 from hawkers import DateRange
 from hawkers import Hawker
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+log_path = Path(f'logs/hawker-bot--{timestamp}.log').resolve()
+log_path.parent.mkdir(parents=True, exist_ok=True)
 
-logger = logging.getLogger(__name__)
+# setup logging format
+log_formatter = logging.Formatter('%(asctime)s  '
+                                  '%(levelname)-8s '
+                                  '[%(name)s|%(processName)s|%(threadName)s|%(module)s|%(funcName)s]\t'
+                                  '%(message)s')
+
+# set global log level to DEBUG (most verbose possible)
+logging.getLogger().setLevel(logging.DEBUG)
+
+# create stderr handler at INFO
+logging_stdout_handler = logging.StreamHandler(sys.stderr)
+logging_stdout_handler.setFormatter(log_formatter)
+logging_stdout_handler.setLevel(logging.INFO)
+logging.getLogger().addHandler(logging_stdout_handler)
+
+# create file handler at DEBUG
+logging_file_handler = logging.FileHandler(log_path)
+logging_file_handler.setFormatter(log_formatter)
+logging_file_handler.setLevel(logging.DEBUG)
+logging.getLogger().addHandler(logging_file_handler)
 
 ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Postal_districts
     '01', '02', '03', '04', '05', '06',  # Raffles Place, Cecil, Marina, People's Park
@@ -60,6 +81,7 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
+        logging.debug('blank zip code')
         return None
 
     if not query.isdigit():
@@ -70,6 +92,7 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
+        logging.debug(f'non-numeric zip code: {query}')
         return None  # text
 
     # sanity check zip code
@@ -81,6 +104,7 @@ def _fix_zip(query, effective_message=None):
                 '`/zip` usage example:',
                 '`/zip 078881`',
             ]))
+        logging.debug(f'zip code not in Singapore list: {query}')
         return None  # invalid postal code
 
     return zip_code
@@ -105,9 +129,8 @@ def _search(query, effective_message):
 
     effective_message.reply_text(f'Displaying top 5 results for "{query}"')
     results = sorted(hawkers, key=lambda x: x.text_similarity(query), reverse=True)
-    print(query)
     for hawker in results[:5]:
-        print(hawker.text_similarity(query), hawker.name)
+        logging.info(f'query="{query}" similarity={hawker.text_similarity(query)} result="{hawker.name}"')
         effective_message.reply_markdown(hawker.to_markdown())
 
 
@@ -128,6 +151,7 @@ def _nearby(lat, lon, effective_message):
     assert isinstance(lon, float), lon
     results = sorted(hawkers, key=lambda x: x.distance_from(lat, lon))
     for result in results[:5]:
+        logging.info(f'lat="{lat}" similarity={hawker.text_similarity(query)} result="{hawker.name}"')
         print(result.distance_from(lat, lon), result.name)
         text = f'{int(result.distance_from(lat, lon))} meters away:  \n' + result.to_markdown()
         effective_message.reply_markdown(text)
@@ -251,7 +275,7 @@ def error(update: Update, context: CallbackContext):
     """
     print(update)
     print(context)
-    logger.warning(f'Update "{update}" caused error "{context.error}"')
+    logging.warning(f'Update "{update}" caused error "{context.error}"')
     raise context.error
 
 
