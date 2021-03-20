@@ -1,6 +1,6 @@
 git pull
 
-if [[ ! -e "stop.sh" ]]; then
+if [[ ! -e "~/stop.sh" ]]; then
     echo "./stop.sh exists"
     echo "please check if hawker-bot is running, and if not, manually remove ./stop.sh"
     ps -ef | grep "python hawker_bot.py"
