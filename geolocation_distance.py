@@ -3,6 +3,7 @@ import time
 
 from geographiclib.geodesic import Geodesic
 
+# noinspection PyUnresolvedReferences
 WGS84 = Geodesic.WGS84
 
 
