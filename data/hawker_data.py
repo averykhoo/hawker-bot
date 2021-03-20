@@ -1,5 +1,8 @@
 import json
 from pprint import pprint
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import pandas as pd
 import requests
@@ -33,6 +36,22 @@ def query_onemap(query):
         if page_num == total_pages:
             assert len(results) == data['found']
     return results
+
+
+def locate_zip(zip_code: Union[str, int]) -> Optional[Tuple[float, float]]:
+    if isinstance(zip_code, str):
+        zip_code = zip_code.strip()
+        assert 5 <= len(zip_code) <= 6
+        assert zip_code.isdigit()
+        zip_code = int(zip_code)
+    assert isinstance(zip_code, int)
+    assert 10000 <= zip_code <= 999999
+    zip_code = f'{zip_code:06d}'
+
+    # query zip code and return coordinates of first matching result
+    for result in query_onemap(zip_code):
+        if result['POSTAL'] == zip_code:
+            return float(result['LATITUDE']), float(result['LONGITUDE'])
 
 
 def convert(lat: float, lon: float):

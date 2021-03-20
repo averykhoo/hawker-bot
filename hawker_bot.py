@@ -11,6 +11,7 @@ from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
 # Enable logging
+from data.hawker_data import locate_zip
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -56,6 +57,17 @@ def _closed(date, effective_message, date_name):
     effective_message.reply_markdown('  \n'.join(lines))
 
 
+def _nearby(lat, lon, effective_message):
+    print(lat, lon)
+    assert isinstance(lat, float), lat
+    assert isinstance(lon, float), lon
+    results = sorted(hawkers, key=lambda x: x.distance_from(lat, lon))
+    for result in results[:5]:
+        print(result.distance_from(lat, lon), result.name)
+        text = f'{int(result.distance_from(lat, lon))} meters away:  \n' + result.to_markdown()
+        effective_message.reply_markdown(text)
+
+
 def cmd_start(update: Update, context: CallbackContext):
     update.effective_message.reply_text('Hi!')
     update.effective_message.reply_markdown('  \n'.join([
@@ -96,7 +108,36 @@ def cmd_search(update: Update, context: CallbackContext):
 
 
 def cmd_share(update: Update, context: CallbackContext):
-    update.effective_message.reply_markdown('[HawkerBot](t.me/hawker_centre_bot)')
+    update.effective_message.reply_markdown('[HawkerBot](https://t.me/hawker_centre_bot)')
+
+
+def cmd_about(update: Update, context: CallbackContext):
+    update.effective_message.reply_markdown('  \n'.join([
+        '[HawkerBot](https://t.me/hawker_centre_bot)',
+        'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
+    ]))
+
+
+def cmd_zip(update: Update, context: CallbackContext):
+    expected_cmd = '/zip'
+    query = update.effective_message.text
+    assert query.lower().startswith(expected_cmd)
+    query = query[len(expected_cmd):].strip()
+
+    if not query.isdigit():
+        return None  # blank or text
+
+    zip_code = int(query)
+    if zip_code < 10001 or zip_code > 999999:
+        return None  # invalid postal code
+
+    loc = locate_zip(f'{zip_code:06d}')
+    if loc:
+        lat, lon = loc
+        update.effective_message.reply_text(f'Displaying nearest 5 results to zip code "{zip_code}"')
+        _nearby(lat, lon, update.effective_message)
+    else:
+        update.effective_message.reply_text(f'Zip code "{zip_code}" not found')
 
 
 def cmd_today(update: Update, context: CallbackContext):
@@ -126,17 +167,10 @@ def handle_text(update: Update, context: CallbackContext):
 
 
 def location(update: Update, context: CallbackContext):
-    update.effective_message.reply_text(f'Displaying nearest 5 results to your location')
-
     lat = update.effective_message.location.latitude
     lon = update.effective_message.location.longitude
-
-    print(lat, lon)
-    results = sorted(hawkers, key=lambda x: x.distance_from(lat, lon))
-    for result in results[:5]:
-        print(result.distance_from(lat, lon), result.name)
-        text = f'{int(result.distance_from(lat, lon))} meters away:  \n' + result.to_markdown()
-        update.effective_message.reply_markdown(text)
+    update.effective_message.reply_text(f'Displaying nearest 5 results to your location')
+    _nearby(lat, lon, update.effective_message)
 
 
 def ignore(update: Update, context: CallbackContext):
@@ -183,6 +217,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('start', cmd_start))
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help))
     updater.dispatcher.add_handler(CommandHandler('share', cmd_share))
+    updater.dispatcher.add_handler(CommandHandler('about', cmd_about))
 
     # by date
     updater.dispatcher.add_handler(CommandHandler('today', cmd_today))
@@ -197,6 +232,7 @@ if __name__ == '__main__':
 
     # by name / zip code
     updater.dispatcher.add_handler(CommandHandler('search', cmd_search))
+    updater.dispatcher.add_handler(CommandHandler('zip', cmd_zip))
     updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text))
 
     # by location
