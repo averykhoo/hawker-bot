@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import sys
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -273,19 +274,17 @@ def location(update: Update, context: CallbackContext):
 
 
 def ignore(update: Update, context: CallbackContext):
-    print(context)
-    print(update)
     logging.warning('INVALID_MESSAGE_TYPE')
-    update.effective_message.reply_text('cannot handle this message type')
+    warnings.warn(f'{update}')
+    update.effective_message.reply_text('Unable to handle this message type')
 
 
 def error(update: Update, context: CallbackContext):
     """
     Log Errors caused by Updates.
     """
-    print(update)
-    print(context)
     logging.warning(f'ERROR="{context.error}"')
+    warnings.warn(f'{update}')
     raise context.error
 
 
@@ -314,7 +313,7 @@ if __name__ == '__main__':
     with open('secrets.json') as f:
         secrets = json.load(f)
 
-    updater = Updater(secrets['hawker_centre_bot_token'])
+    updater = Updater(secrets['hawker_bot_token'])
 
     # log message
     updater.dispatcher.add_handler(MessageHandler(Filters.all, log_message), 1)
