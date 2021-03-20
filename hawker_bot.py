@@ -39,7 +39,7 @@ logging.getLogger().addHandler(logging_stdout_handler)
 # create file handler at DEBUG
 logging_file_handler = logging.FileHandler(log_path)
 logging_file_handler.setFormatter(log_formatter)
-logging_file_handler.setLevel(logging.DEBUG)
+logging_file_handler.setLevel(logging.INFO)  # set to DEBUG if there's enough disk space
 logging.getLogger().addHandler(logging_file_handler)
 
 ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Postal_districts
