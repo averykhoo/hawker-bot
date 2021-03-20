@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import re
 import sys
 import warnings
 from pathlib import Path
@@ -72,6 +73,8 @@ ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Post
     '75', '76',  # Yishun, Sembawang, Senoko
     '79', '80',  # Seletar
 }
+
+RE_COMMAND = re.compile(r'(/[a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
 
 
 def _fix_zip(query, effective_message=None):
@@ -148,7 +151,6 @@ def _closed(date, effective_message, date_name):
         if hawker.closed_on_dates(date):
             logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
             lines.append(f'{len(lines)}.  {hawker.name}')
-            continue
 
     effective_message.reply_markdown('  \n'.join(lines))
 
@@ -215,6 +217,16 @@ def cmd_about(update: Update, context: CallbackContext):
     ]))
 
 
+def cmd_all(update: Update, context: CallbackContext):
+    lines = [f'All hawker centres:']
+
+    logging.info(f'LIST_ALL')
+    for hawker in sorted(hawkers, key=lambda x: x.name):
+        lines.append(f'{len(lines)}.  {hawker.name}')
+
+    update.effective_message.reply_markdown('  \n'.join(lines))
+
+
 def cmd_zip(update: Update, context: CallbackContext):
     expected_cmd = '/zip'
     query = update.effective_message.text
@@ -261,8 +273,20 @@ def cmd_next_week(update: Update, context: CallbackContext):
     _closed(DateRange(next_week_start, next_week_end), update.effective_message, '_next_ week')
 
 
+def cmd_unknown(update: Update, context: CallbackContext):
+    query = update.effective_message.text.strip()
+    m = RE_COMMAND.match(query)
+    assert m is not None
+    logging.info(f'UNSUPPORTED_COMMAND="{m.group()}" QUERY="{query}"')
+    update.effective_message.reply_markdown(f'Unsupported command: {m.group()}')
+
+
 def handle_text(update: Update, context: CallbackContext):
     query = update.effective_message.text.strip()
+    if RE_COMMAND.match(query) is not None:
+        cmd_unknown(update, context)
+        return
+
     _search(query, update.effective_message)
 
 
@@ -323,6 +347,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('share', cmd_share), 2)
     updater.dispatcher.add_handler(CommandHandler('about', cmd_about), 2)
+    updater.dispatcher.add_handler(CommandHandler('all', cmd_all), 2)
 
     # by date
     updater.dispatcher.add_handler(CommandHandler('today', cmd_today), 2)

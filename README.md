@@ -4,33 +4,29 @@
 *   optionally, install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
 
 ##  todo
+*   inline mode (search)
 *   message queue per-user with auto-terminate if user sends new thing
-*   update commands via @BotFather `/setcommands`
+*   update command list via @BotFather `/setcommands`
 *   auto-handle telegram quotas by rate limiting message sending
+*   auto-handle message_too_long by breaking messages up into chunks < 4096 chars
 *   support being in telegram groups
     *   eg. receiving all messages
     *   or only commands (private mode)
-*   command list
-*   inline mode (search)
 *   get user timezone
 *   commands
-    *   closed: search only closed soon
     *   follow unfollow
     *   stop/exit/quit/mute 
     *   delete-all-data
     *   share deeplink to bot (private/group)
-    *   about bot, link to git
     *   refresh: reload all resources
-    *   list all hawkers
+    *   ~~list all hawkers~~ (400 MESSAGE_TOO_LONG)
 *   filter out unconstructed hawkers or with no food stalls
 *   what is telegram context and how to use it
 *   pull new data
     *   build internal data.gov
     *   build onemap query python api
     *   update app data on the fly
-*   logging
 *   stats
-*   prod and staging tokens
 *   follow
     *   specific hawker centers
     *   everyday or only on specific days or some kind of schedule
