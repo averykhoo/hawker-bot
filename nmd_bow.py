@@ -37,7 +37,10 @@ def bow_ngram_movers_distance(bag_of_words_1: Union[str, Iterable[str]],
             except ZeroDivisionError:
                 row.append(int(word_1 != word_2))
         costs.append(row)
-    row_idxs, col_idxs = scipy.optimize.linear_sum_assignment(costs)  # 1D equivalent of EMD
+    if costs:
+        row_idxs, col_idxs = scipy.optimize.linear_sum_assignment(costs)  # 1D equivalent of EMD
+    else:
+        row_idxs, col_idxs = [], []
 
     # sum
     if invert:
