@@ -153,7 +153,6 @@ def _closed(date, effective_message, date_name):
 
 
 def _nearby(lat, lon, effective_message):
-    print(lat, lon)
     assert isinstance(lat, float), lat
     assert isinstance(lon, float), lon
     results = sorted([(hawker, hawker.distance_from(lat, lon)) for hawker in hawkers], key=lambda x: x[1])
