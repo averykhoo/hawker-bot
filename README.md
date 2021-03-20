@@ -4,7 +4,6 @@
 *   optionally, install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
 
 ##  todo
-*   inline mode (search)
 *   message queue per-user with auto-terminate if user sends new thing
 *   update command list via @BotFather `/setcommands`
 *   auto-handle telegram quotas by rate limiting message sending

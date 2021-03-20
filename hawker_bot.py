@@ -3,14 +3,20 @@ import json
 import logging
 import re
 import sys
+import uuid
 import warnings
 from pathlib import Path
+from typing import List
 
 import pandas as pd
+from telegram import InlineQueryResultArticle
+from telegram import InputTextMessageContent
+from telegram import ParseMode
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import CommandHandler
 from telegram.ext import Filters
+from telegram.ext import InlineQueryHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
@@ -42,6 +48,11 @@ logging_file_handler = logging.FileHandler(log_path)
 logging_file_handler.setFormatter(log_formatter)
 logging_file_handler.setLevel(logging.DEBUG)  # set to INFO if there's not enough disk space
 logging.getLogger().addHandler(logging_file_handler)
+
+BOT_USERNAMES = {
+    'hawker_centre_bot',  # prod
+    'hawker_center_bot',  # dev
+}
 
 ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Postal_districts
     '01', '02', '03', '04', '05', '06',  # Raffles Place, Cecil, Marina, People's Park
@@ -114,34 +125,50 @@ def _fix_zip(query, effective_message=None):
     return zip_code
 
 
-def _search(query, effective_message, threshold=0.6):
+def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
     if not query:
-        effective_message.reply_text('no search query received')
+        if effective_message is not None:
+            effective_message.reply_text('no search query received')
         logging.info('QUERY_BLANK')
-        return
+        return []
 
     # try exact match for zip code
     zip_code = _fix_zip(query)
     if zip_code:
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
-            effective_message.reply_text(f'Displaying zip code match for "{zip_code}"')
+            if effective_message is not None:
+                effective_message.reply_text(f'Displaying zip code match for "{zip_code}"')
             for result in results:
                 logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
-                effective_message.reply_markdown(result.to_markdown())
-            return
+                if effective_message is not None:
+                    effective_message.reply_markdown(result.to_markdown())
+            return results
+
+    for hawker in hawkers:
+        if hawker.name == query:
+            logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
+            if effective_message is not None:
+                effective_message.reply_text(f'Displaying exact match for "{query}"')
+                effective_message.reply_markdown(hawker.to_markdown())
+            return [hawker]
 
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
-        effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"')
+        if effective_message is not None:
+            effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"')
         for hawker, score in results[:5]:
             logging.info(f'QUERY="{query}" SIMILARITY={hawker.text_similarity(query)} RESULT="{hawker.name}"')
-            effective_message.reply_markdown(hawker.to_markdown())
+            if effective_message is not None:
+                effective_message.reply_markdown(hawker.to_markdown())
+        return [hawker for hawker, score in results]
 
     else:
         logging.info(f'QUERY_NO_RESULTS="{query}"')
-        effective_message.reply_text(f'Zero results found for "{query}"')
+        if effective_message is not None:
+            effective_message.reply_text(f'Zero results found for "{query}"')
+        return []
 
 
 def _closed(date, effective_message, date_name):
@@ -282,6 +309,12 @@ def cmd_unknown(update: Update, context: CallbackContext):
 
 
 def handle_text(update: Update, context: CallbackContext):
+    if update.effective_message.via_bot is not None:
+        bot_username = update.effective_message.via_bot.username
+        if bot_username in BOT_USERNAMES:
+            logging.debug(f'VIA_BOT="{bot_username}"')
+            return
+
     query = update.effective_message.text.strip()
     if RE_COMMAND.match(query) is not None:
         cmd_unknown(update, context)
@@ -290,14 +323,14 @@ def handle_text(update: Update, context: CallbackContext):
     _search(query, update.effective_message)
 
 
-def location(update: Update, context: CallbackContext):
+def handle_location(update: Update, context: CallbackContext):
     lat = update.effective_message.location.latitude
     lon = update.effective_message.location.longitude
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location')
     _nearby(lat, lon, update.effective_message)
 
 
-def ignore(update: Update, context: CallbackContext):
+def handle_unknown(update: Update, context: CallbackContext):
     logging.warning('INVALID_MESSAGE_TYPE')
     warnings.warn(f'{update}')
     update.effective_message.reply_text('Unable to handle this message type')
@@ -314,6 +347,50 @@ def error(update: Update, context: CallbackContext):
 
 def log_message(update: Update, context: CallbackContext):
     logging.debug(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
+
+
+def handle_inline(update: Update, _: CallbackContext) -> None:
+    """Handle the inline query."""
+    query = update.inline_query.query.strip()
+    logging.info(f'INLINE="{query}"')
+
+    results = _search(query)
+    if results:
+        update.inline_query.answer([
+            InlineQueryResultArticle(
+                id=str(uuid.uuid4()),
+                title=hawker.name,
+                input_message_content=InputTextMessageContent(hawker.to_markdown(),
+                                                              parse_mode=ParseMode.MARKDOWN
+                                                              ),
+            ) for hawker in results[:5]
+        ])
+    elif query:
+        update.inline_query.answer([
+            InlineQueryResultArticle(
+                id=str(uuid.uuid4()),
+                title='No results found',
+                input_message_content=InputTextMessageContent('\n'.join([
+                    'No hawker centres match the provided search term:',
+                    f'`{query}`',
+                ]),
+                    parse_mode=ParseMode.MARKDOWN,
+                ),
+            )
+        ])
+    else:
+        update.inline_query.answer([
+            InlineQueryResultArticle(
+                id=str(uuid.uuid4()),
+                title='Enter search query',
+                input_message_content=InputTextMessageContent('  \n'.join([
+                    '*Inline mode usage example:*',
+                    '`@hawker_centre_bot clementi`',
+                ]),
+                    parse_mode=ParseMode.MARKDOWN,
+                ),
+            )
+        ])
 
 
 if __name__ == '__main__':
@@ -338,6 +415,9 @@ if __name__ == '__main__':
         secrets = json.load(f)
 
     updater = Updater(secrets['hawker_bot_token'])
+
+    # inline
+    updater.dispatcher.add_handler(InlineQueryHandler(handle_inline))
 
     # log message
     updater.dispatcher.add_handler(MessageHandler(Filters.all, log_message), 1)
@@ -366,10 +446,10 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text), 2)
 
     # by location
-    updater.dispatcher.add_handler(MessageHandler(Filters.location, location), 2)
+    updater.dispatcher.add_handler(MessageHandler(Filters.location, handle_location), 2)
 
     # handle non-commands
-    updater.dispatcher.add_handler(MessageHandler(Filters.all, ignore), 2)
+    updater.dispatcher.add_handler(MessageHandler(Filters.all, handle_unknown), 2)
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
