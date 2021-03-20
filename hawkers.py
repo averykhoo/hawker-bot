@@ -274,8 +274,7 @@ class Hawker:
         lines = [
             f'[\u200B]({self.photourl})'  # note intentional lack of comma, there shouldn't be a newline here
             f'*{self.name}*',
-            f'_{self.no_of_food_stalls} food stalls_',
-            f'_{self.no_of_market_stalls} market stalls_',
+            f'_{self.no_of_food_stalls} food stalls, {self.no_of_market_stalls} market stalls_',
             f'[{address}](https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude})',
             # self.description_myenv,
         ]
