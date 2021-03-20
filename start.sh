@@ -9,4 +9,6 @@ chmod +x stop.sh
 echo "starting..."
 nohup python hawker_bot.py > "logs/$DATE.log" 2>&1 &
 echo echo "kill -9 $!" > stop.sh
+# shellcheck disable=SC2016
+echo 'rm -- "$0"' > stop.sh
 echo "to stop: ./stop.sh"
