@@ -8,14 +8,12 @@
 *   support being in telegram groups
     *   eg. receiving all messages
     *   or only commands (private mode)
-*   remove nmd
 *   command list
 *   inline mode (search)
 *   get user timezone
 *   commands
-    *   start: display help
+    *   closed: search only closed soon
     *   zip: search nearby geocoded zip codes
-    *   week: only remainder of week, after today
     *   follow unfollow
     *   stop/exit/quit/mute 
     *   delete-all-data

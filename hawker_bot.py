@@ -57,22 +57,26 @@ def _closed(date, effective_message, date_name):
 
 
 def cmd_start(update: Update, context: CallbackContext):
-    """
-    Send a message when the command /start is issued.
-    """
-    assert isinstance(update, Update)
-    assert isinstance(context, CallbackContext)
     update.effective_message.reply_text('Hi!')
+    update.effective_message.reply_markdown('  \n'.join([
+        '*Usage:*',
+        '/HELP list all commands',
+        '/TODAY list hawker centers closed today',
+        '/TOMORROW list hawker centers closed tomorrow',
+        '/WEEK list hawker centers closed this week',
+        '/NEXTWEEK list hawker centers closed next week',
+        'sending a text message will return matching hawker centers',
+        'sending a location will return nearby hawker centers',
+    ]))
 
 
 def cmd_help(update: Update, context: CallbackContext):
-    """
-    Send a message when the command /help is issued.
-    """
+    assert isinstance(update, Update)
+    assert isinstance(context, CallbackContext)
     update.effective_message.reply_markdown('  \n'.join([
         '*Usage:*',
         '/START start using the bot (you\'ve already done this)',
-        '/HELP this command',
+        '/HELP list all commands (this command)',
         '/TODAY list hawker centers closed today',
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
@@ -83,9 +87,6 @@ def cmd_help(update: Update, context: CallbackContext):
 
 
 def cmd_search(update: Update, context: CallbackContext):
-    """
-    Send a message when the command /help is issued.
-    """
     expected_cmd = '/search'
     query = update.effective_message.text
     assert query.lower().startswith(expected_cmd)
@@ -95,9 +96,6 @@ def cmd_search(update: Update, context: CallbackContext):
 
 
 def cmd_share(update: Update, context: CallbackContext):
-    """
-    Send a message when the command /help is issued.
-    """
     update.effective_message.reply_markdown('[HawkerBot](t.me/hawker_centre_bot)')
 
 
@@ -111,23 +109,18 @@ def cmd_tomorrow(update: Update, context: CallbackContext):
 
 def cmd_this_week(update: Update, context: CallbackContext):
     today = datetime.date.today()
-    week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = week_start + datetime.timedelta(days=6)
-    _closed(DateRange(week_start, week_end), update.effective_message, 'this week')
+    week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
+    _closed(DateRange(today, week_end), update.effective_message, 'this week')
 
 
 def cmd_next_week(update: Update, context: CallbackContext):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
-    next_week = DateRange(next_week_start, next_week_end)
     _closed(DateRange(next_week_start, next_week_end), update.effective_message, '_next_ week')
 
 
 def handle_text(update: Update, context: CallbackContext):
-    """
-    Send a message when the command /help is issued.
-    """
     query = update.effective_message.text.strip()
     _search(query, update.effective_message)
 
