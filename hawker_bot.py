@@ -21,6 +21,7 @@ from telegram.ext import Updater
 
 from data.hawker_data import locate_zip
 from data.hawker_data import query_onemap
+from data.hawker_data import weather_today
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -354,6 +355,40 @@ def cmd_zip(update: Update, context: CallbackContext):
 
 
 def cmd_today(update: Update, context: CallbackContext):
+    weather_data = weather_today()
+    if weather_data:
+        fmt_str = '%Y-%m-%dT%H:%M:%S+08:00'
+        # check first item
+        idx = 0
+        time_start = datetime.datetime.strptime(weather_data['periods'][idx]['time']['start'], fmt_str)
+        time_end = datetime.datetime.strptime(weather_data['periods'][idx]['time']['end'], fmt_str)
+        assert time_start - datetime.timedelta(hours=1) <= datetime.datetime.now()
+        assert datetime.datetime.now() <= time_end + datetime.timedelta(hours=1)
+
+        # if we're 30 minutes to next item, take next item
+        if datetime.datetime.now() + datetime.timedelta(hours=0.5) >= time_end:
+            idx += 1
+            time_start = datetime.datetime.strptime(weather_data['periods'][idx]['time']['start'], fmt_str)
+            time_end = datetime.datetime.strptime(weather_data['periods'][idx]['time']['end'], fmt_str)
+
+        # stringify the time
+        start = time_start.strftime('%I %p').lstrip('0')
+        if time_start.date() == time_end.date():
+            end = time_end.strftime('%I %p').lstrip('0')
+        else:
+            end = time_end.strftime('%I %p').lstrip('0') + ' (tomorrow)'
+
+        # send weather as message
+        update.effective_message.reply_markdown('  \n'.join([
+            f'*Weather forecast from {start} to {end}*',
+            'Central: ' + weather_data['periods'][idx]['regions']['central'],
+            'North: ' + weather_data['periods'][idx]['regions']['north'],
+            'South: ' + weather_data['periods'][idx]['regions']['south'],
+            'East: ' + weather_data['periods'][idx]['regions']['east'],
+            'West: ' + weather_data['periods'][idx]['regions']['west'],
+        ]), disable_notification=True, disable_web_page_preview=True)
+
+    # send what's closed today
     _closed(datetime.date.today(), update.effective_message, 'today')
 
 

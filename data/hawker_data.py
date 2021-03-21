@@ -70,6 +70,31 @@ def convert(lat: float, lon: float):
     return data['latitude'], data['longitude']
 
 
+def weather_now():
+    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast')
+    area_metadata = json.loads(r.content).get('area_metadata', [])
+    items = json.loads(r.content).get('items', [])
+    if not items:
+        return
+    return area_metadata, items[0]  # todo: merge metadata and items
+
+
+def weather_today():
+    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
+    items = json.loads(r.content).get('items', [])
+    if not items:
+        return
+    return items[0]
+
+
+def weather_forecast():
+    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast')
+    items = json.loads(r.content).get('items', [])
+    if not items:
+        return
+    return items[0]
+
+
 def get_resource(resource_id: str):
     limit = 99999  # just for starters
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
@@ -93,8 +118,10 @@ def get_resource(resource_id: str):
 
 
 if __name__ == '__main__':
-    pprint(query_onemap('Punggol Town Hub Hawker Centre'))
-    pprint(convert(39318.07, 32112.26))
+    # pprint(query_onemap('Punggol Town Hub Hawker Centre'))
+    # pprint(convert(39318.07, 32112.26))
+    pprint(weather_today())
+    pprint(weather_forecast())
 
     # for resource_name, resource_id in RESOURCE_IDS.items():
     #     df = get_resource(resource_id)
