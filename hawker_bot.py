@@ -394,19 +394,22 @@ def cmd_today(update: Update, context: CallbackContext):
 
 
 def cmd_tomorrow(update: Update, context: CallbackContext):
-
     weather_data = weather_forecast()
     if weather_data:
         # make sure we have tomorrow
-        today_str = datetime.date.today().strftime('%Y-%m-%d')
+        tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         idx = 0
-        while weather_data['forecasts'][idx]['date'] < today_str:
+        while weather_data['forecasts'][idx]['date'] < tomorrow_str:
             idx += 1
 
         # send weather as message
+        if datetime.date.today().year < (datetime.date.today() + datetime.timedelta(days=1)).year:
+            tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%d %b %Y').lstrip('0')
+        else:
+            tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%d %b').lstrip('0')
         update.effective_message.reply_markdown('  \n'.join([
-            f'*Weather forecast for tomorrow:*',
-            weather_data['forecasts'][idx]['forecast'],
+            f'*Weather forecast for tomorrow ({tomorrow_str}):*',
+            weather_data['forecasts'][idx]['forecast'].rstrip('.'),
         ]), disable_notification=True, disable_web_page_preview=True)
 
     _closed(datetime.date.today() + datetime.timedelta(days=1), update.effective_message, 'tomorrow')
