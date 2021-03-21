@@ -201,7 +201,7 @@ class Hawker:
         if self.est_original_completion_date is None:
             return None
         if len(self.est_original_completion_date) == 4:
-            return datetime.datetime.strptime(f'1/1/{self.est_original_completion_date}', '%d/%m/%Y')
+            return datetime.datetime.strptime(f'31/12/{self.est_original_completion_date}', '%d/%m/%Y')
         else:
             return datetime.datetime.strptime(self.est_original_completion_date, '%d/%m/%Y')
 
@@ -259,6 +259,27 @@ class Hawker:
         return max(results), sum(results)
 
     def to_markdown(self) -> str:
+        # output markdown lines
+        lines = []
+
+        # photo and name
+        if self.photourl:
+            lines.append(f'[\u200B]({self.photourl})*{self.name}*')
+        else:
+            lines.append(f'*{self.name}*')
+
+        # food stalls
+        if self.no_of_food_stalls + self.no_of_food_stalls > 0:
+            lines.append(f'_{self.no_of_food_stalls} food stalls, {self.no_of_market_stalls} market stalls_')
+
+        # address
+        address = self.address_myenv or f'{round(self.latitude, 5)}°N,{round(self.longitude, 5)}°E'
+        lines.append(f'[{address}](https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude})')
+
+        # located in which building
+        if self.addressbuildingname:
+            lines.append(f'(located in {self.addressbuildingname})')
+
         # closure dates
         closed_dates = []
         for date_range in self.cleaning_date_ranges:
@@ -267,28 +288,19 @@ class Hawker:
             closed_dates.append((self.rnr_period, f'{self.rnr_period.month_name} renovation'))
         if self.other_works_period and self.other_works_period != self.rnr_period:
             closed_dates.append((self.other_works_period, f'{self.other_works_period.month_name} repairs'))
-        closed_dates = sorted(closed_dates)
-
-        # basic info
-        address = self.address_myenv or f'{round(self.latitude, 5)}°N,{round(self.longitude, 5)}°E'
-        lines = [
-            f'[\u200B]({self.photourl})'  # note intentional lack of comma, there shouldn't be a newline here
-            f'*{self.name}*',
-            f'_{self.no_of_food_stalls} food stalls, {self.no_of_market_stalls} market stalls_',
-            f'[{address}](https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude})',
-            # self.description_myenv,
-        ]
-
-        # located in which building
-        if self.addressbuildingname:
-            lines.append(f'(located in {self.addressbuildingname})')
-
-        # closure dates
         if closed_dates:
+            closed_dates = sorted(closed_dates)
             for date_range, reason in closed_dates:
                 lines.append(f'{reason}: {str(date_range)}')
+        elif self.estimated_original_completion_date > datetime.datetime.today():
+            if len(self.est_original_completion_date) == 4:
+                lines.append(f'Opening in {self.est_original_completion_date}')
+            else:
+                lines.append(f'Opening on {self.estimated_original_completion_date.strftime("%d %b %Y")}')
         else:
             lines.append('No closure dates')
+
+        # done, now join the lines into a single message
         return '  \n'.join(lines)
 
 
