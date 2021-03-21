@@ -162,6 +162,7 @@ def cmd_start(update: Update, context: CallbackContext):
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
+        '/WEATHER 24h weather forecast',
         '/ZIP <zipcode> list hawker centers near a zipcode',
         '/ONEMAP <query> search OneMap.sg',
         'sending a text message will return matching hawker centers',
