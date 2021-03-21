@@ -6,3 +6,4 @@ nextweek -  list hawker centers closed next week
 zip -       list hawker centers near a given zipcode
 onemap -    search OneMap.sg for a given query
 about -     about this bot
+weather -   24h weather forecast
