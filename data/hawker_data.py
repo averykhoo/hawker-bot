@@ -30,11 +30,15 @@ def query_onemap(query):
                                  'pageNum':        page_num,
                                  })
         data = json.loads(r.content)
-        results.extend(data['results'])
-        total_pages = data['totalNumPages']
-        assert page_num == data['pageNum']
+
+        if 'error' in data:
+            return results
+
+        results.extend(data.get('results', []))
+        total_pages = data.get('totalNumPages', page_num)
+        assert page_num == data.get('pageNum', page_num), data
         if page_num == total_pages:
-            assert len(results) == data['found']
+            assert len(results) == data['found'], data
     return results
 
 

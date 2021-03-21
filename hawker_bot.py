@@ -259,6 +259,16 @@ def cmd_onemap(update: Update, context: CallbackContext):
     assert query.lower().startswith(expected_cmd)
     query = query[len(expected_cmd):].strip()
 
+    if not query:
+        update.effective_message.reply_markdown('  \n'.join([
+            'No query provided',
+            '`/onemap` usage example:',
+            '`/onemap lau pa sat`',
+        ]),
+            disable_notification=True)
+        logging.info('QUERY_ONEMAP_BLANK')
+        return None
+
     results = query_onemap(query)
     if not results:
         logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
