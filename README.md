@@ -1,11 +1,14 @@
 #   hawker-bot
 
-##  usage
+##  setup
 *   optionally, install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
+*   update command list via @BotFather `/setcommands` with contents of *setcommands.txt*
+*   allow inline mode via @BotFather `/setinline`
 
 ##  todo
+*   provide an aliases file, then download *hawkercentre.kml* from onemap?
+*   i18n via json file? how to handle string formatting?
 *   message queue per-user with auto-terminate if user sends new thing
-*   update command list via @BotFather `/setcommands`
 *   auto-handle telegram quotas by rate limiting message sending
 *   auto-handle message_too_long by breaking messages up into chunks < 4096 chars
 *   support being in telegram groups

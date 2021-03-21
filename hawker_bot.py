@@ -401,6 +401,13 @@ def handle_text(update: Update, context: CallbackContext):
 def handle_location(update: Update, context: CallbackContext):
     lat = update.effective_message.location.latitude
     lon = update.effective_message.location.longitude
+
+    # outside the SVY21 bounding box
+    if not (1.13 >= lat >= 1.47) or not (103.59 >= lon >= 104.07):
+        update.effective_message.reply_text(f'You appear to be outside of Singapore, '
+                                            f'so this bot will probably not be very useful to you',
+                                            disable_notification=True)
+        
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)
     _nearby(lat, lon, update.effective_message)
