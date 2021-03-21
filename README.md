@@ -6,11 +6,31 @@
 *   allow inline mode via @BotFather `/setinline`
 
 ##  todo
-*   split weather into separate handler function, and move all hawker functions one group down
-    *   group 1: debug log
-    *   group 2: weather
-    *   group 3: hawker
-*   provide an aliases file, then download *hawkercentre.kml* from onemap?
+*   major refactoring
+    *   split out logging setup code
+    *   split code into separate groups of handler functions
+        *   group 1: debug log
+        *   group 2: did you mean / autocorrect
+            *   no starting / for command (eg. 'today', 'tomorrow', 'week', 'help', etc)
+            *   missing space (eg. '/zip120726', '/onemapclementi')
+        *   group 3: weather
+            *   location
+            *   today
+            *   tomorrow
+            *   week?
+        *   group 4: hawker stuff
+    *   provide an aliases file, then download *hawkercentre.kml* from onemap?
+    *   hawker centre set
+        *   find_by_text
+        *   find_by_location
+    *   data api
+        *   onemap
+            *   zip
+            *   query
+            *   hawkercentre.kml
+        *   data gov
+            *   weather
+            *   hawker centre closed dates
 *   i18n via json file? how to handle string formatting?
 *   message queue per-user with auto-terminate if user sends new thing
 *   auto-handle telegram quotas by rate limiting message sending
@@ -18,7 +38,6 @@
 *   support being in telegram groups
     *   eg. receiving all messages
     *   or only commands (private mode)
-*   get user timezone
 *   commands
     *   follow unfollow
     *   stop/exit/quit/mute 
@@ -26,7 +45,6 @@
     *   share deeplink to bot (private/group)
     *   refresh: reload all resources
     *   ~~list all hawkers~~ (400 MESSAGE_TOO_LONG)
-*   filter out unconstructed hawkers or with no food stalls
 *   what is telegram context and how to use it
 *   pull new data
     *   build internal data.gov

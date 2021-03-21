@@ -100,6 +100,9 @@ class Hawker:
     # landxaddresspoint: float  # SVY21 geodetic datum
     # landyaddresspoint: float  # SVY21 geodetic datum
 
+    latitude_hc: Optional[float] = None  # WGS84 (LATITUDE, possibly missing, matches 'latitude_hc' in other table)
+    longitude_hc: Optional[float] = None  # WGS84 (LONGITUDE, possibly missing, matches 'longitude_hc' in other table)
+
     address_myenv: Optional[str] = None
     description_myenv: Optional[str] = None  # DESCRIPTION_MYENV
 
@@ -146,6 +149,8 @@ class Hawker:
         return Hawker(name=dataframe_row['NAME'],
                       latitude=float(dataframe_row['point_lat']),
                       longitude=float(dataframe_row['point_lon']),
+                      latitude_hc=float(dataframe_row['LATITUDE']) if dataframe_row['LATITUDE'] else None,
+                      longitude_hc=float(dataframe_row['LONGITUDE']) if dataframe_row['LONGITUDE'] else None,
                       status=status_map[dataframe_row['STATUS']],
                       address_myenv=dataframe_row['ADDRESS_MYENV'],
                       description_myenv=dataframe_row['DESCRIPTION_MYENV'],

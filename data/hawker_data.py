@@ -1,11 +1,11 @@
+import datetime
 import json
-from pprint import pprint
-from typing import Optional
-from typing import Tuple
-from typing import Union
+import logging
+from pathlib import Path
 
 import pandas as pd
 import requests
+from tabulate import tabulate
 
 RESOURCE_IDS = {
     'Dates of Hawker Centres Closure':
@@ -17,85 +17,8 @@ RESOURCE_IDS = {
 }
 
 
-def query_onemap(query):
-    results = []
-    page_num = 0
-    total_pages = 1
-    while page_num < total_pages:
-        page_num += 1
-        r = requests.get('https://developers.onemap.sg/commonapi/search',
-                         params={'searchVal':      query,
-                                 'returnGeom':     'Y',
-                                 'getAddrDetails': 'Y',
-                                 'pageNum':        page_num,
-                                 })
-        data = json.loads(r.content)
-
-        if 'error' in data:
-            return results
-
-        results.extend(data.get('results', []))
-        total_pages = data.get('totalNumPages', page_num)
-        assert page_num == data.get('pageNum', page_num), data
-        if page_num == total_pages:
-            assert len(results) == data['found'], data
-    return results
-
-
-def locate_zip(zip_code: Union[str, int]) -> Optional[Tuple[float, float, str]]:
-    if isinstance(zip_code, str):
-        zip_code = zip_code.strip()
-        assert 5 <= len(zip_code) <= 6
-        assert zip_code.isdigit()
-        zip_code = int(zip_code)
-    assert isinstance(zip_code, int)
-    assert 10000 <= zip_code <= 999999
-    zip_code = f'{zip_code:06d}'
-
-    # query zip code and return coordinates of first matching result
-    for result in query_onemap(zip_code):
-        if result['POSTAL'] == zip_code:
-            return float(result['LATITUDE']), float(result['LONGITUDE']), result['ADDRESS']
-
-
-def convert(lat: float, lon: float):
-    """
-    3414(SVY21) to 4326(WGS84)
-    """
-    r = requests.get('https://developers.onemap.sg/commonapi/convert/3414to4326',
-                     params={'X': lat,
-                             'Y': lon,
-                             })
-    data = json.loads(r.content)
-    return data['latitude'], data['longitude']
-
-
-def weather_now():
-    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast')
-    area_metadata = json.loads(r.content).get('area_metadata', [])
-    items = json.loads(r.content).get('items', [])
-    if not items:
-        return
-    return area_metadata, items[0]  # todo: merge metadata and items
-
-
-def weather_today():
-    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
-    items = json.loads(r.content).get('items', [])
-    if not items:
-        return
-    return items[0]
-
-
-def weather_forecast():
-    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast')
-    items = json.loads(r.content).get('items', [])
-    if not items:
-        return
-    return items[0]
-
-
 def get_resource(resource_id: str):
+    logging.info(f'loading {resource_id}')
     limit = 99999  # just for starters
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
                      params={
@@ -118,17 +41,12 @@ def get_resource(resource_id: str):
 
 
 if __name__ == '__main__':
-    # pprint(query_onemap('Punggol Town Hub Hawker Centre'))
-    # pprint(convert(39318.07, 32112.26))
-    pprint(weather_today())
-    pprint(weather_forecast())
+    for resource_name, resource_id in RESOURCE_IDS.items():
+        df = get_resource(resource_id)
+        print(tabulate(df, headers=df.columns))
 
-    # for resource_name, resource_id in RESOURCE_IDS.items():
-    #     df = get_resource(resource_id)
-    #     print(tabulate(df, headers=df.columns))
-    #
-    #     safe_name = '-'.join(''.join(char if char.isalpha() else ' ' for char in resource_name.lower()).split())
-    #     timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
-    #     path = Path(f'{safe_name}/{safe_name}--{timestamp}.csv')
-    #     path.parent.mkdir(parents=True, exist_ok=True)
-    #     df.to_csv(path, index=False)
+        safe_name = '-'.join(''.join(char if char.isalpha() else ' ' for char in resource_name.lower()).split())
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+        path = Path(f'{safe_name}/{safe_name}--{timestamp}.csv')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(path, index=False)
