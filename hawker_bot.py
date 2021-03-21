@@ -17,6 +17,7 @@ from telegram.ext import Updater
 
 from hawkers import DateRange
 from hawkers import Hawker
+from utils import InvalidZip
 from utils import ZipBlank
 from utils import ZipNonExistent
 from utils import ZipNonNumeric
@@ -78,8 +79,8 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
         return []
 
     # try exact match for zip code
-    zip_code = _fix_zip(query)
-    if zip_code:
+    try:
+        zip_code = fix_zip(query)
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
             if effective_message is not None:
@@ -91,9 +92,12 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
                     effective_message.reply_markdown(result.to_markdown(),
                                                      disable_notification=True)
             return results
+    except InvalidZip:
+        pass
 
+    # try to find exact (case-insensitive) match for name
     for hawker in hawkers:
-        if hawker.name == query:
+        if hawker.name.casefold() == query.casefold():
             logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
             if effective_message is not None:
                 effective_message.reply_text(f'Displaying exact match for "{query}"',
@@ -102,6 +106,7 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
                                                  disable_notification=True)
             return [hawker]
 
+    # run fuzzy search over fields
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
@@ -188,7 +193,7 @@ def cmd_help(update: Update, context: CallbackContext):
 def cmd_search(update: Update, context: CallbackContext):
     expected_cmd = '/search'
     query = update.effective_message.text
-    assert query.lower().startswith(expected_cmd)
+    assert query.casefold().startswith(expected_cmd.casefold())
     query = query[len(expected_cmd):].strip()
 
     _search(query, update.effective_message)
@@ -197,7 +202,7 @@ def cmd_search(update: Update, context: CallbackContext):
 def cmd_onemap(update: Update, context: CallbackContext):
     expected_cmd = '/onemap'
     query = update.effective_message.text
-    assert query.lower().startswith(expected_cmd)
+    assert query.casefold().startswith(expected_cmd.casefold())
     query = query[len(expected_cmd):].strip()
 
     if not query:
@@ -236,11 +241,6 @@ def cmd_onemap(update: Update, context: CallbackContext):
                                             disable_notification=True)
 
 
-def cmd_share(update: Update, context: CallbackContext):
-    update.effective_message.reply_markdown('[HawkerBot](https://t.me/hawker_centre_bot)',
-                                            disable_notification=True)
-
-
 def cmd_about(update: Update, context: CallbackContext):
     update.effective_message.reply_markdown('  \n'.join([
         '[@hawker_centre_bot](https://t.me/hawker_centre_bot)',
@@ -256,21 +256,10 @@ def cmd_about(update: Update, context: CallbackContext):
         disable_web_page_preview=True)
 
 
-def cmd_all(update: Update, context: CallbackContext):
-    lines = [f'All hawker centres:']
-
-    logging.info(f'LIST_ALL')
-    for hawker in sorted(hawkers, key=lambda x: x.name):
-        lines.append(f'{len(lines)}.  {hawker.name}')
-
-    update.effective_message.reply_markdown('  \n'.join(lines),
-                                            disable_notification=True)
-
-
 def cmd_zip(update: Update, context: CallbackContext):
     expected_cmd = '/zip'
     query = update.effective_message.text
-    assert query.lower().startswith(expected_cmd)
+    assert query.casefold().startswith(expected_cmd.casefold())
     query = query[len(expected_cmd):].strip()
 
     zip_code = _fix_zip(query, update.effective_message)
@@ -294,6 +283,36 @@ def cmd_zip(update: Update, context: CallbackContext):
     _nearby(lat, lon, update.effective_message)
 
 
+def cmd_weather(update: Update, context: CallbackContext):
+    weather_data = weather_today()
+    if weather_data:
+        fmt_str = '%Y-%m-%dT%H:%M:%S+08:00'
+        today = datetime.date.today()
+
+        for period_data in weather_data['periods']:
+
+            time_start = datetime.datetime.strptime(period_data['time']['start'], fmt_str)
+            time_end = datetime.datetime.strptime(period_data['time']['end'], fmt_str)
+
+            # stringify the time
+            start = time_start.strftime('%I %p').lstrip('0')
+            end = time_end.strftime('%I %p').lstrip('0')
+            if time_start.date() > today:
+                start += ' (tomorrow)'
+            if time_end.date() > today:
+                end += ' (tomorrow)'
+
+            # send weather as message
+            update.effective_message.reply_markdown('  \n'.join([
+                f'*Weather forecast from {start} to {end}*',
+                'Central: ' + period_data['regions']['central'],
+                'North: ' + period_data['regions']['north'],
+                'South: ' + period_data['regions']['south'],
+                'East: ' + period_data['regions']['east'],
+                'West: ' + period_data['regions']['west'],
+            ]), disable_notification=True, disable_web_page_preview=True)
+
+
 def cmd_today(update: Update, context: CallbackContext):
     weather_data = weather_today()
     if weather_data:
@@ -313,10 +332,9 @@ def cmd_today(update: Update, context: CallbackContext):
 
         # stringify the time
         start = time_start.strftime('%I %p').lstrip('0')
-        if time_start.date() == time_end.date():
-            end = time_end.strftime('%I %p').lstrip('0')
-        else:
-            end = time_end.strftime('%I %p').lstrip('0') + ' (tomorrow)'
+        end = time_end.strftime('%I %p').lstrip('0')
+        if time_end.date() > datetime.date.today():
+            end += ' (tomorrow)'
 
         # send weather as message
         update.effective_message.reply_markdown('  \n'.join([
@@ -368,10 +386,24 @@ def cmd_next_week(update: Update, context: CallbackContext):
 
 
 def cmd_unknown(update: Update, context: CallbackContext):
+    fuzzy_matches = {
+        '/zip':    cmd_zip,
+        '/onemap': cmd_onemap,
+        '/search': cmd_search,
+    }
+
     query = update.effective_message.text.strip()
-    logging.info(f'UNSUPPORTED_COMMAND="{get_command(query)}" QUERY="{query}"')
-    update.effective_message.reply_markdown(f'Unsupported command: {get_command(query)}',
-                                            disable_notification=True)
+    for command, func in fuzzy_matches.items():
+        if query.casefold().startswith(command.casefold()):
+            logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="{command}"')
+            update.effective_message.reply_markdown(f'Assuming you meant:  \n'
+                                                    f'`{query[:len(command)]} {query[len(command):]}`')
+            func(update, context)
+            break
+    else:
+        logging.info(f'UNSUPPORTED_COMMAND="{get_command(query)}" QUERY="{query}"')
+        update.effective_message.reply_markdown(f'Unsupported command: {get_command(query)}',
+                                                disable_notification=True)
 
 
 def handle_text(update: Update, context: CallbackContext):
@@ -386,7 +418,29 @@ def handle_text(update: Update, context: CallbackContext):
         cmd_unknown(update, context)
         return
 
-    _search(query, update.effective_message)
+    fuzzy_matches = {
+        'about':     cmd_about,
+        'help':      cmd_help,
+        'today':     cmd_today,
+        'tomorrow':  cmd_tomorrow,
+        'week':      cmd_this_week,
+        'nextweek':  cmd_next_week,
+        'next_week': cmd_next_week,
+        'next week': cmd_next_week,
+        'weather':   cmd_weather,
+    }
+
+    for fuzzy_match, func in fuzzy_matches.items():
+        func_name = fuzzy_match.replace('_', '').replace(' ', '')
+        if query.casefold() == fuzzy_match.casefold():
+            logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="/{func_name}"')
+            update.effective_message.reply_markdown(f'Assuming you meant:  \n'
+                                                    f'`/{func_name}`')
+            func(update, context)
+            break
+
+    else:
+        _search(query, update.effective_message)
 
 
 def handle_location(update: Update, context: CallbackContext):
@@ -481,9 +535,11 @@ if __name__ == '__main__':
     # handle commands
     updater.dispatcher.add_handler(CommandHandler('start', cmd_start), 2)
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
-    updater.dispatcher.add_handler(CommandHandler('share', cmd_share), 2)
+    updater.dispatcher.add_handler(CommandHandler('halp', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('about', cmd_about), 2)
-    updater.dispatcher.add_handler(CommandHandler('all', cmd_all), 2)
+    updater.dispatcher.add_handler(CommandHandler('aboot', cmd_about), 2)
+    updater.dispatcher.add_handler(CommandHandler('share', cmd_about), 2)
+    updater.dispatcher.add_handler(CommandHandler('weather', cmd_weather), 2)
 
     # by date
     updater.dispatcher.add_handler(CommandHandler('today', cmd_today), 2)

@@ -7,7 +7,10 @@
 
 ##  todo
 *   major refactoring
-    *   split out logging setup code
+    *   better way to handle command aliases
+        *   try to auto-generate *setcommands.txt*
+        *   declarative, so it's possible to autocorrect missing slash
+        *   specify number of expected arguments, so it's possible to auto-split and autocorrect multi-word commands
     *   split code into separate groups of handler functions
         *   group 1: debug log
         *   group 2: did you mean / autocorrect
