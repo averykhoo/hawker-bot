@@ -86,8 +86,8 @@ class Status(Enum):
 status_map = {
     'Existing':           Status.EXISTING,
     'Existing (new)':     Status.EXISTING,  # whatever
-    'Proposed':           Status.UNDER_CONSTRUCTION,
-    'Under Construction': Status.PROPOSED,
+    'Proposed':           Status.PROPOSED,
+    'Under Construction': Status.UNDER_CONSTRUCTION,
 }
 
 
@@ -267,6 +267,12 @@ class Hawker:
             lines.append(f'[\u200B]({self.photourl})*{self.name}*')
         else:
             lines.append(f'*{self.name}*')
+
+        # under construction
+        if self.status == Status.PROPOSED:
+            lines.append('_Planned_')
+        if self.status == Status.UNDER_CONSTRUCTION:
+            lines.append('_Under Construction_')
 
         # food stalls
         if self.no_of_food_stalls + self.no_of_food_stalls > 0:

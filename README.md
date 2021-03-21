@@ -6,6 +6,10 @@
 *   allow inline mode via @BotFather `/setinline`
 
 ##  todo
+*   split weather into separate handler function, and move all hawker functions one group down
+    *   group 1: debug log
+    *   group 2: weather
+    *   group 3: hawker
 *   provide an aliases file, then download *hawkercentre.kml* from onemap?
 *   i18n via json file? how to handle string formatting?
 *   message queue per-user with auto-terminate if user sends new thing
