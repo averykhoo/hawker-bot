@@ -211,12 +211,14 @@ def cmd_start(update: Update, context: CallbackContext):
                                         disable_notification=True)
     update.effective_message.reply_markdown('  \n'.join([
         '*Usage:*',
+        '/ABOUT about this bot',
         '/HELP list all commands',
         '/TODAY list hawker centers closed today',
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
         '/ZIP <zipcode> list hawker centers near a zipcode',
+        '/ONEMAP <query> search OneMap.sg'
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]),
@@ -229,12 +231,14 @@ def cmd_help(update: Update, context: CallbackContext):
     update.effective_message.reply_markdown('  \n'.join([
         '*Usage:*',
         "/START start using the bot (you've already done this)",
+        '/ABOUT about this bot',
         '/HELP list all commands (this command)',
         '/TODAY list hawker centers closed today',
         '/TOMORROW list hawker centers closed tomorrow',
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
         '/ZIP <zipcode> list hawker centers near a zipcode',
+        '/ONEMAP <query> search OneMap.sg'
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]),
@@ -289,8 +293,13 @@ def cmd_share(update: Update, context: CallbackContext):
 
 def cmd_about(update: Update, context: CallbackContext):
     update.effective_message.reply_markdown('  \n'.join([
-        '[HawkerBot](https://t.me/hawker_centre_bot)',
+        '[@hawker_centre_bot](https://t.me/hawker_centre_bot)',
         'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
+        'Data sources and APIs:',
+        '[data.gov.sg: Dates of Hawker Centres Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
+        '[data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
+        '[OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
+        '[OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
     ]),
         disable_notification=True)
 
