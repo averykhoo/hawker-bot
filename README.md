@@ -32,6 +32,7 @@
             *   query
             *   hawkercentre.kml
         *   data gov
+            *   check metadata for revision ID before updating?
             *   weather
             *   hawker centre closed dates
 *   i18n via json file? how to handle string formatting?

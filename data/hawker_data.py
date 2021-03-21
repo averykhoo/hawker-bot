@@ -13,8 +13,16 @@ RESOURCE_IDS = {
     'List of Government Markets Hawker Centres':
         '8f6bba57-19fc-4f36-8dcf-c0bda382364d',
     'List of NEA Licensed Eating Establishments with Grades, Demerit Points and Suspension History':
-        '34f86c3e-a90c-4de9-a69f-afc86b7f31b6'
+        '34f86c3e-a90c-4de9-a69f-afc86b7f31b6',
+    'Hawker Centres (KML)':
+        'c2e33097-4f46-4ef5-91db-64eef290ca85',
 }
+
+
+def get_metadata(resource_id):
+    r = requests.get(f'https://data.gov.sg/api/action/resource_show?id={resource_id}')
+    data = json.loads(r.content)
+    return data['result']
 
 
 def get_resource(resource_id: str):

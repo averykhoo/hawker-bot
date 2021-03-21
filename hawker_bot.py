@@ -249,8 +249,9 @@ def cmd_about(update: Update, context: CallbackContext):
         'Data sources and APIs:',
         '1. [data.gov.sg: Dates of Hawker Centres Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
         '2. [data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
-        '3. [OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
-        '4. [OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
+        '3. [data.gov.sg: Weather Forecast](https://data.gov.sg/dataset/weather-forecast)',
+        '4. [OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
+        '5. [OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
     ]),
         disable_notification=True,
         disable_web_page_preview=True)
