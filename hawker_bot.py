@@ -4,7 +4,6 @@ import logging
 import re
 import sys
 import uuid
-import warnings
 from pathlib import Path
 from typing import List
 
@@ -47,7 +46,7 @@ logging.getLogger().addHandler(logging_stdout_handler)
 # create file handler at DEBUG
 logging_file_handler = logging.FileHandler(log_path)
 logging_file_handler.setFormatter(log_formatter)
-logging_file_handler.setLevel(logging.DEBUG)  # set to INFO if there's not enough disk space
+logging_file_handler.setLevel(logging.INFO)  # set to DEBUG if there's enough disk space (there isn't)
 logging.getLogger().addHandler(logging_file_handler)
 
 BOT_USERNAMES = {
@@ -295,13 +294,15 @@ def cmd_about(update: Update, context: CallbackContext):
     update.effective_message.reply_markdown('  \n'.join([
         '[@hawker_centre_bot](https://t.me/hawker_centre_bot)',
         'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
+        '',
         'Data sources and APIs:',
-        '[data.gov.sg: Dates of Hawker Centres Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
-        '[data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
-        '[OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
-        '[OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
+        '1. [data.gov.sg: Dates of Hawker Centres Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
+        '2. [data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
+        '3. [OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
+        '4. [OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
     ]),
-        disable_notification=True)
+        disable_notification=True,
+        disable_web_page_preview=True)
 
 
 def cmd_all(update: Update, context: CallbackContext):
@@ -396,8 +397,7 @@ def handle_location(update: Update, context: CallbackContext):
 
 
 def handle_unknown(update: Update, context: CallbackContext):
-    logging.warning('INVALID_MESSAGE_TYPE')
-    warnings.warn(f'{update}')
+    logging.warning(f'INVALID_MESSAGE_TYPE MESSAGE_JSON={json.dumps(update.to_dict())}')
     update.effective_message.reply_text('Unable to handle this message type',
                                         disable_notification=True)
 
@@ -406,8 +406,7 @@ def error(update: Update, context: CallbackContext):
     """
     Log Errors caused by Updates.
     """
-    logging.warning(f'ERROR="{context.error}"')
-    warnings.warn(f'{update}')
+    logging.warning(f'ERROR="{context.error}" MESSAGE_JSON={json.dumps(update.to_dict())}')
     raise context.error
 
 
