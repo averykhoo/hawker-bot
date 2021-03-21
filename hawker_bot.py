@@ -21,6 +21,7 @@ from telegram.ext import Updater
 
 from data.hawker_data import locate_zip
 from data.hawker_data import query_onemap
+from data.hawker_data import weather_forecast
 from data.hawker_data import weather_today
 from hawkers import DateRange
 from hawkers import Hawker
@@ -393,6 +394,21 @@ def cmd_today(update: Update, context: CallbackContext):
 
 
 def cmd_tomorrow(update: Update, context: CallbackContext):
+
+    weather_data = weather_forecast()
+    if weather_data:
+        # make sure we have tomorrow
+        today_str = datetime.date.today().strftime('%Y-%m-%d')
+        idx = 0
+        while weather_data['forecasts'][idx]['date'] < today_str:
+            idx += 1
+
+        # send weather as message
+        update.effective_message.reply_markdown('  \n'.join([
+            f'*Weather forecast for tomorrow:*',
+            weather_data['forecasts'][idx]['forecast'],
+        ]), disable_notification=True, disable_web_page_preview=True)
+
     _closed(datetime.date.today() + datetime.timedelta(days=1), update.effective_message, 'tomorrow')
 
 
