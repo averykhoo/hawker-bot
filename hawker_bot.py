@@ -217,7 +217,7 @@ def cmd_start(update: Update, context: CallbackContext):
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
         '/ZIP <zipcode> list hawker centers near a zipcode',
-        '/ONEMAP <query> search OneMap.sg'
+        '/ONEMAP <query> search OneMap.sg',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]),
@@ -237,7 +237,7 @@ def cmd_help(update: Update, context: CallbackContext):
         '/WEEK list hawker centers closed this week',
         '/NEXTWEEK list hawker centers closed next week',
         '/ZIP <zipcode> list hawker centers near a zipcode',
-        '/ONEMAP <query> search OneMap.sg'
+        '/ONEMAP <query> search OneMap.sg',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
     ]),
@@ -407,7 +407,7 @@ def handle_location(update: Update, context: CallbackContext):
         update.effective_message.reply_text(f'You appear to be outside of Singapore, '
                                             f'so this bot will probably not be very useful to you',
                                             disable_notification=True)
-        
+
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)
     _nearby(lat, lon, update.effective_message)
