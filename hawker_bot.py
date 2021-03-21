@@ -21,6 +21,7 @@ from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
 from data.hawker_data import locate_zip
+from data.hawker_data import query_onemap
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -95,7 +96,8 @@ def _fix_zip(query, effective_message=None):
                 'No zip code provided',
                 '`/zip` usage example:',
                 '`/zip 078881`',
-            ]))
+            ]),
+                disable_notification=True)
             logging.info('ZIPCODE_BLANK')
         return None
 
@@ -106,7 +108,8 @@ def _fix_zip(query, effective_message=None):
                 'Zip code must be digits 0-9',
                 '`/zip` usage example:',
                 '`/zip 078881`',
-            ]))
+            ]),
+                disable_notification=True)
             logging.info(f'ZIPCODE_NON_NUMERIC="{query}"')
         return None  # text
 
@@ -118,7 +121,8 @@ def _fix_zip(query, effective_message=None):
                 f'Zip code provided cannot possibly exist in Singapore: "{zip_code}"',
                 '`/zip` usage example:',
                 '`/zip 078881`',
-            ]))
+            ]),
+                disable_notification=True)
             logging.info(f'ZIPCODE_NON_EXISTENT="{query}"')
         return None  # invalid postal code
 
@@ -128,7 +132,8 @@ def _fix_zip(query, effective_message=None):
 def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
     if not query:
         if effective_message is not None:
-            effective_message.reply_text('no search query received')
+            effective_message.reply_text('no search query received',
+                                         disable_notification=True)
         logging.info('QUERY_BLANK')
         return []
 
@@ -138,36 +143,43 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
             if effective_message is not None:
-                effective_message.reply_text(f'Displaying zip code match for "{zip_code}"')
+                effective_message.reply_text(f'Displaying zip code match for "{zip_code}"',
+                                             disable_notification=True)
             for result in results:
                 logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
                 if effective_message is not None:
-                    effective_message.reply_markdown(result.to_markdown())
+                    effective_message.reply_markdown(result.to_markdown(),
+                                                     disable_notification=True)
             return results
 
     for hawker in hawkers:
         if hawker.name == query:
             logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
             if effective_message is not None:
-                effective_message.reply_text(f'Displaying exact match for "{query}"')
-                effective_message.reply_markdown(hawker.to_markdown())
+                effective_message.reply_text(f'Displaying exact match for "{query}"',
+                                             disable_notification=True)
+                effective_message.reply_markdown(hawker.to_markdown(),
+                                                 disable_notification=True)
             return [hawker]
 
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
         if effective_message is not None:
-            effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"')
+            effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"',
+                                         disable_notification=True)
         for hawker, score in results[:5]:
             logging.info(f'QUERY="{query}" SIMILARITY={hawker.text_similarity(query)} RESULT="{hawker.name}"')
             if effective_message is not None:
-                effective_message.reply_markdown(hawker.to_markdown())
+                effective_message.reply_markdown(hawker.to_markdown(),
+                                                 disable_notification=True)
         return [hawker for hawker, score in results]
 
     else:
         logging.info(f'QUERY_NO_RESULTS="{query}"')
         if effective_message is not None:
-            effective_message.reply_text(f'Zero results found for "{query}"')
+            effective_message.reply_text(f'Zero results found for "{query}"',
+                                         disable_notification=True)
         return []
 
 
@@ -179,7 +191,8 @@ def _closed(date, effective_message, date_name):
             logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
             lines.append(f'{len(lines)}.  {hawker.name}')
 
-    effective_message.reply_markdown('  \n'.join(lines))
+    effective_message.reply_markdown('  \n'.join(lines),
+                                     disable_notification=True)
 
 
 def _nearby(lat, lon, effective_message):
@@ -189,11 +202,13 @@ def _nearby(lat, lon, effective_message):
     for result, distance in results[:5]:
         logging.info(f'LAT={lat} LON={lon} DISTANCE={distance} RESULT="{result.name}"')
         text = f'{round(distance)} meters away:  \n' + result.to_markdown()
-        effective_message.reply_markdown(text)
+        effective_message.reply_markdown(text,
+                                         disable_notification=True)
 
 
 def cmd_start(update: Update, context: CallbackContext):
-    update.effective_message.reply_text('Hi!')
+    update.effective_message.reply_text('Hi!',
+                                        disable_notification=True)
     update.effective_message.reply_markdown('  \n'.join([
         '*Usage:*',
         '/HELP list all commands',
@@ -204,7 +219,8 @@ def cmd_start(update: Update, context: CallbackContext):
         '/ZIP <zipcode> list hawker centers near a zipcode',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
-    ]))
+    ]),
+        disable_notification=True)
 
 
 def cmd_help(update: Update, context: CallbackContext):
@@ -221,7 +237,8 @@ def cmd_help(update: Update, context: CallbackContext):
         '/ZIP <zipcode> list hawker centers near a zipcode',
         'sending a text message will return matching hawker centers',
         'sending a location will return nearby hawker centers',
-    ]))
+    ]),
+        disable_notification=True)
 
 
 def cmd_search(update: Update, context: CallbackContext):
@@ -233,15 +250,49 @@ def cmd_search(update: Update, context: CallbackContext):
     _search(query, update.effective_message)
 
 
+def cmd_onemap(update: Update, context: CallbackContext):
+    expected_cmd = '/onemap'
+    query = update.effective_message.text
+    assert query.lower().startswith(expected_cmd)
+    query = query[len(expected_cmd):].strip()
+
+    results = query_onemap(query)
+    if not results:
+        logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
+        update.effective_message.reply_text('No results',
+                                            disable_notification=True)
+        return
+
+    update.effective_message.reply_text(f'Displaying top {min(10, len(results))} results from OneMapSG',
+                                        disable_notification=True)
+
+    out = []
+    for result in results[:10]:
+        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result["SEARCHVAL"]}" ADDRESS="{result["ADDRESS"]}"')
+        # update.effective_message.reply_markdown(f'```\n{json.dumps(result, indent=4)}\n```',
+        #                                         disable_notification=True)
+        out.extend([
+            f'*{result["SEARCHVAL"]}*',
+            f'[{result["BLK_NO"]} {result["ROAD_NAME"]}, SINGAPORE {result["POSTAL"]}]'
+            f'(https://www.google.com/maps/search/?api=1&query={result["LATITUDE"]},{result["LONGITUDE"]})',
+            ''
+        ])
+    update.effective_message.reply_markdown('  \n'.join(out),
+                                            disable_web_page_preview=True,
+                                            disable_notification=True)
+
+
 def cmd_share(update: Update, context: CallbackContext):
-    update.effective_message.reply_markdown('[HawkerBot](https://t.me/hawker_centre_bot)')
+    update.effective_message.reply_markdown('[HawkerBot](https://t.me/hawker_centre_bot)',
+                                            disable_notification=True)
 
 
 def cmd_about(update: Update, context: CallbackContext):
     update.effective_message.reply_markdown('  \n'.join([
         '[HawkerBot](https://t.me/hawker_centre_bot)',
         'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
-    ]))
+    ]),
+        disable_notification=True)
 
 
 def cmd_all(update: Update, context: CallbackContext):
@@ -251,7 +302,8 @@ def cmd_all(update: Update, context: CallbackContext):
     for hawker in sorted(hawkers, key=lambda x: x.name):
         lines.append(f'{len(lines)}.  {hawker.name}')
 
-    update.effective_message.reply_markdown('  \n'.join(lines))
+    update.effective_message.reply_markdown('  \n'.join(lines),
+                                            disable_notification=True)
 
 
 def cmd_zip(update: Update, context: CallbackContext):
@@ -269,12 +321,14 @@ def cmd_zip(update: Update, context: CallbackContext):
         logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
         update.effective_message.reply_markdown('  \n'.join([
             f'Zip code not found: "{zip_code}"',
-        ]))
+        ]),
+            disable_notification=True)
         return None  # invalid postal code
 
     # found!
     lat, lon, address = loc
-    update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"')
+    update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"',
+                                        disable_notification=True)
     logging.info(f'ZIPCODE={zip_code} LAT={lat} LON={lon} ADDRESS="{address}"')
     _nearby(lat, lon, update.effective_message)
 
@@ -305,7 +359,8 @@ def cmd_unknown(update: Update, context: CallbackContext):
     m = RE_COMMAND.match(query)
     assert m is not None
     logging.info(f'UNSUPPORTED_COMMAND="{m.group()}" QUERY="{query}"')
-    update.effective_message.reply_markdown(f'Unsupported command: {m.group()}')
+    update.effective_message.reply_markdown(f'Unsupported command: {m.group()}',
+                                            disable_notification=True)
 
 
 def handle_text(update: Update, context: CallbackContext):
@@ -326,14 +381,16 @@ def handle_text(update: Update, context: CallbackContext):
 def handle_location(update: Update, context: CallbackContext):
     lat = update.effective_message.location.latitude
     lon = update.effective_message.location.longitude
-    update.effective_message.reply_text(f'Displaying nearest 5 results to your location')
+    update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
+                                        disable_notification=True)
     _nearby(lat, lon, update.effective_message)
 
 
 def handle_unknown(update: Update, context: CallbackContext):
     logging.warning('INVALID_MESSAGE_TYPE')
     warnings.warn(f'{update}')
-    update.effective_message.reply_text('Unable to handle this message type')
+    update.effective_message.reply_text('Unable to handle this message type',
+                                        disable_notification=True)
 
 
 def error(update: Update, context: CallbackContext):
@@ -442,6 +499,7 @@ if __name__ == '__main__':
 
     # by name / zip code
     updater.dispatcher.add_handler(CommandHandler('search', cmd_search), 2)
+    updater.dispatcher.add_handler(CommandHandler('onemap', cmd_onemap), 2)
     updater.dispatcher.add_handler(CommandHandler('zip', cmd_zip), 2)
     updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text), 2)
 
