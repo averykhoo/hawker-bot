@@ -312,13 +312,12 @@ def emd_1d(positions_x: Sequence[float],
 
 if __name__ == '__main__':
 
-    from levenshtein import damerau_levenshtein_distance
-    from levenshtein import edit_distance
-
+    # from levenshtein import damerau_levenshtein_distance
+    # from levenshtein import edit_distance
 
     def speed_test(word_1: str, word_2: str):
-        edit_distance(word_1, word_2)
-        damerau_levenshtein_distance(word_1, word_2)
+        # edit_distance(word_1, word_2)
+        # damerau_levenshtein_distance(word_1, word_2)
         return ngram_movers_distance(word_1, word_2)
 
 

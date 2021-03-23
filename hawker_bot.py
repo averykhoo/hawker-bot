@@ -15,20 +15,20 @@ from telegram.ext import InlineQueryHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
+from api_wrappers.onemap import query_onemap
+from api_wrappers.postal_code import InvalidZip
+from api_wrappers.postal_code import ZipBlank
+from api_wrappers.postal_code import ZipNonExistent
+from api_wrappers.postal_code import ZipNonNumeric
+from api_wrappers.postal_code import fix_zipcode
+from api_wrappers.postal_code import locate_zipcode
+from api_wrappers.weather import weather_forecast
+from api_wrappers.weather import weather_today
 from hawkers import DateRange
 from hawkers import Hawker
-from utils import InvalidZip
-from utils import ZipBlank
-from utils import ZipNonExistent
-from utils import ZipNonNumeric
-from utils import fix_zip
 from utils import get_command
 from utils import load_hawker_data
-from utils import locate_zip
-from utils import query_onemap
 from utils import setup_logging
-from utils import weather_forecast
-from utils import weather_today
 
 setup_logging(app_name='hawker-bot')
 
@@ -42,7 +42,7 @@ hawkers = load_hawker_data()
 
 def _fix_zip(query, effective_message=None):
     try:
-        return fix_zip(query)
+        return fix_zipcode(query)
 
     except ZipBlank:
         if effective_message is not None:
@@ -80,7 +80,7 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
 
     # try exact match for zip code
     try:
-        zip_code = fix_zip(query)
+        zip_code = fix_zipcode(query)
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
             if effective_message is not None:
@@ -269,7 +269,7 @@ def cmd_zip(update: Update, context: CallbackContext):
     if not zip_code:
         return None
 
-    loc = locate_zip(zip_code)
+    loc = locate_zipcode(zip_code)
     if not loc:
         logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
         update.effective_message.reply_markdown('  \n'.join([
@@ -279,11 +279,10 @@ def cmd_zip(update: Update, context: CallbackContext):
         return None  # invalid postal code
 
     # found!
-    lat, lon, address = loc
-    update.effective_message.reply_text(f'Displaying nearest 5 results to "{address}"',
+    update.effective_message.reply_text(f'Displaying nearest 5 results to "{loc.address}"',
                                         disable_notification=True)
-    logging.info(f'ZIPCODE={zip_code} LAT={lat} LON={lon} ADDRESS="{address}"')
-    _nearby(lat, lon, update.effective_message)
+    logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
+    _nearby(loc.latitude, loc.longitude, update.effective_message)
 
 
 def cmd_weather(update: Update, context: CallbackContext):

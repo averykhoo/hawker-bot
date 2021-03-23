@@ -1,4 +1,6 @@
 import json
+import math
+import time
 import warnings
 from dataclasses import dataclass
 from functools import lru_cache
@@ -38,6 +40,7 @@ class Location:
     def distance(self, other: 'Location') -> float:
         """
         from this point, how far away is the other point?
+        uses vincenty formula
 
         :return: positive distance in meters
         """
@@ -126,3 +129,59 @@ def convert_4326_to_3414(lat: float, lon: float):
                              })
     data = json.loads(r.content)
     return data['latitude'], data['longitude']
+
+
+def _haversine(loc_1: Location, loc_2: Location) -> float:
+    """
+    assumes spherical earth
+    not the default distance because it's slightly less accurate
+    it is faster, but then so is pythagoras on a flat earth model
+    """
+    earth_radius = 6371008.8  # meters
+
+    dLat = math.radians(loc_2.latitude - loc_1.latitude)
+    dLon = math.radians(loc_2.longitude - loc_1.longitude)
+    loc_1.latitude = math.radians(loc_1.latitude)
+    loc_2.latitude = math.radians(loc_2.latitude)
+
+    a = math.sin(dLat / 2) ** 2 + math.cos(loc_1.latitude) * math.cos(loc_2.latitude) * math.sin(dLon / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+
+    return earth_radius * c
+
+
+def _pythagoras(loc_1: Location, loc_2: Location):
+    """
+    assumes flat earth
+    laughably inaccurate at high altitudes
+    within singapore, gives basically the same output as haversine, and it's 3x faster
+    """
+    # earth_radius = 6371008.8  # meters
+    return math.sqrt((loc_1.latitude - loc_2.latitude) ** 2 +
+                     (loc_1.longitude - loc_2.longitude) ** 2
+                     ) * 111195.08023353292  # 2 * math.pi * earth_radius / 360
+
+
+if __name__ == '__main__':
+    # l1 = Location(-1.0, -1.0)
+    # l2 = Location(0.5, 179.7)
+    l1 = Location(1.2, 103.6)
+    l2 = Location(1.5, 104.1)
+
+    # vincenty
+    t = time.time()
+    for _ in range(1000):
+        d = l1.distance(l2)
+    print(d, time.time() - t)
+
+    # haversine
+    t = time.time()
+    for _ in range(1000):
+        d = _haversine(l1, l2)
+    print(d, time.time() - t)
+
+    # pythagoras
+    t = time.time()
+    for _ in range(1000):
+        d = _pythagoras(l1, l2)
+    print(d, time.time() - t)
