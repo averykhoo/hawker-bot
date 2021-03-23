@@ -72,7 +72,18 @@ class Location:
 
         assuming len(others) < 1000, it's not worth the code to use heapq
         """
+        # sanity check
+        if not isinstance(k, int):
+            raise TypeError
+        if k == 0:
+            raise ValueError(k)
+
+        # return all sorted if k is negative
         out = sorted(others, key=lambda x: self.distance(x))
+        if k < 0:
+            return out
+
+        # otherwise return top k
         if len(out) < k:
             raise ValueError(others)
         return out[:k]

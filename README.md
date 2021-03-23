@@ -81,4 +81,4 @@
         *   hawker centres
         *   update days
     *   is-deleted
-*   
+*   format_distance_metric and format_distance_imperial

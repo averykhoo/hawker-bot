@@ -15,6 +15,7 @@ from telegram.ext import InlineQueryHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
+from api_wrappers.location import Location
 from api_wrappers.onemap import query_onemap
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import ZipBlank
@@ -140,13 +141,13 @@ def _closed(date, effective_message, date_name):
                                      disable_notification=True)
 
 
-def _nearby(lat, lon, effective_message):
-    assert isinstance(lat, float), lat
-    assert isinstance(lon, float), lon
-    results = sorted([(hawker, hawker.distance_from(lat, lon)) for hawker in hawkers], key=lambda x: x[1])
-    for result, distance in results[:5]:
-        logging.info(f'LAT={lat} LON={lon} DISTANCE={distance} RESULT="{result.name}"')
-        text = f'{round(distance)} meters away:  \n' + result.to_markdown()
+def _nearby(loc, effective_message):
+    assert isinstance(loc, Location), loc
+    # noinspection PyTypeChecker
+    results: List[Hawker] = loc.k_nearest(hawkers, k=-1)
+    for result in results[:5]:
+        logging.info(f'LAT={loc.latitude} LON={loc.longitude} DISTANCE={loc.distance(result)} RESULT="{result.name}"')
+        text = f'{round(loc.distance(result))} meters away:  \n' + result.to_markdown()
         effective_message.reply_markdown(text,
                                          disable_notification=True)
 
@@ -282,7 +283,7 @@ def cmd_zip(update: Update, context: CallbackContext):
     update.effective_message.reply_text(f'Displaying nearest 5 results to "{loc.address}"',
                                         disable_notification=True)
     logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-    _nearby(loc.latitude, loc.longitude, update.effective_message)
+    _nearby(loc, update.effective_message)
 
 
 def cmd_weather(update: Update, context: CallbackContext):
@@ -446,18 +447,22 @@ def handle_text(update: Update, context: CallbackContext):
 
 
 def handle_location(update: Update, context: CallbackContext):
-    lat = update.effective_message.location.latitude
-    lon = update.effective_message.location.longitude
+    loc = Location(latitude=update.effective_message.location.latitude,
+                   longitude=update.effective_message.location.longitude,
+                   )
+
+    # lat = update.effective_message.location.latitude
+    # lon = update.effective_message.location.longitude
 
     # outside the SVY21 bounding box
-    if not (1.13 >= lat >= 1.47) or not (103.59 >= lon >= 104.07):
+    if not loc.within_singapore():
         update.effective_message.reply_text(f'You appear to be outside of Singapore, '
                                             f'so this bot will probably not be very useful to you',
                                             disable_notification=True)
 
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)
-    _nearby(lat, lon, update.effective_message)
+    _nearby(loc, update.effective_message)
 
 
 def handle_unknown(update: Update, context: CallbackContext):

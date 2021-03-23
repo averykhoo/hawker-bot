@@ -13,6 +13,7 @@ import pandas as pd
 from geographiclib.constants import Constants
 from geographiclib.geodesic import Geodesic
 
+from api_wrappers.location import Location
 from nmd_bow import bow_ngram_movers_distance
 from tokenizer import unicode_tokenize
 
@@ -92,7 +93,7 @@ status_map = {
 
 
 @dataclass
-class Hawker:
+class Hawker(Location):
     name: str  # NAME
     status: Status
     latitude: float  # WGS84 (use point_lat because the LATITUDE value is sometimes missing)
@@ -246,13 +247,6 @@ class Hawker:
                 return True
 
         return False
-
-    def distance_from(self, latitude: float, longitude: float) -> float:
-        """
-        uses vincenty algorithm
-        slower than haversine, but more accurate
-        """
-        return WGS84.Inverse(latitude, longitude, self.latitude, self.longitude)['s12']
 
     def text_similarity(self, text: str) -> Tuple[float, float]:
         results = []
