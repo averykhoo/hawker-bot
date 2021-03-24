@@ -206,15 +206,24 @@ def query_onemap(query):
     total_pages = 1
     while page_num < total_pages:
         page_num += 1
+        data = dict()
 
         # run query
-        r = requests.get('https://developers.onemap.sg/commonapi/search',
-                         params={'searchVal':      query,
-                                 'returnGeom':     'Y',
-                                 'getAddrDetails': 'Y',
-                                 'pageNum':        page_num,
-                                 })
-        data = json.loads(r.content)
+        for retry_attempt in range(3):
+            # noinspection PyBroadException
+            try:
+                r = requests.get('https://developers.onemap.sg/commonapi/search',
+                                 params={'searchVal':      query,
+                                         'returnGeom':     'Y',
+                                         'getAddrDetails': 'Y',
+                                         'pageNum':        page_num,
+                                         })
+                data = json.loads(r.content)
+                break
+
+            except Exception:
+                if retry_attempt == 2:
+                    raise
 
         # catch error
         if 'error' in data:
