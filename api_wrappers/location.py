@@ -12,6 +12,8 @@ import requests
 from geographiclib.geodesic import Geodesic
 
 # noinspection PyUnresolvedReferences
+from api_wrappers.caching import cache_1m
+
 WGS84 = Geodesic.WGS84
 
 
@@ -187,6 +189,7 @@ def _pythagoras(loc_1: Location, loc_2: Location):
                      ) * 111195.08023353292  # 2 * math.pi * earth_radius / 360
 
 
+@cache_1m
 def query_onemap(query):
     """
     Each page of json response is restricted to a maximum of 10 results.
