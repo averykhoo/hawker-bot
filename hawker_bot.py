@@ -16,7 +16,7 @@ from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
 from api_wrappers.location import Location
-from api_wrappers.location import query_onemap
+from api_wrappers.location import onemap_search
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
@@ -222,7 +222,7 @@ def cmd_onemap(update: Update, context: CallbackContext):
         logging.info('QUERY_ONEMAP_BLANK')
         return None
 
-    results = query_onemap(query)
+    results = onemap_search(query)
     if not results:
         logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
         update.effective_message.reply_text('No results',
@@ -234,9 +234,9 @@ def cmd_onemap(update: Update, context: CallbackContext):
 
     out = []
     for result in results[:10]:
-        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building}" ADDRESS="{result.address}"')
+        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
         out.extend([
-            f'*{result.building}*',
+            f'*{result.building_name}*',
             f'[{result.block_no} {result.road_name}, SINGAPORE {result.zipcode}]'
             f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
             ''

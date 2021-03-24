@@ -1,9 +1,10 @@
 import logging
 from functools import lru_cache
+from pprint import pprint
 from typing import Optional
 
 from api_wrappers.location import OneMapResult
-from api_wrappers.location import query_onemap
+from api_wrappers.location import onemap_search
 
 
 class InvalidZip(ValueError):
@@ -82,6 +83,10 @@ def locate_zipcode(zipcode: str) -> Optional[OneMapResult]:
     zipcode = fix_zipcode(zipcode)
 
     # query zip code and return coordinates of first matching result
-    for result in query_onemap(zipcode):
+    for result in onemap_search(zipcode):
         if result.zipcode == zipcode:
             return result
+
+
+if __name__ == '__main__':
+    pprint(locate_zipcode('120725'))
