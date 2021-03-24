@@ -23,8 +23,10 @@ from api_wrappers.postal_code import ZipNonExistent
 from api_wrappers.postal_code import ZipNonNumeric
 from api_wrappers.postal_code import fix_zipcode
 from api_wrappers.postal_code import locate_zipcode
-from api_wrappers.weather import weather_forecast
-from api_wrappers.weather import weather_today
+from api_wrappers.string_formatting import pprint_date
+from api_wrappers.string_formatting import pprint_datetime
+from api_wrappers.weather import weather_24h_grouped
+from api_wrappers.weather import weather_4d
 from hawkers import DateRange
 from hawkers import Hawker
 from utils import get_command
@@ -248,7 +250,7 @@ def cmd_about(update: Update, context: CallbackContext):
         'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
         '',
         'Data sources and APIs:',
-        '1. [data.gov.sg: Dates of Hawker Centres Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
+        '1. [data.gov.sg: Dates of Hawker Centre Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
         '2. [data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
         '3. [data.gov.sg: Weather Forecast](https://data.gov.sg/dataset/weather-forecast)',
         '4. [OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
@@ -285,90 +287,53 @@ def cmd_zip(update: Update, context: CallbackContext):
 
 
 def cmd_weather(update: Update, context: CallbackContext):
-    weather_data = weather_today()
-    if weather_data:
-        fmt_str = '%Y-%m-%dT%H:%M:%S+08:00'
-        today = datetime.date.today()
+    weather_data = weather_24h_grouped()
+    for time_start, time_end in sorted(weather_data.keys()):
+        start_str = pprint_datetime(time_start, use_deictic_temporal_pronouns=True)
+        end_str = pprint_datetime(time_end, use_deictic_temporal_pronouns=True)
 
-        for period_data in weather_data['periods']:
+        # format message
+        lines = [f'*Weather forecast from {start_str} to {end_str}*']
+        for forecast in weather_data[time_start, time_end]:
+            lines.append(f'{forecast.name}: {forecast.forecast}')
 
-            time_start = datetime.datetime.strptime(period_data['time']['start'], fmt_str)
-            time_end = datetime.datetime.strptime(period_data['time']['end'], fmt_str)
-
-            # stringify the time
-            start = time_start.strftime('%I %p').lstrip('0')
-            end = time_end.strftime('%I %p').lstrip('0')
-            if time_start.date() > today:
-                start += ' (tomorrow)'
-            if time_end.date() > today:
-                end += ' (tomorrow)'
-
-            # send weather as message
-            update.effective_message.reply_markdown('  \n'.join([
-                f'*Weather forecast from {start} to {end}*',
-                'Central: ' + period_data['regions']['central'],
-                'North: ' + period_data['regions']['north'],
-                'South: ' + period_data['regions']['south'],
-                'East: ' + period_data['regions']['east'],
-                'West: ' + period_data['regions']['west'],
-            ]), disable_notification=True, disable_web_page_preview=True)
+        # send message
+        update.effective_message.reply_markdown('  \n'.join(lines),
+                                                disable_notification=True,
+                                                disable_web_page_preview=True)
 
 
 def cmd_today(update: Update, context: CallbackContext):
-    weather_data = weather_today()
-    if weather_data:
-        fmt_str = '%Y-%m-%dT%H:%M:%S+08:00'
-        # check first item
-        idx = 0
-        time_start = datetime.datetime.strptime(weather_data['periods'][idx]['time']['start'], fmt_str)
-        time_end = datetime.datetime.strptime(weather_data['periods'][idx]['time']['end'], fmt_str)
-        assert time_start - datetime.timedelta(hours=1) <= datetime.datetime.now()
-        assert datetime.datetime.now() <= time_end + datetime.timedelta(hours=1)
+    soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
+    for (time_start, time_end), forecasts in weather_24h_grouped().items():
+        if time_start <= soon < time_end:
+            start_str = pprint_datetime(time_start, use_deictic_temporal_pronouns=True)
+            end_str = pprint_datetime(time_end, use_deictic_temporal_pronouns=True)
 
-        # if we're 30 minutes to next item, take next item
-        if datetime.datetime.now() + datetime.timedelta(hours=0.5) >= time_end:
-            idx += 1
-            time_start = datetime.datetime.strptime(weather_data['periods'][idx]['time']['start'], fmt_str)
-            time_end = datetime.datetime.strptime(weather_data['periods'][idx]['time']['end'], fmt_str)
+            # format message
+            lines = [f'*Weather forecast from {start_str} to {end_str}*']
+            for forecast in forecasts:
+                lines.append(f'{forecast.name}: {forecast.forecast}')
 
-        # stringify the time
-        start = time_start.strftime('%I %p').lstrip('0')
-        end = time_end.strftime('%I %p').lstrip('0')
-        if time_end.date() > datetime.date.today():
-            end += ' (tomorrow)'
-
-        # send weather as message
-        update.effective_message.reply_markdown('  \n'.join([
-            f'*Weather forecast from {start} to {end}*',
-            'Central: ' + weather_data['periods'][idx]['regions']['central'],
-            'North: ' + weather_data['periods'][idx]['regions']['north'],
-            'South: ' + weather_data['periods'][idx]['regions']['south'],
-            'East: ' + weather_data['periods'][idx]['regions']['east'],
-            'West: ' + weather_data['periods'][idx]['regions']['west'],
-        ]), disable_notification=True, disable_web_page_preview=True)
+            # send message
+            update.effective_message.reply_markdown('  \n'.join(lines),
+                                                    disable_notification=True,
+                                                    disable_web_page_preview=True)
+            break
 
     # send what's closed today
     _closed(datetime.date.today(), update.effective_message, 'today')
 
 
 def cmd_tomorrow(update: Update, context: CallbackContext):
-    weather_data = weather_forecast()
-    if weather_data:
-        # make sure we have tomorrow
-        tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        idx = 0
-        while weather_data['forecasts'][idx]['date'] < tomorrow_str:
-            idx += 1
-
-        # send weather as message
-        if datetime.date.today().year < (datetime.date.today() + datetime.timedelta(days=1)).year:
-            tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%d %b %Y').lstrip('0')
-        else:
-            tomorrow_str = (datetime.date.today() + datetime.timedelta(days=1)).strftime('%d %b').lstrip('0')
-        update.effective_message.reply_markdown('  \n'.join([
-            f'*Weather forecast for tomorrow ({tomorrow_str}):*',
-            weather_data['forecasts'][idx]['forecast'].rstrip('.'),
-        ]), disable_notification=True, disable_web_page_preview=True)
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    for detailed_forecast in weather_4d():
+        if detailed_forecast.date == tomorrow:
+            update.effective_message.reply_markdown('  \n'.join([
+                f'*Weather forecast for tomorrow, {pprint_date(tomorrow, print_day=True)}:*',
+                detailed_forecast.forecast,
+            ]), disable_notification=True, disable_web_page_preview=True)
+            break
 
     _closed(datetime.date.today() + datetime.timedelta(days=1), update.effective_message, 'tomorrow')
 

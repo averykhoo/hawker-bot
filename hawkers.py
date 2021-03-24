@@ -14,6 +14,7 @@ from geographiclib.constants import Constants
 from geographiclib.geodesic import Geodesic
 
 from api_wrappers.location import Location
+from api_wrappers.string_formatting import pprint_date
 from nmd_bow import bow_ngram_movers_distance
 from tokenizer import unicode_tokenize
 
@@ -62,19 +63,10 @@ class DateRange:
             return start
 
     def __str__(self):
-        if datetime.date.today().year == self.start.year:
-            start = self.start.strftime('%d %b (%a)').lstrip('0')
+        if self.start != self.end:
+            return f'{pprint_date(self.start, print_day=True)} to {pprint_date(self.end, print_day=True)}'
         else:
-            start = self.start.strftime('%d %b %Y (%a)').lstrip('0')
-        if datetime.date.today().year == self.end.year:
-            end = self.end.strftime('%d %b (%a)').lstrip('0')
-        else:
-            end = self.end.strftime('%d %b %Y (%a)').lstrip('0')
-
-        if start != end:
-            return f'{start} to {end}'
-        else:
-            return start
+            return pprint_date(self.start, print_day=True)
 
 
 @unique

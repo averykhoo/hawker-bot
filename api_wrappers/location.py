@@ -11,9 +11,9 @@ from typing import List
 import requests
 from geographiclib.geodesic import Geodesic
 
-# noinspection PyUnresolvedReferences
 from api_wrappers.caching import cache_1m
 
+# noinspection PyUnresolvedReferences
 WGS84 = Geodesic.WGS84
 
 
@@ -114,20 +114,14 @@ class Location:
 
 
 @dataclass
-class Address(Location):
-    # inherits latitude and longitude
-    address: str
-
-
-@dataclass
 class OneMapResult(Location):
-    address: str  # ADDRESS, seems to be f'{block_no} {road_name} {building} SINGAPORE {zipcode}'
+    address: str  # ADDRESS, usually f'{block_no} {road_name} {building} SINGAPORE {zipcode}' unless there are nulls
     block_no: str  # BLK_NO, eg 22B
     road_name: str  # ROAD_NAME
     building: str  # BUILDING
     zipcode: str  # POSTAL
-    latitude: float  # LATITUDE
-    longitude: float  # LONGITUDE
+    # latitude: float  # LATITUDE (inherited from Location)
+    # longitude: float  # LONGITUDE (inherited from Location)
     svy21_x: float  # X
     svy21_y: float  # Y
 
@@ -252,6 +246,7 @@ def query_onemap(query):
         # l2 = Location(0.5, 179.7)
         l1 = Location(1.2, 103.6)
         l2 = Location(1.5, 104.1)
+        d = None
 
         # vincenty
         t = time.time()
