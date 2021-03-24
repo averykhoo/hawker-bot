@@ -35,7 +35,7 @@ def setup_logging(app_name) -> logging.Logger:
     # create file handler at DEBUG
     logging_file_handler = logging.FileHandler(log_path)
     logging_file_handler.setFormatter(log_formatter)
-    logging_file_handler.setLevel(logging.INFO)  # set to DEBUG if there's enough disk space (there isn't)
+    logging_file_handler.setLevel(logging.DEBUG)  # set to INFO if there isn't enough disk space
     logging.getLogger().addHandler(logging_file_handler)
 
     return logging.getLogger()
