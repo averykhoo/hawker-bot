@@ -23,8 +23,8 @@ from api_wrappers.postal_code import ZipNonExistent
 from api_wrappers.postal_code import ZipNonNumeric
 from api_wrappers.postal_code import fix_zipcode
 from api_wrappers.postal_code import locate_zipcode
-from api_wrappers.string_formatting import pprint_date
-from api_wrappers.string_formatting import pprint_datetime
+from api_wrappers.string_formatting import format_date
+from api_wrappers.string_formatting import format_datetime
 from api_wrappers.weather import weather_24h_grouped
 from api_wrappers.weather import weather_4d
 from hawkers import DateRange
@@ -289,8 +289,8 @@ def cmd_zip(update: Update, context: CallbackContext):
 def cmd_weather(update: Update, context: CallbackContext):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
-        start_str = pprint_datetime(time_start, use_deictic_temporal_pronouns=True)
-        end_str = pprint_datetime(time_end, use_deictic_temporal_pronouns=True)
+        start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
+        end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
 
         # format message
         lines = [f'*Weather forecast from {start_str} to {end_str}*']
@@ -307,8 +307,8 @@ def cmd_today(update: Update, context: CallbackContext):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
         if time_start <= soon < time_end:
-            start_str = pprint_datetime(time_start, use_deictic_temporal_pronouns=True)
-            end_str = pprint_datetime(time_end, use_deictic_temporal_pronouns=True)
+            start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
+            end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
 
             # format message
             lines = [f'*Weather forecast from {start_str} to {end_str}*']
@@ -330,7 +330,7 @@ def cmd_tomorrow(update: Update, context: CallbackContext):
     for detailed_forecast in weather_4d():
         if detailed_forecast.date == tomorrow:
             update.effective_message.reply_markdown('  \n'.join([
-                f'*Weather forecast for tomorrow, {pprint_date(tomorrow, print_day=True)}:*',
+                f'*Weather forecast for tomorrow, {format_date(tomorrow, print_day=True)}:*',
                 detailed_forecast.forecast,
             ]), disable_notification=True, disable_web_page_preview=True)
             break
