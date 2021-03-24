@@ -1,7 +1,6 @@
 import json
 import logging
 import math
-import time
 import warnings
 from dataclasses import dataclass
 from functools import lru_cache
@@ -16,8 +15,6 @@ from geographiclib.geodesic import Geodesic
 from api_wrappers.caching import cache_1m
 
 # noinspection PyUnresolvedReferences
-from api_wrappers.caching import cache_2d
-
 WGS84 = Geodesic.WGS84
 
 

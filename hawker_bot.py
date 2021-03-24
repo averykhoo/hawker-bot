@@ -5,6 +5,7 @@ import uuid
 from typing import List
 
 from telegram import InlineQueryResultArticle
+from telegram import InlineQueryResultVenue
 from telegram import InputTextMessageContent
 from telegram import ParseMode
 from telegram import Update
@@ -463,9 +464,12 @@ def handle_inline(update: Update, _: CallbackContext) -> None:
     results = _search(query)
     if results:
         update.inline_query.answer([
-            InlineQueryResultArticle(
+            InlineQueryResultVenue(
                 id=str(uuid.uuid4()),
+                latitude=hawker.latitude,
+                longitude=hawker.longitude,
                 title=hawker.name,
+                address=hawker.address_myenv,
                 input_message_content=InputTextMessageContent(hawker.to_markdown(),
                                                               parse_mode=ParseMode.MARKDOWN
                                                               ),
