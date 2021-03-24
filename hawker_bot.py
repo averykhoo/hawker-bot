@@ -16,7 +16,7 @@ from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
 from api_wrappers.location import Location
-from api_wrappers.onemap import query_onemap
+from api_wrappers.location import query_onemap
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
@@ -230,13 +230,11 @@ def cmd_onemap(update: Update, context: CallbackContext):
 
     out = []
     for result in results[:10]:
-        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result["SEARCHVAL"]}" ADDRESS="{result["ADDRESS"]}"')
-        # update.effective_message.reply_markdown(f'```\n{json.dumps(result, indent=4)}\n```',
-        #                                         disable_notification=True)
+        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building}" ADDRESS="{result.address}"')
         out.extend([
-            f'*{result["SEARCHVAL"]}*',
-            f'[{result["BLK_NO"]} {result["ROAD_NAME"]}, SINGAPORE {result["POSTAL"]}]'
-            f'(https://www.google.com/maps/search/?api=1&query={result["LATITUDE"]},{result["LONGITUDE"]})',
+            f'*{result.building}*',
+            f'[{result.block_no} {result.road_name}, SINGAPORE {result.zipcode}]'
+            f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
             ''
         ])
     update.effective_message.reply_markdown('  \n'.join(out),

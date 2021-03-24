@@ -1,4 +1,5 @@
 import json
+import logging
 import math
 import time
 import warnings
@@ -116,6 +117,19 @@ class Address(Location):
     address: str
 
 
+@dataclass
+class OneMapResult(Location):
+    address: str  # ADDRESS, seems to be f'{block_no} {road_name} {building} SINGAPORE {zipcode}'
+    block_no: str  # BLK_NO, eg 22B
+    road_name: str  # ROAD_NAME
+    building: str  # BUILDING
+    zipcode: str  # POSTAL
+    latitude: float  # LATITUDE
+    longitude: float  # LONGITUDE
+    svy21_x: float  # X
+    svy21_y: float  # Y
+
+
 @lru_cache
 def convert_3414_to_4326(lat: float, lon: float):
     """
@@ -173,26 +187,83 @@ def _pythagoras(loc_1: Location, loc_2: Location):
                      ) * 111195.08023353292  # 2 * math.pi * earth_radius / 360
 
 
-if __name__ == '__main__':
-    # l1 = Location(-1.0, -1.0)
-    # l2 = Location(0.5, 179.7)
-    l1 = Location(1.2, 103.6)
-    l2 = Location(1.5, 104.1)
+def query_onemap(query):
+    """
+    Each page of json response is restricted to a maximum of 10 results.
+    Parameter       Type    Optional    Description
+    searchVal       String  Required    Keywords entered by user that is used to filter out the results.
+    returnGeom      {Y/N}   Required    Checks if user wants to return the geometry.
+    getAddrDetails  {Y/N}   Required    Checks if user wants to return address details for a point.
+    pageNum         Int     Optional    Specifies the page to retrieve your search results from.
 
-    # vincenty
-    t = time.time()
-    for _ in range(1000):
-        d = l1.distance(l2)
-    print(d, time.time() - t)
+    :param query:
+    :return:
+    """
+    query = query.strip()
+    if not query:
+        logging.info('QUERY_ONEMAP_BLANK')
+        return []
 
-    # haversine
-    t = time.time()
-    for _ in range(1000):
-        d = _haversine(l1, l2)
-    print(d, time.time() - t)
+    results = []
+    page_num = 0
+    total_pages = 1
+    while page_num < total_pages:
+        page_num += 1
 
-    # pythagoras
-    t = time.time()
-    for _ in range(1000):
-        d = _pythagoras(l1, l2)
-    print(d, time.time() - t)
+        # run query
+        r = requests.get('https://developers.onemap.sg/commonapi/search',
+                         params={'searchVal':      query,
+                                 'returnGeom':     'Y',
+                                 'getAddrDetails': 'Y',
+                                 'pageNum':        page_num,
+                                 })
+        data = json.loads(r.content)
+
+        # catch error
+        if 'error' in data:
+            logging.warning(f'QUERY_ONEMAP_ERROR={query} PAGE_NUM={page_num}')
+            return results
+
+        # append to results
+        for result in data.get('results', []):
+            results.append(OneMapResult(address=result['ADDRESS'],
+                                        block_no=result['BLK_NO'],
+                                        road_name=result['ROAD_NAME'],
+                                        building=result['BUILDING'],
+                                        zipcode=result['POSTAL'],
+                                        latitude=float(result['LATITUDE']),
+                                        longitude=float(result['LONGITUDE']),
+                                        svy21_x=float(result['X']),
+                                        svy21_y=float(result['Y']),
+                                        ))
+
+        # check number of pages and results
+        total_pages = data.get('totalNumPages', page_num)
+        assert page_num == data.get('pageNum', page_num), data
+        if page_num == total_pages:
+            assert len(results) == data['found'], data
+        return results
+
+    if __name__ == '__main__':
+        # l1 = Location(-1.0, -1.0)
+        # l2 = Location(0.5, 179.7)
+        l1 = Location(1.2, 103.6)
+        l2 = Location(1.5, 104.1)
+
+        # vincenty
+        t = time.time()
+        for _ in range(1000):
+            d = l1.distance(l2)
+        print(d, time.time() - t)
+
+        # haversine
+        t = time.time()
+        for _ in range(1000):
+            d = _haversine(l1, l2)
+        print(d, time.time() - t)
+
+        # pythagoras
+        t = time.time()
+        for _ in range(1000):
+            d = _pythagoras(l1, l2)
+        print(d, time.time() - t)

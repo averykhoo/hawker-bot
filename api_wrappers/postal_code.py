@@ -2,8 +2,8 @@ import logging
 from functools import lru_cache
 from typing import Optional
 
-from api_wrappers.location import Address
-from api_wrappers.onemap import query_onemap
+from api_wrappers.location import OneMapResult
+from api_wrappers.location import query_onemap
 
 
 class InvalidZip(ValueError):
@@ -75,7 +75,7 @@ def fix_zipcode(query: str) -> str:
     return zip_code
 
 
-def locate_zipcode(zipcode: str) -> Optional[Address]:
+def locate_zipcode(zipcode: str) -> Optional[OneMapResult]:
     """
     `query_onemap` is already cached
     """
@@ -83,8 +83,5 @@ def locate_zipcode(zipcode: str) -> Optional[Address]:
 
     # query zip code and return coordinates of first matching result
     for result in query_onemap(zipcode):
-        if result['POSTAL'] == zipcode:
-            return Address(latitude=float(result['LATITUDE']),
-                           longitude=float(result['LONGITUDE']),
-                           address=result['ADDRESS'],
-                           )
+        if result.zipcode == zipcode:
+            return result
