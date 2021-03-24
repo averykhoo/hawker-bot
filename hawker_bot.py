@@ -25,7 +25,9 @@ from api_wrappers.postal_code import fix_zipcode
 from api_wrappers.postal_code import locate_zipcode
 from api_wrappers.string_formatting import format_date
 from api_wrappers.string_formatting import format_datetime
+from api_wrappers.weather import Forecast
 from api_wrappers.weather import weather_24h_grouped
+from api_wrappers.weather import weather_2h
 from api_wrappers.weather import weather_4d
 from hawkers import DateRange
 from hawkers import Hawker
@@ -422,6 +424,13 @@ def handle_location(update: Update, context: CallbackContext):
         update.effective_message.reply_text(f'You appear to be outside of Singapore, '
                                             f'so this bot will probably not be very useful to you',
                                             disable_notification=True)
+
+    # noinspection PyTypeChecker
+    forecast: Forecast = loc.nearest(weather_2h())
+    update.effective_message.reply_markdown('  \n'.join([
+        f'*Weather near you ({forecast.name})*',
+        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+    ]), disable_notification=True, disable_web_page_preview=True)
 
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)

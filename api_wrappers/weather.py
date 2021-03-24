@@ -8,6 +8,7 @@ from typing import Tuple
 
 import requests
 
+from api_wrappers.caching import cache_1m
 from api_wrappers.location import Location
 
 forecast_details = {  # http://www.weather.gov.sg/forecasting-2/#forecast_3
@@ -93,6 +94,7 @@ class DetailedForecast:
     last_update: datetime.datetime
 
 
+@cache_1m
 def weather_2h() -> List[Forecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast')
@@ -108,6 +110,7 @@ def weather_2h() -> List[Forecast]:
                      ) for item in data['area_metadata']]
 
 
+@cache_1m
 def weather_24h() -> List[Forecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
@@ -123,6 +126,7 @@ def weather_24h() -> List[Forecast]:
             for region_name, region_forecast in period['regions'].items()]
 
 
+@cache_1m
 def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], List[Forecast]]:
     out = dict()
     for forecast in weather_24h():
