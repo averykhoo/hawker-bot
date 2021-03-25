@@ -7,35 +7,69 @@
 
 ##  todo
 *   major refactoring
+    *   data api and datatypes
+        *   onemap
+            *   zip
+            *   query
+            *   hawkercentre.kml
+        *   data gov sg
+            *   check metadata for revision ID before updating?
+            *   weather
+            *   hawker centre closed dates
+        *   google maps api (free)
+        *   split `location.py` into onemap and location datatypes/utils
+    *   some kind of data handling that can be synced live from external sources
+        *   syncing allowed to fail for up to 1 week
+        *   cross-references need to be fuzzy because names and latlongs don't always match
     *   better way to handle command aliases
         *   try to auto-generate *setcommands.txt*
         *   declarative, so it's possible to autocorrect missing slash
         *   specify number of expected arguments, so it's possible to auto-split and autocorrect multi-word commands
     *   split code into separate groups of handler functions
-        *   group 1: debug log
-        *   group 2: did you mean / autocorrect
-            *   no starting / for command (eg. 'today', 'tomorrow', 'week', 'help', etc)
-            *   missing space (eg. '/zip120726', '/onemapclementi')
-        *   group 3: weather
+        *   group 1: enrichment
+            *   fuzzy match command (aka. did you mean / autocorrect)
+                *   no starting / for command (eg. 'today', 'tomorrow', 'week', 'help', etc)
+                *   missing space (eg. '/zip120726', '/onemapclementi')
+            *   context from the previous query (only possible after user-db is set up)
+            *   detect region name (eg. ang mo kio, clementi)
+                *   detect mrt station name
+        *   group 2: logging
+            *   debug log the json message
+            *   stats collection 
+                *   query types (inline, image, command, text, fuzzy command, location, video, audio, document, etc) 
+                *   command frequency
+                    *   include fuzzy commands
+                    *   include invalid commands
+                *   most common hawker centres
+        *   group 3: filtering
+            *   via self
+            *   forwarded from self
+            *   sanity checks: blank, non-ascii, etc
+        *   group 4: weather
             *   location
             *   today
             *   tomorrow
             *   week?
-        *   group 4: hawker stuff
+        *   group 5: hawker stuff
+        *   group 6: contextual additional processes
+            *   offer buttons for contextual followup queries
+    *   better `handle_text` (assuming it's non-blank, longer than 1 char, and not a command)
+        *   exact match
+            *   zipcode exact match
+            *   hawker exact name match
+        *   fuzzy
+            *   hawker fuzzy string match
+            *   zipcode regex match -> nearby hawkers
+            *   onemap search
     *   provide an aliases file, then download *hawkercentre.kml* from onemap?
     *   hawker centre set
         *   find_by_text
         *   find_by_location
-    *   data api
-        *   onemap
-            *   zip
-            *   query
-            *   hawkercentre.kml
-        *   data gov
-            *   check metadata for revision ID before updating?
-            *   weather
-            *   hawker centre closed dates
-*   i18n via json file? how to handle string formatting?
+*   multilingual handling
+    *   i18n via json file? how to handle string formatting?
+    *   https://data.gov.sg/dataset/train-station-chinese-names
+        *   https://en.wikipedia.org/wiki/List_of_Singapore_MRT_stations
+    *   any free translate api?
 *   improvements to messaging
     *   message queue per-user with auto-terminate if user sends new thing
     *   reply coalescing
@@ -57,7 +91,6 @@
     *   build internal data.gov
     *   build onemap query python api
     *   update app data on the fly
-*   stats
 *   follow
     *   specific hawker centers
     *   everyday or only on specific days or some kind of schedule
@@ -82,3 +115,10 @@
         *   update days
     *   is-deleted
 *   format_distance_metric and format_distance_imperial
+*   weather
+    *   at location as optional argument
+        *   mrt station
+        *   grc / region / planning area name
+    *   current rain where
+        *   rain area maps
+        *   weather station data
