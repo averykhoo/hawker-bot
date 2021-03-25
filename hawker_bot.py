@@ -129,9 +129,38 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
     else:
         logging.info(f'QUERY_NO_RESULTS="{query}"')
         if effective_message is not None:
-            effective_message.reply_text(f'Zero results found for "{query}"',
+            effective_message.reply_text(f'Zero hawker centres match "{query}"',
                                          disable_notification=True)
+        # return []
+
+    # if we have don't have to reply, exit early
+    if effective_message is None:
         return []
+    results = onemap_search(query)
+
+    # if we have to reply, try to be a bit more intelligent
+    if not results:
+        logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
+        effective_message.reply_text(f'Zero matches from OneMap.sg for {query}',
+                                     disable_notification=True)
+        return []
+
+    effective_message.reply_text(f'Displaying top {min(5, len(results))} results from OneMapSG',
+                                 disable_notification=True)
+
+    lines = []
+    for result in results[:5]:
+        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
+        lines.extend([
+            f'*{result.building_name}*',
+            f'[{result.block_no} {result.road_name}, SINGAPORE {result.zipcode}]'
+            f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
+            ''
+        ])
+    effective_message.reply_markdown('  \n'.join(lines),
+                                     disable_web_page_preview=True,
+                                     disable_notification=True)
+    return []
 
 
 def _closed(date, effective_message, date_name):
@@ -480,7 +509,7 @@ def handle_inline(update: Update, _: CallbackContext) -> None:
             InlineQueryResultArticle(
                 id=str(uuid.uuid4()),
                 title='No results found',
-                input_message_content=InputTextMessageContent('\n'.join([
+                input_message_content=InputTextMessageContent('  \n'.join([
                     'No hawker centres match the provided search term:',
                     f'`{query}`',
                 ]),
@@ -523,6 +552,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('aboot', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('share', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('weather', cmd_weather), 2)
+    updater.dispatcher.add_handler(CommandHandler('forecast', cmd_weather), 2)
 
     # by date
     updater.dispatcher.add_handler(CommandHandler('today', cmd_today), 2)
