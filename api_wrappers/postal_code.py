@@ -3,8 +3,8 @@ from functools import lru_cache
 from pprint import pprint
 from typing import Optional
 
-from api_wrappers.onemap import OneMapResult
-from api_wrappers.onemap import onemap_search
+from api_wrappers.onemap_sg import OneMapResult
+from api_wrappers.onemap_sg import onemap_search
 
 
 class InvalidZip(ValueError):
