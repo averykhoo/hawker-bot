@@ -21,7 +21,6 @@
             *   https://github.com/googlemaps/google-maps-services-python
             *   https://developers.google.com/maps/gmp-get-started
             *   ratings, geocoding, reverse geocoding, place_id
-        *   split `location.py` into onemap and location datatypes/utils
     *   some kind of data handling that can be synced live from external sources
         *   syncing allowed to fail for up to 1 week
         *   cross-references need to be fuzzy because names and latlongs don't always match
@@ -57,7 +56,7 @@
         *   group 5: hawker stuff
         *   group 6: contextual additional processes
             *   offer buttons for contextual followup queries
-    *   better `handle_text` (assuming it's non-blank, longer than 1 char, and not a command)
+    *   better structured `handle_text` (assuming it's non-blank, longer than 1 char, and not a command)
         *   exact match
             *   zipcode exact match
             *   hawker exact name match
@@ -69,6 +68,7 @@
     *   hawker centre set
         *   find_by_text
         *   find_by_location
+        *   use a better data structure for nearby lookup
 *   multilingual handling
     *   i18n via json file? how to handle string formatting?
     *   https://data.gov.sg/dataset/train-station-chinese-names
@@ -123,7 +123,6 @@
     *   https://data.gov.sg/dataset/realtime-weather-readings
     *   [PSI](https://data.gov.sg/dataset/psi)
     *   [PM2.5](https://data.gov.sg/dataset/pm2-5)
-        
     *   at location as optional argument
         *   mrt station
         *   grc / region / planning area name

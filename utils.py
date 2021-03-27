@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from data.hawker_data import RESOURCE_IDS
-from data.hawker_data import get_resource
+from api_wrappers.data_gov_sg import RESOURCE_IDS
+from api_wrappers.data_gov_sg import get_resource
 from hawkers import Hawker
 
 

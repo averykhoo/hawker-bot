@@ -17,7 +17,7 @@ from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
 from api_wrappers.location import Location
-from api_wrappers.location import onemap_search
+from api_wrappers.onemap import onemap_search
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
