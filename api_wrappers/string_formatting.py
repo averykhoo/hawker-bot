@@ -136,3 +136,50 @@ def format_datetime(timestamp, use_deictic_temporal_pronouns=False, print_day=Fa
 
     else:
         return f'{format_time(timestamp)}, {date_str}' + day_str
+
+
+def format_distance_meters(meters: float):
+    if meters < 0:
+        minus = '-'
+        meters = -meters
+    else:
+        minus = ''
+
+    if meters < 1:
+        unit = 0
+        denominators = [100.0, 10.0, 1000.0, 1000.0]
+        while unit < 4 and meters < 0.95:
+            meters *= denominators[unit]
+            unit += 1
+        unit_str = ['meters', 'centimeters', 'millimeters', 'microns', 'nanometers'][unit]
+
+        # singular form
+        if meters == 1:
+            unit_str = unit_str[:-1]
+
+        # exact or float
+        if meters % 1 and meters > 1:
+            return f'{minus}{meters:,.2f} {unit_str}'
+        elif meters % 1:
+            # noinspection PyStringFormat
+            meters = f'{{N:,.{1 - int(math.floor(math.log10(abs(meters))))}f}}'.format(N=meters)
+            return f'{minus}{meters} {unit_str}'
+        else:
+            return f'{minus}{meters:,.0f} {unit_str}'
+
+    # fractions of a second (ms, μs, ns)
+    elif meters > 900:
+        meters /= 1000
+        unit_str = 'kilometers'
+    else:
+        unit_str = 'meters'
+
+    # singular form
+    if meters == 1:
+        unit_str = unit_str[:-1]
+
+    # exact or float
+    if meters % 1:
+        return f'{minus}{meters:,.2f} {unit_str}'
+    else:
+        return f'{minus}{meters:,.0f} {unit_str}'

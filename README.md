@@ -8,6 +8,7 @@
 ##  todo
 *   major refactoring
     *   data api and datatypes
+        *   gracefully handle api downtime
         *   onemap
             *   zip
             *   query
@@ -17,6 +18,9 @@
             *   weather
             *   hawker centre closed dates
         *   google maps api (free)
+            *   https://github.com/googlemaps/google-maps-services-python
+            *   https://developers.google.com/maps/gmp-get-started
+            *   ratings, geocoding, reverse geocoding, place_id
         *   split `location.py` into onemap and location datatypes/utils
     *   some kind of data handling that can be synced live from external sources
         *   syncing allowed to fail for up to 1 week
@@ -114,8 +118,12 @@
         *   hawker centres
         *   update days
     *   is-deleted
-*   format_distance_metric and format_distance_imperial
 *   weather
+    *   [UVI](https://data.gov.sg/dataset/ultraviolet-index-uvi)
+    *   https://data.gov.sg/dataset/realtime-weather-readings
+    *   [PSI](https://data.gov.sg/dataset/psi)
+    *   [PM2.5](https://data.gov.sg/dataset/pm2-5)
+        
     *   at location as optional argument
         *   mrt station
         *   grc / region / planning area name
