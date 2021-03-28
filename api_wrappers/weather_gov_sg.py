@@ -2,6 +2,7 @@ import datetime
 import json
 from dataclasses import dataclass
 from io import BytesIO
+from pprint import pprint
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -43,16 +44,20 @@ intensityColors = [
     '#D028A6',
     '#F93DF5',
 ]
+
+
 def get_warning():
-    r=requests.get('http://www.weather.gov.sg/mobile/rest-mobile-app-warning/')
+    r = requests.get('http://www.weather.gov.sg/mobile/rest-mobile-app-warning/')
 
 
-def haze_pm25_hourly():
+def haze_aqi_hourly():
+    # https://www-haze-gov-sg-admin.cwp.sg
     # from https://www-haze-gov-sg-admin.cwp.sg/assets/scripts/data.js
     # staging version https://www-haze-gov-sg-admin.cwp-stg.sg/assets/scripts/data.js
     # unix timestamp 5 mins
     # 1616915100 == Sun Mar 28 2021 15:05:00 GMT+0800 == 07:05:00 GMT+0000
-    url=f'https://www-haze-gov-sg-admin.cwp.sg/api/airquality/jsondata/1616915100'
+    url = f'https://www-haze-gov-sg-admin.cwp.sg/api/airquality/jsondata/1616915100'
+
 
 def get_radar_3rd_party():
     # https://github.com/cheeaun/rainshot
@@ -60,12 +65,60 @@ def get_radar_3rd_party():
     # https://rainshot.now.sh
     pass
 
+
 def get_drain_water_levels():
-    r=requests.get('https://s3-ap-southeast-1.amazonaws.com/myenv2/water_level_card.json')
+    r = requests.get('https://s3-ap-southeast-1.amazonaws.com/myenv2/water_level_card.json')
+
+
+def get_lightning():
+    # http://www.weather.gov.sg/lightning/lightning/lightningalertinformationsystem.jsp
+    # (0.7195858639657194,103.34288130198104), (1.978634136034281,104.60227869801894)
+    # url = f'http://www.weather.gov.sg/files/rainarea/50km/dpsri_70km_{timestamp_str}0000dBR.dpsri.png'
+    r = requests.post('http://www.weather.gov.sg/lightning/LightningStrikeServlet/',
+                      json={'lightningType': 'TL'})
+    r = requests.post('http://www.weather.gov.sg/lightning/LightningStrikeServlet/',
+                      json={'lightningType': 'thunderStormForecast'})
+    r = requests.post('http://www.weather.gov.sg/lightning/LightningStrikeServlet/',
+                      json={'lightningType': 'rainRadar'})
+    data = json.loads(r.content)
+    return data
+
 
 def get_radar_70km() -> List[List[Tuple[int, int, int, int]]]:
     # https://medium.com/@cheeaun/building-check-weather-sg-3e5fbf1cbe43
     """
+    function calculatePosition(basemapImg,latitude,longitude){
+        // var map_latitude_top    = 1.490735;
+        // var map_longitude_left  = 103.568691;
+        // var map_latitude_bottom = 1.177710;
+        // var map_longitude_right = 104.134487;
+        var map_latitude_top    = 1.4572;
+        var map_longitude_left  = 103.565;
+        var map_latitude_bottom = 1.1450;
+        var map_longitude_right = 104.130;
+        var width_calibration   = 20720;
+        var height_calibration  = 246;
+        var zoom_level_height   = 200;
+        var zoom_level_width    = 200;
+        var imgWidth            = basemapImg.width;
+        var imgHeight           = basemapImg.height;
+        var scale               = imgWidth/100;
+        var map_latitude_total  = map_latitude_top - map_latitude_bottom;
+        var map_longitude_total = map_longitude_right - map_longitude_left;
+
+        var positions           = new Object();
+
+        // positions[0]            = ((Number(longitude)+0.015)*zoom_level_height-height_calibration)*scale+'px';
+        // positions[1]            = (latitude*zoom_level_width-width_calibration)*scale+'px';
+        positions[0]            = (map_latitude_top-latitude)/map_latitude_total*imgHeight+'px';
+        positions[1]            = (longitude-map_longitude_left)/map_longitude_total*imgWidth+'px';
+        // positions[0]            = (latitude-map_latitude_top)/map_latitude_total*imgHeight+'px';
+        // positions[1]            = (map_longitude_left-longitude)/map_longitude_total*imgWidth+'px';
+        return positions;
+    }
+
+
+
     function calculatePosition(basemapImg,latitude,longitude){
     /* var map_latitude_top = 1.490735;
     var map_longitude_left = 103.568691;
@@ -88,6 +141,9 @@ def get_radar_70km() -> List[List[Tuple[int, int, int, int]]]:
     Upper latitude = 1.475°
     Lower longitude = 103.565°
     Upper longitude = 104.130°
+
+
+    if(arr1[i]['LATITUDE']<1.4836&&arr1[i]['LATITUDE']>1.170&&arr1[i]['LONGITUDE']<104.143&&arr1[i]['LONGITUDE']>103.565){
     :return:
     """
     timestamp = datetime.datetime.now()
@@ -306,5 +362,7 @@ if __name__ == '__main__':
     # pprint(get_weather_readings())
 
     # print(get_radar_70km())
-    get_radar_240km()
-    get_radar_480km()
+    # get_radar_240km()
+    # get_radar_480km()
+
+    pprint(get_lightning())
