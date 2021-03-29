@@ -1,6 +1,8 @@
 import datetime
 import json
 import logging
+import os
+import time
 import uuid
 from typing import List
 
@@ -26,6 +28,7 @@ from api_wrappers.postal_code import fix_zipcode
 from api_wrappers.postal_code import locate_zipcode
 from api_wrappers.string_formatting import format_date
 from api_wrappers.string_formatting import format_datetime
+from api_wrappers.string_formatting import format_seconds
 from api_wrappers.weather import Forecast
 from api_wrappers.weather import weather_24h_grouped
 from api_wrappers.weather import weather_2h
@@ -311,6 +314,13 @@ def cmd_zip(update: Update, context: CallbackContext):
             disable_notification=True)
         return None  # invalid postal code
 
+    # noinspection PyTypeChecker
+    forecast: Forecast = loc.nearest(weather_2h())
+    update.effective_message.reply_markdown('  \n'.join([
+        f'*Weather near your zipcode ({forecast.name})*',
+        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+    ]), disable_notification=True, disable_web_page_preview=True)
+
     # found!
     update.effective_message.reply_text(f'Displaying nearest 5 results to "{loc.address}"',
                                         disable_notification=True)
@@ -402,6 +412,44 @@ def cmd_unknown(update: Update, context: CallbackContext):
         logging.info(f'UNSUPPORTED_COMMAND="{get_command(query)}" QUERY="{query}"')
         update.effective_message.reply_markdown(f'Unsupported command: {get_command(query)}',
                                                 disable_notification=True)
+
+
+def cmd_halt(update: Update, context: CallbackContext):
+    expected_cmd = '/halt'
+    query = update.effective_message.text
+    assert query.casefold().startswith(expected_cmd.casefold())
+    query = query[len(expected_cmd):].strip()
+
+    # compulsory flag to prevent itchy fingers
+    acknowledgement = 'YES_I_AM_VERY_SURE'
+    if acknowledgement in query:
+        query = query.replace(acknowledgement, ' ').strip()
+    else:
+        update.effective_message.reply_text(f'/halt args must include "{acknowledgement}" flag',
+                                            disable_notification=True)
+        return
+
+    # halt in this many seconds
+    if query.isdigit():
+        logging.info(f'HALT_TIME={query}')
+        update.effective_message.reply_text(f'Halting in {format_seconds(int(query))}...',
+                                            disable_notification=True)
+        time.sleep(int(query))
+
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        os._exit(0)
+
+    # time not provided, don't do anything
+    elif not query:
+        logging.info(f'BLANK_HALT_TIME')
+        update.effective_message.reply_text(f'/halt time not provided',
+                                            disable_notification=True)
+
+    # time is not numeric, so reject (don't accept "now")
+    else:
+        logging.info(f'INVALID_HALT_TIME="{query}"')
+        update.effective_message.reply_text(f'/halt time must be numeric',
+                                            disable_notification=True)
 
 
 def handle_text(update: Update, context: CallbackContext):
@@ -546,6 +594,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(MessageHandler(Filters.all, log_message), 1)
 
     # handle commands
+    updater.dispatcher.add_handler(CommandHandler('halt', cmd_halt), 2)
     updater.dispatcher.add_handler(CommandHandler('start', cmd_start), 2)
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('halp', cmd_help), 2)
@@ -554,6 +603,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('share', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('weather', cmd_weather), 2)
     updater.dispatcher.add_handler(CommandHandler('forecast', cmd_weather), 2)
+    updater.dispatcher.add_handler(CommandHandler('rain', cmd_weather), 2)
 
     # by date
     updater.dispatcher.add_handler(CommandHandler('today', cmd_today), 2)
