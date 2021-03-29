@@ -452,6 +452,11 @@ def cmd_halt(update: Update, context: CallbackContext):
                                             disable_notification=True)
 
 
+def cmd_ping(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(f'pong',
+                                        disable_notification=True)
+
+
 def handle_text(update: Update, context: CallbackContext):
     if update.effective_message.via_bot is not None:
         bot_username = update.effective_message.via_bot.username
@@ -594,13 +599,16 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(MessageHandler(Filters.all, log_message), 1)
 
     # handle commands
-    updater.dispatcher.add_handler(CommandHandler('halt', cmd_halt), 2)
     updater.dispatcher.add_handler(CommandHandler('start', cmd_start), 2)
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('halp', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('about', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('aboot', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('share', cmd_about), 2)
+    updater.dispatcher.add_handler(CommandHandler('ping', cmd_ping), 2)
+    updater.dispatcher.add_handler(CommandHandler('halt', cmd_halt), 2)
+
+    # weather
     updater.dispatcher.add_handler(CommandHandler('weather', cmd_weather), 2)
     updater.dispatcher.add_handler(CommandHandler('forecast', cmd_weather), 2)
     updater.dispatcher.add_handler(CommandHandler('rain', cmd_weather), 2)
