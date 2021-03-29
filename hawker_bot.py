@@ -535,8 +535,9 @@ def handle_inline(update: Update, _: CallbackContext) -> None:
 if __name__ == '__main__':
     with open('secrets.json') as f:
         secrets = json.load(f)
+        hawker_bot_token = secrets['hawker_bot_token']
 
-    updater = Updater(secrets['hawker_bot_token'])
+    updater = Updater(hawker_bot_token)
 
     # inline
     updater.dispatcher.add_handler(InlineQueryHandler(handle_inline))
