@@ -530,7 +530,7 @@ def error(update: Update, context: CallbackContext):
     """
     Log Errors caused by Updates.
     """
-    logging.warning(f'ERROR="{context.error}" MESSAGE_JSON={json.dumps(update.to_dict())}')
+    logging.warning(f'ERROR="{context.error}"')
     raise context.error
 
 
