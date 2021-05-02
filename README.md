@@ -119,6 +119,7 @@
         *   update days
     *   is-deleted
 *   weather
+    *   sanity check that dates are current (to detect if the api breaks again)
     *   [UVI](https://data.gov.sg/dataset/ultraviolet-index-uvi)
     *   https://data.gov.sg/dataset/realtime-weather-readings
     *   [PSI](https://data.gov.sg/dataset/psi)
