@@ -7,6 +7,9 @@
 
 ##  todo
 *   major refactoring
+    *   markdown templates
+        *   about
+        *   help
     *   data api and datatypes
         *   gracefully handle api downtime
         *   onemap
