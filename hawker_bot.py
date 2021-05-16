@@ -280,6 +280,7 @@ def cmd_onemap(update: Update, context: CallbackContext):
 
 
 def cmd_about(update: Update, context: CallbackContext):
+    # todo: create about.md and load markdown from there, to make this easier to edit
     update.effective_message.reply_markdown('  \n'.join([
         '[@hawker_centre_bot](https://t.me/hawker_centre_bot)',
         'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
