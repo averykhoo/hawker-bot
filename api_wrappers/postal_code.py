@@ -1,4 +1,5 @@
 import logging
+import re
 from functools import lru_cache
 from pprint import pprint
 from typing import Optional
@@ -59,11 +60,18 @@ ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Post
 def fix_zipcode(query: str) -> str:
     query = query.strip()
 
-    if not query:
+    # if we can match this, we know can parse it as a zipcode
+    m = re.fullmatch(r'(?:S(G|ingapore)?\s?)?(?P<zip>\d{6})', query, flags=re.I | re.U)
+    if m:
+        query = m.group('zip')
+
+    # error for blank input
+    elif not query:
         logging.info('ZIPCODE_BLANK')
         raise ZipBlank()
 
-    if not query.isdigit():
+    # error for non-numeric input
+    elif not query.isdigit():
         logging.info(f'ZIPCODE_NON_NUMERIC="{query}"')
         raise ZipNonNumeric()
 
