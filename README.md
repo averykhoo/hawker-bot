@@ -1,5 +1,11 @@
 #   hawker-bot
 
+##  code sources
+*   [tokenizer](https://github.com/averykhoo/tokenize)
+*   [ngram mover's distance](https://github.com/averykhoo/ngram-movers-distance)
+    *   literally invented for approx string matching when there are egregious typos
+    *   nmd is much faster than nmd-bow, and actually faster than levenshtein
+
 ##  setup
 *   optionally, install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
 *   update command list via @BotFather `/setcommands` with contents of *setcommands.txt*
