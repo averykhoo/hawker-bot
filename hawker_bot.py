@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import json
 import logging
@@ -254,20 +255,9 @@ def cmd_onemap(update: Update, context: CallbackContext):
 
 
 def cmd_about(update: Update, context: CallbackContext):
-    # todo: create about.md and load markdown from there, to make this easier to edit
-    update.effective_message.reply_markdown('  \n'.join([
-        '[@hawker_centre_bot](https://t.me/hawker_centre_bot)',
-        'Github: [averykhoo/hawker-bot](https://github.com/averykhoo/hawker-bot)',
-        '',
-        'Data sources and APIs:',
-        '1. [data.gov.sg: Dates of Hawker Centre Closure](https://data.gov.sg/dataset/dates-of-hawker-centres-closure)',
-        '2. [data.gov.sg: Hawker Centres](https://data.gov.sg/dataset/hawker-centres)',
-        '3. [data.gov.sg: Weather Forecast](https://data.gov.sg/dataset/weather-forecast)',
-        '4. [OneMap API](https://docs.onemap.sg/#onemap-rest-apis)',
-        '5. [OneMap Hawker Centres](https://assets.onemap.sg/kml/hawkercentre.kml)',
-    ]),
-        disable_notification=True,
-        disable_web_page_preview=True)
+    update.effective_message.reply_markdown(utils.load_template('about'),
+                                            disable_notification=True,
+                                            disable_web_page_preview=True)
 
 
 def cmd_zip(update: Update, context: CallbackContext):
@@ -368,6 +358,20 @@ def cmd_next_week(update: Update, context: CallbackContext):
     _closed(DateRange(next_week_start, next_week_end), update.effective_message, '_next_ week')
 
 
+def cmd_this_month(update: Update, context: CallbackContext):
+    today = datetime.date.today()
+    month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    _closed(DateRange(today, month_end), update.effective_message, 'this month')
+
+
+def cmd_next_month(update: Update, context: CallbackContext):
+    today = datetime.date.today()
+    month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    next_month_start = month_end + datetime.timedelta(days=1)
+    next_month_end = next_month_start.replace(day=calendar.monthrange(next_month_start.year, next_month_start.month)[1])
+    _closed(DateRange(next_month_start, next_month_end), update.effective_message, 'next month')
+
+
 def cmd_unknown(update: Update, context: CallbackContext):
     fuzzy_matches = {
         '/zip':    cmd_zip,
@@ -445,19 +449,33 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     fuzzy_matches = {
-        'about':     cmd_about,
-        'help':      cmd_help,
-        'today':     cmd_today,
-        'tomorrow':  cmd_tomorrow,
-        'week':      cmd_this_week,
-        'nextweek':  cmd_next_week,
-        'next_week': cmd_next_week,
-        'next week': cmd_next_week,
-        'weather':   cmd_weather,
+        'about':      ('about', cmd_about),
+        'help':       ('help', cmd_help),
+        '?':          ('help', cmd_help),
+        '??':         ('help', cmd_help),
+        '???':        ('help', cmd_help),
+        '/?':         ('help', cmd_help),
+        'today':      ('today', cmd_today),
+        'tomorrow':   ('tomorrow', cmd_tomorrow),
+        'week':       ('week', cmd_this_week),
+        'thisweek':   ('week', cmd_this_week),
+        'this week':  ('week', cmd_this_week),
+        'next':       ('nextweek', cmd_next_week),
+        'nextweek':   ('nextweek', cmd_next_week),
+        'next_week':  ('nextweek', cmd_next_week),
+        'next week':  ('nextweek', cmd_next_week),
+        'month':      ('month', cmd_this_month),
+        'thismonth':  ('month', cmd_this_month),
+        'this month': ('month', cmd_this_month),
+        'nextmonth':  ('nextmonth', cmd_next_month),
+        'next_month': ('nextmonth', cmd_next_month),
+        'next month': ('nextmonth', cmd_next_month),
+        'weather':    ('weather', cmd_weather),
+        'forecast':   ('weather', cmd_weather),
+        'rain':       ('weather', cmd_weather),
     }
 
-    for fuzzy_match, func in fuzzy_matches.items():
-        func_name = fuzzy_match.replace('_', '').replace(' ', '')
+    for fuzzy_match, (func_name, func) in fuzzy_matches.items():
         if query.casefold() == fuzzy_match.casefold():
             logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="/{func_name}"')
             update.effective_message.reply_markdown(f'Assuming you meant:  \n'
@@ -574,6 +592,7 @@ if __name__ == '__main__':
 
     # handle commands
     updater.dispatcher.add_handler(CommandHandler('start', cmd_start), 2)
+    updater.dispatcher.add_handler(CommandHandler('h', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('help', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('halp', cmd_help), 2)
     updater.dispatcher.add_handler(CommandHandler('about', cmd_about), 2)
@@ -597,6 +616,11 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('next', cmd_next_week), 2)
     updater.dispatcher.add_handler(CommandHandler('nextweek', cmd_next_week), 2)
     updater.dispatcher.add_handler(CommandHandler('next_week', cmd_next_week), 2)
+    updater.dispatcher.add_handler(CommandHandler('month', cmd_this_month), 2)
+    updater.dispatcher.add_handler(CommandHandler('thismonth', cmd_this_month), 2)
+    updater.dispatcher.add_handler(CommandHandler('this_month', cmd_this_month), 2)
+    updater.dispatcher.add_handler(CommandHandler('nextmonth', cmd_next_month), 2)
+    updater.dispatcher.add_handler(CommandHandler('next_month', cmd_next_month), 2)
 
     # by name / zip code
     updater.dispatcher.add_handler(CommandHandler('search', cmd_search), 2)
