@@ -379,6 +379,7 @@ def cmd_next_month(update: Update, context: CallbackContext):
 
 
 def cmd_unknown(update: Update, context: CallbackContext):
+    # todo: this is terrible
     fuzzy_matches = {
         '/postal': cmd_zip,
         '/onemap': cmd_onemap,
