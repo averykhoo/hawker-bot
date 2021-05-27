@@ -261,10 +261,16 @@ def cmd_about(update: Update, context: CallbackContext):
 
 
 def cmd_zip(update: Update, context: CallbackContext):
-    expected_cmd = '/zip'
+    # expected_cmd = '/zip'
     query = update.effective_message.text
-    assert query.casefold().startswith(expected_cmd.casefold())
-    query = query[len(expected_cmd):].strip()
+    # assert query.casefold().startswith(expected_cmd.casefold())
+    # query = query[len(expected_cmd):].strip()
+    parts = query.strip().split(maxsplit=1)
+    assert parts
+    if len(parts) == 1:
+        query = ''
+    else:
+        query = parts[-1]
 
     zip_code = _fix_zip(query, update.effective_message)
     if not zip_code:
@@ -374,7 +380,7 @@ def cmd_next_month(update: Update, context: CallbackContext):
 
 def cmd_unknown(update: Update, context: CallbackContext):
     fuzzy_matches = {
-        '/zip':    cmd_zip,
+        '/postal': cmd_zip,
         '/onemap': cmd_onemap,
         '/search': cmd_search,
     }
