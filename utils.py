@@ -95,3 +95,11 @@ def get_command(query):
     m = RE_COMMAND.match(query)
     if m is not None:
         return m.group()
+
+
+def load_template(template_name):
+    path = Path(f'templates/{template_name}.md')
+    if not path.exists():
+        raise ValueError(template_name)
+    with path.open(encoding='utf8') as f:
+        return f.read().strip().replace('\n', '  \n')

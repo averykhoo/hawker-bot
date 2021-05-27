@@ -1,9 +1,9 @@
-help -      list all commands
 today -     list hawker centers closed today
 tomorrow -  list hawker centers closed tomorrow
 week -      list hawker centers closed this week
 nextweek -  list hawker centers closed next week
-zip -       list hawker centers near a given zipcode
+weather -   24h weather forecast
+postal -    list hawker centers near a given postal code
 onemap -    search OneMap.sg for a given query
 about -     about this bot
-weather -   24h weather forecast
+help -      list all commands

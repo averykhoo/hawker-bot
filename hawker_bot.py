@@ -18,6 +18,7 @@ from telegram.ext import InlineQueryHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
+import utils
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg import onemap_search
 from api_wrappers.postal_code import InvalidZip
@@ -192,42 +193,15 @@ def _nearby(loc, effective_message):
 def cmd_start(update: Update, context: CallbackContext):
     update.effective_message.reply_text('Hi!',
                                         disable_notification=True)
-    update.effective_message.reply_markdown('  \n'.join([
-        '*Usage:*',
-        '/ABOUT about this bot',
-        '/HELP list all commands',
-        '/TODAY list hawker centers closed today',
-        '/TOMORROW list hawker centers closed tomorrow',
-        '/WEEK list hawker centers closed this week',
-        '/NEXTWEEK list hawker centers closed next week',
-        '/WEATHER 24h weather forecast',
-        '/ZIP <zipcode> list hawker centers near a zipcode',
-        '/ONEMAP <query> search OneMap.sg',
-        'sending a text message will return matching hawker centers',
-        'sending a location will return nearby hawker centers',
-    ]),
-        disable_notification=True)
+    update.effective_message.reply_markdown(utils.load_template('start'),
+                                            disable_notification=True)
 
 
 def cmd_help(update: Update, context: CallbackContext):
     assert isinstance(update, Update)
     assert isinstance(context, CallbackContext)
-    update.effective_message.reply_markdown('  \n'.join([
-        '*Usage:*',
-        "/START start using the bot (you've already done this)",
-        '/ABOUT about this bot',
-        '/HELP list all commands (this command)',
-        '/TODAY list hawker centers closed today',
-        '/TOMORROW list hawker centers closed tomorrow',
-        '/WEEK list hawker centers closed this week',
-        '/NEXTWEEK list hawker centers closed next week',
-        '/WEATHER 24h weather forecast',
-        '/ZIP <zipcode> list hawker centers near a zipcode',
-        '/ONEMAP <query> search OneMap.sg',
-        'sending a text message will return matching hawker centers',
-        'sending a location will return nearby hawker centers',
-    ]),
-        disable_notification=True)
+    update.effective_message.reply_markdown(utils.load_template('help'),
+                                            disable_notification=True)
 
 
 def cmd_search(update: Update, context: CallbackContext):
@@ -606,7 +580,7 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('aboot', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('share', cmd_about), 2)
     updater.dispatcher.add_handler(CommandHandler('ping', cmd_ping), 2)
-    updater.dispatcher.add_handler(CommandHandler('halt', cmd_halt), 2)
+    # updater.dispatcher.add_handler(CommandHandler('halt', cmd_halt), 2)
 
     # weather
     updater.dispatcher.add_handler(CommandHandler('weather', cmd_weather), 2)
@@ -628,6 +602,11 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler('search', cmd_search), 2)
     updater.dispatcher.add_handler(CommandHandler('onemap', cmd_onemap), 2)
     updater.dispatcher.add_handler(CommandHandler('zip', cmd_zip), 2)
+    updater.dispatcher.add_handler(CommandHandler('zipcode', cmd_zip), 2)
+    updater.dispatcher.add_handler(CommandHandler('post', cmd_zip), 2)
+    updater.dispatcher.add_handler(CommandHandler('postal', cmd_zip), 2)
+    updater.dispatcher.add_handler(CommandHandler('postcode', cmd_zip), 2)
+    updater.dispatcher.add_handler(CommandHandler('postalcode', cmd_zip), 2)
     updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_text), 2)
 
     # by location
