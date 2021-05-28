@@ -61,7 +61,12 @@ def fix_zipcode(query: str) -> str:
     query = query.strip()
 
     # if we can match this, we know can parse it as a zipcode
-    m = re.fullmatch(r'(?:S(G|ingapore)?\s?)?(?P<zip>\d{6})', query, flags=re.I | re.U)
+    # /zip code 123456
+    # /zip 123456
+    # /zip S123456
+    # /zip SG123456
+    # /zip Singapore 123456
+    m = re.fullmatch(r'(?:(?:code|S(G|ingapore)?)\s?)?(?P<zip>\d{6})', query, flags=re.I | re.U)
     if m:
         query = m.group('zip')
 

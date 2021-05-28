@@ -4,6 +4,8 @@ import re
 import sys
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
+from typing import Tuple
 
 import pandas as pd
 
@@ -90,11 +92,36 @@ def load_hawker_data():
 RE_COMMAND = re.compile(r'(/[a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
 
 
-@lru_cache
+@lru_cache(maxsize=0xFF)
 def get_command(query):
     m = RE_COMMAND.match(query)
     if m is not None:
         return m.group()
+
+
+@lru_cache(maxsize=0xFF)
+def split_command(query: str,
+                  command: Optional[str] = None,
+                  ) -> Tuple[Optional[str], str]:
+    query = query.strip()
+
+    if command:
+        command = command.casefold()
+        if query.casefold().startswith(command):
+            return query[:len(command)], query[len(command):].strip()
+        if query.casefold().startswith(f'/{command}'):
+            return query[:len(command) + 1], query[len(command) + 1:].strip()
+        if query.casefold().startswith(f'\\{command}'):
+            return query[:len(command) + 1], query[len(command) + 1:].strip()
+        return None, query
+
+    parts = query.split()
+    if len(parts) == 0:
+        return None, ''
+    elif len(parts) == 1:
+        return parts[0], ''
+    else:
+        return parts[0], query[len(parts[0]):].strip()
 
 
 def load_template(template_name):

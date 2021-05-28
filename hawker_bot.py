@@ -199,34 +199,29 @@ def cmd_start(update: Update, context: CallbackContext):
 
 
 def cmd_help(update: Update, context: CallbackContext):
-    assert isinstance(update, Update)
-    assert isinstance(context, CallbackContext)
     update.effective_message.reply_markdown(utils.load_template('help'),
                                             disable_notification=True)
 
 
 def cmd_search(update: Update, context: CallbackContext):
-    expected_cmd = '/search'
     query = update.effective_message.text
-    assert query.casefold().startswith(expected_cmd.casefold())
-    query = query[len(expected_cmd):].strip()
+    command, query = utils.split_command(query, 'search')
+    assert command is not None
 
     _search(query, update.effective_message)
 
 
 def cmd_onemap(update: Update, context: CallbackContext):
-    expected_cmd = '/onemap'
     query = update.effective_message.text
-    assert query.casefold().startswith(expected_cmd.casefold())
-    query = query[len(expected_cmd):].strip()
+    command, query = utils.split_command(query, 'onemap')
+    assert command is not None
 
     if not query:
         update.effective_message.reply_markdown('  \n'.join([
             'No query provided',
             '`/onemap` usage example:',
             '`/onemap lau pa sat`',
-        ]),
-            disable_notification=True)
+        ]), disable_notification=True)
         logging.info('QUERY_ONEMAP_BLANK')
         return None
 
@@ -261,16 +256,9 @@ def cmd_about(update: Update, context: CallbackContext):
 
 
 def cmd_zip(update: Update, context: CallbackContext):
-    # expected_cmd = '/zip'
     query = update.effective_message.text
-    # assert query.casefold().startswith(expected_cmd.casefold())
-    # query = query[len(expected_cmd):].strip()
-    parts = query.strip().split(maxsplit=1)
-    assert parts
-    if len(parts) == 1:
-        query = ''
-    else:
-        query = parts[-1]
+    command, query = utils.split_command(query)
+    assert command is not None
 
     zip_code = _fix_zip(query, update.effective_message)
     if not zip_code:
@@ -281,8 +269,7 @@ def cmd_zip(update: Update, context: CallbackContext):
         logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
         update.effective_message.reply_markdown('  \n'.join([
             f'Zip code not found: "{zip_code}"',
-        ]),
-            disable_notification=True)
+        ]), disable_notification=True)
         return None  # invalid postal code
 
     # noinspection PyTypeChecker
@@ -482,13 +469,12 @@ def handle_text(update: Update, context: CallbackContext):
         'rain':       ('weather', cmd_weather),
     }
 
-    for fuzzy_match, (func_name, func) in fuzzy_matches.items():
-        if query.casefold() == fuzzy_match.casefold():
-            logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="/{func_name}"')
-            update.effective_message.reply_markdown(f'Assuming you meant:  \n'
-                                                    f'`/{func_name}`')
-            func(update, context)
-            break
+    if query.casefold() in fuzzy_matches:
+        func_name, func = fuzzy_matches[query.casefold()]
+        logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="/{func_name}"')
+        update.effective_message.reply_markdown(f'Assuming you meant:  \n'
+                                                f'`/{func_name}`')
+        func(update, context)
 
     else:
         _search(query, update.effective_message)
