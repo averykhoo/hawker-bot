@@ -1,6 +1,6 @@
 #   hawker-bot
 
-##  code sources
+##  copies source code from:
 *   [tokenizer](https://github.com/averykhoo/tokenize)
 *   [ngram mover's distance](https://github.com/averykhoo/ngram-movers-distance)
     *   literally invented for approx string matching when there are egregious typos
@@ -14,7 +14,7 @@
 ##  todo
 *   major refactoring
     *   data api and datatypes
-        *   gracefully handle api downtime
+        *   gracefully detect and handle api downtime
         *   onemap
             *   zip
             *   query
@@ -37,13 +37,13 @@
     *   split code into separate groups of handler functions
         *   group 1: enrichment
             *   fuzzy match command (aka. did you mean / autocorrect)
-                *   no starting / for command (eg. 'today', 'tomorrow', 'week', 'help', etc)
+                *   [x] no starting / for command (eg. 'today', 'tomorrow', 'week', 'help', etc)
                 *   missing space (eg. '/zip120726', '/onemapclementi')
             *   context from the previous query (only possible after user-db is set up)
             *   detect region name (eg. ang mo kio, clementi)
                 *   detect mrt station name
         *   group 2: logging
-            *   debug log the json message
+            *   [x] debug log the json message
             *   stats collection 
                 *   query types (inline, image, command, text, fuzzy command, location, video, audio, document, etc) 
                 *   command frequency
@@ -70,7 +70,8 @@
             *   hawker fuzzy string match
             *   zipcode regex match -> nearby hawkers
             *   onemap search
-    *   provide an aliases file, then download *hawkercentre.kml* from onemap?
+    *   provide a hawker aliases file, then download *hawkercentre.kml* from onemap?
+        *   as opposed to the current method of hardcoding in NEA's hawker list
     *   hawker centre set
         *   find_by_text
         *   find_by_location
