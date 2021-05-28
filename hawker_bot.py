@@ -368,14 +368,16 @@ def cmd_next_month(update: Update, context: CallbackContext):
 def cmd_unknown(update: Update, context: CallbackContext):
     # todo: this is terrible
     fuzzy_matches = {
-        '/postal': cmd_zip,
-        '/onemap': cmd_onemap,
-        '/search': cmd_search,
+        'postal': ('postal', cmd_zip),  # /postal123456 or /postalcode123456
+        'zip':    ('postal', cmd_zip),  # /zip123456 or /zipcode123456
+        'onemap': ('onemap', cmd_onemap),  # /onemapclementi
+        'search': ('search', cmd_search),  # /searchclementi
     }
 
     query = update.effective_message.text.strip()
-    for command, func in fuzzy_matches.items():
-        if query.casefold().startswith(command.casefold()):
+    for command, (func_name, func) in fuzzy_matches.items():
+        _command, _query = utils.split_command(query, command)
+        if _command is not None:
             logging.info(f'FUZZY_MATCHED_COMMAND="{get_command(query)}" COMMAND="{command}"')
             update.effective_message.reply_markdown(f'Assuming you meant:  \n'
                                                     f'`{query[:len(command)]} {query[len(command):]}`')

@@ -89,7 +89,7 @@ def load_hawker_data():
     return hawkers
 
 
-RE_COMMAND = re.compile(r'(/[a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
+RE_COMMAND = re.compile(r'([/\\][a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
 
 
 @lru_cache(maxsize=0xFF)
