@@ -2,7 +2,7 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from telegram import Update
+from fastbot.message import Message
 
 
 @dataclass
@@ -12,23 +12,23 @@ class Response(ABC):
     notification: bool = True
 
     @abstractmethod
-    def send(self, update: Update):
+    def send(self, message: Message):
         ...
 
 
 @dataclass
 class Text(Response):
-    def send(self, update: Update):
-        update.effective_message.reply_text(self.content,
-                                            disable_notification=not self.notification,
-                                            disable_web_page_preview=not self.web_page_preview,
-                                            )
+    def send(self, message: Message):
+        message.update.effective_message.reply_text(self.content,
+                                                    disable_notification=not self.notification,
+                                                    disable_web_page_preview=not self.web_page_preview,
+                                                    )
 
 
 @dataclass
 class Markdown(Response):
-    def send(self, update: Update):
-        update.effective_message.reply_markdown(self.content,
-                                                disable_notification=not self.notification,
-                                                disable_web_page_preview=not self.web_page_preview,
-                                                )
+    def send(self, message: Message):
+        message.update.effective_message.reply_markdown(self.content,
+                                                        disable_notification=not self.notification,
+                                                        disable_web_page_preview=not self.web_page_preview,
+                                                        )

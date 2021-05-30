@@ -1,26 +1,43 @@
-# if isinstance(update, Update) and update.effective_message:
-#     message = update.effective_message
-#
-#     if (
-#             message.entities
-#             and message.entities[0].type == MessageEntity.BOT_COMMAND
-#             and message.entities[0].offset == 0
-#             and message.text
-#             and message.bot
-#     ):
-#         command = message.text[1 : message.entities[0].length]
-#         args = message.text.split()[1:]
-#         command_parts = command.split('@')
-#         command_parts.append(message.bot.username)
-#
-#         if not (
-#                 command_parts[0].lower() in self.command
-#                 and command_parts[1].lower() == message.bot.username.lower()
-#         ):
-#             return None
-#
-#         filter_result = self.filters(update)
-#         if filter_result:
-#             return args, filter_result
-#         return False
-# return None
+from dataclasses import dataclass
+from typing import List
+
+# noinspection PyPackageRequirements
+from telegram import Update
+# noinspection PyPackageRequirements
+from telegram.ext import CallbackContext
+
+from fastbot.message import Message
+from fastbot.route import Match
+from fastbot.route import Route
+
+
+@dataclass
+class Router:
+    routes: List[Route]
+
+    def handle_message(self, update: Update, context: CallbackContext):
+        message = Message(update, context)
+        if not message.text:
+            return Match.NO_MATCH
+
+        partial_match = None
+        any_match = None
+        for route in self.routes:
+            match = route.match(message)
+            if match == Match.FULL_MATCH:
+                route.callback(message)
+                return Match.FULL_MATCH
+            elif match == Match.PREFIX_MATCH and partial_match is None:
+                partial_match = route
+            elif match == Match.SUBSTRING_MATCH and any_match is None:
+                any_match = route
+
+            if partial_match is not None:
+                partial_match.callback(message)
+                return Match.PREFIX_MATCH
+
+            if any_match is not None:
+                any_match.callback(message)
+                return Match.SUBSTRING_MATCH
+
+            return Match.NO_MATCH
