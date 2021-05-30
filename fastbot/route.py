@@ -87,7 +87,7 @@ class Route:
             response.send(message)
 
 
-def _make_keyword_route(endpoint: Endpoint,
+def make_keyword_route(endpoint: Endpoint,
                         word: str,
                         case: bool = False,
                         substring_match: bool = False,
@@ -114,7 +114,7 @@ def _make_keyword_route(endpoint: Endpoint,
     return Route(pattern, endpoint, allowed_matches)
 
 
-def _make_command_route(endpoint: Endpoint,
+def make_command_route(endpoint: Endpoint,
                         word: str,
                         case: bool = False,
                         allow_backslash: bool = False,
@@ -146,7 +146,7 @@ def _make_command_route(endpoint: Endpoint,
     return Route(pattern, endpoint, allowed_matches)
 
 
-def _make_regex_route(endpoint: Endpoint,
+def make_regex_route(endpoint: Endpoint,
                       pattern: Pattern,
                       full_match: bool = True,
                       prefix_match: bool = False,
@@ -165,32 +165,3 @@ def _make_regex_route(endpoint: Endpoint,
 
     # create route
     return Route(pattern, endpoint, allowed_matches)
-
-
-def keyword(arg,
-            /,
-            *,
-            case: bool = False,
-            substring_match: bool = False,
-            boundary: bool = True,
-            ) -> Union[Endpoint, Callable[[Endpoint], Endpoint]]:
-    # check if this is a decorator initialization
-    if isinstance(arg, str):
-        def decorator(endpoint: Endpoint):
-            _make_keyword_route(endpoint=endpoint,
-                                word=arg,
-                                case=case,
-                                substring_match=substring_match,
-                                boundary=boundary)
-            return endpoint
-
-        return decorator
-
-    # nope, this is being called as a decorator
-    assert isinstance(arg, Callable)
-    _make_keyword_route(endpoint=arg,
-                        word=arg.__name__,  # take function name as keyword
-                        case=case,
-                        substring_match=substring_match,
-                        boundary=boundary)
-    return arg
