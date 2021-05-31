@@ -4,6 +4,7 @@ from dataclasses import field
 from re import Pattern
 from typing import Callable
 from typing import List
+from typing import Optional
 
 from telegram import Update
 # noinspection PyPackageRequirements
@@ -16,9 +17,6 @@ from fastbot.route import Route
 from fastbot.route import make_command_route
 from fastbot.route import make_keyword_route
 from fastbot.route import make_regex_route
-
-
-# noinspection PyPackageRequirements
 
 
 @dataclass
@@ -107,6 +105,7 @@ class Router:
                 cmd: str,
                 /,
                 *,
+                argument_pattern: Optional[Pattern] = None,
                 case: bool = False,
                 allow_backslash: bool = False,
                 allow_noslash: bool = False,
@@ -120,6 +119,7 @@ class Router:
         def decorator(endpoint: Endpoint):
             self.__routes.append(make_command_route(endpoint=endpoint,
                                                     command=cmd,
+                                                    argument_pattern=argument_pattern,
                                                     case=case,
                                                     allow_backslash=allow_backslash,
                                                     allow_noslash=allow_noslash,

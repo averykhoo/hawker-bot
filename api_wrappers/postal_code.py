@@ -7,6 +7,7 @@ from typing import Optional
 from api_wrappers.onemap_sg import OneMapResult
 from api_wrappers.onemap_sg import onemap_search
 
+RE_ZIPCODE = re.compile(r'(?:(?:code|S(G|ingapore)?)\s?)?(?P<zip>\d{6})', flags=re.I | re.U)
 
 class InvalidZip(ValueError):
     pass
@@ -66,7 +67,7 @@ def fix_zipcode(query: str) -> str:
     # /zip S123456
     # /zip SG123456
     # /zip Singapore 123456
-    m = re.fullmatch(r'(?:(?:code|S(G|ingapore)?)\s?)?(?P<zip>\d{6})', query, flags=re.I | re.U)
+    m = RE_ZIPCODE.fullmatch(query)
     if m:
         query = m.group('zip')
 

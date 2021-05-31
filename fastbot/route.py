@@ -68,8 +68,7 @@ class Route:
         message.match = match
         message.command = self.key
 
-        # ret = self.endpoint(message)
-        ret = self.endpoint(message.update, message.context)
+        ret = self.endpoint(message)
         if ret is not None:
             if isinstance(ret, Response):
                 responses = [ret]
@@ -106,7 +105,7 @@ def make_keyword_route(endpoint: Endpoint,
 
     # boundary checking
     if boundary:
-        pattern = re.compile(rf'(?P<command>(?:^|\b){re.escape(keyword)}(?:\b|$))', flags=flags)
+        pattern = re.compile(rf'(?:^|\b)(?P<command>{re.escape(keyword)})(?:\b|$)', flags=flags)
     else:
         pattern = re.compile(rf'(?P<command>{re.escape(keyword)})', flags=flags)
 
@@ -120,6 +119,7 @@ def make_keyword_route(endpoint: Endpoint,
 
 def make_command_route(endpoint: Endpoint,
                        command: str,
+                       argument_pattern: Optional[Pattern] = None,
                        case: bool = False,
                        allow_backslash: bool = False,
                        allow_noslash: bool = False,
@@ -140,11 +140,19 @@ def make_command_route(endpoint: Endpoint,
     if allow_noslash:
         slash += '?'
 
+    # argument pattern
+    if argument_pattern is None:
+        arg = ''
+    elif boundary:
+        arg = rf'(?:\s+(?P<argument>{argument_pattern.pattern}))?'
+    else:
+        arg = rf'(?:\s*(?P<argument>{argument_pattern.pattern}))?'
+
     # boundary checking
     if boundary:
-        pattern = re.compile(rf'(?P<command>(?:^|\s){slash}{re.escape(command)}(?:\b|$))', flags=flags)
+        pattern = re.compile(rf'(?:^|\s)(?P<command>{slash}{re.escape(command)}){arg}(?:\b|$)', flags=flags)
     else:
-        pattern = re.compile(rf'(?P<command>{slash}{re.escape(command)})', flags=flags)
+        pattern = re.compile(rf'(?P<command>{slash}{re.escape(command)}){arg}', flags=flags)
 
     # create route
     return make_regex_route(endpoint,

@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from re import Match
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -14,7 +15,7 @@ from telegram.ext import CallbackContext
 class Message:
     update: Update
     context: CallbackContext
-    prefix: Optional[str] = None  # matched command string
+    match: Optional[Match] = None  # matched command string
     command: Optional[str] = None  # canonical command name
 
     @property
@@ -23,9 +24,18 @@ class Message:
 
     @property
     def argument(self) -> Optional[str]:
-        if self.prefix is not None:
-            assert self.text.startswith(self.prefix)
-            return self.text[len(self.prefix):].strip()
+        if self.match is not None:
+            assert len(self.match.groups()) > 0, (self.text, self.match)
+            assert len(self.match.groupdict()) > 0, (self.text, self.match)
+
+            if 'argument' in self.match.groupdict():
+                return self.match.group('argument')
+
+            assert 'command' in self.match.groupdict(), (self.text, self.match)
+            for group_idx, group_text in enumerate(self.match.groups()):
+                if group_text == self.match.group('command'):
+                    start_pos, end_pos = self.match.span(group_idx + 1)  # group 0 is the full match
+                    return self.text[end_pos:].strip()
 
     @property
     def via_bot(self):

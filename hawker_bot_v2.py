@@ -2,6 +2,7 @@ import calendar
 import datetime
 import json
 import logging
+import re
 import uuid
 from typing import List
 from typing import Optional
@@ -20,6 +21,7 @@ import utils
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg import onemap_search
 from api_wrappers.postal_code import InvalidZip
+from api_wrappers.postal_code import RE_ZIPCODE
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
 from api_wrappers.postal_code import ZipNonNumeric
@@ -167,11 +169,9 @@ def __nearby(loc):
 
 
 @bot.command('start', allow_backslash=True, allow_noslash=True)
-def cmd_start(update: Update, context: CallbackContext):
-    update.effective_message.reply_text('Hi!',
-                                        disable_notification=True)
-    update.effective_message.reply_markdown(utils.load_template('start'),
-                                            disable_notification=True)
+def cmd_start(message: Message):
+    return [Text('Hi!', notification=False),
+            Markdown(utils.load_template('start'), notification=False)]
 
 
 @bot.command('help', allow_backslash=True, allow_noslash=True)
@@ -180,46 +180,44 @@ def cmd_start(update: Update, context: CallbackContext):
 @bot.command('?', allow_backslash=True, allow_noslash=True)
 @bot.command('??', allow_backslash=True, allow_noslash=True)
 @bot.command('???', allow_backslash=True, allow_noslash=True)
-def cmd_help(update: Update, context: CallbackContext):
+def cmd_help(message: Message):
     return Markdown(utils.load_template('help'), notification=False)
 
 
-@bot.command('search', allow_backslash=True, prefix_match=True)
-def cmd_search(update: Update, context: CallbackContext, query=None):
+@bot.command('search', allow_backslash=True, boundary=False, prefix_match=True)
+def cmd_search(message: Message, query=None):
     if query is None:
-        query = update.effective_message.text
-        command, query = utils.split_command(query, 'search')
-        assert command is not None
+        assert message.match is not None
+        query = message.argument
 
     results, responses = __search(query, onemap=True)
     return responses
 
 
-@bot.command('onemap', allow_backslash=True, prefix_match=True)
-def cmd_onemap(update: Update, context: CallbackContext, query=None):
+@bot.command('onemap', allow_backslash=True, boundary=False, prefix_match=True)
+def cmd_onemap(message: Message, query=None):
     if query is None:
-        query = update.effective_message.text
-        command, query = utils.split_command(query, 'onemap')
-        assert command is not None
+        assert message.match is not None
+        query = message.argument
 
     if not query:
-        update.effective_message.reply_markdown('  \n'.join([
+        yield Markdown('  \n'.join([
             'No query provided',
             '`/onemap` usage example:',
             '`/onemap lau pa sat`',
-        ]), disable_notification=True)
+        ]), notification=False)
         logging.info('QUERY_ONEMAP_BLANK')
         return None
 
     results = onemap_search(query)
     if not results:
         logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
-        update.effective_message.reply_text('No results',
-                                            disable_notification=True)
+        yield Text('No results',
+                   notification=False)
         return
 
-    update.effective_message.reply_text(f'Displaying top {min(10, len(results))} results from OneMapSG',
-                                        disable_notification=True)
+    yield Text(f'Displaying top {min(10, len(results))} results from OneMapSG',
+               notification=False)
 
     out = []
     for result in results[:10]:
@@ -230,59 +228,59 @@ def cmd_onemap(update: Update, context: CallbackContext, query=None):
             f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
             ''
         ])
-    update.effective_message.reply_markdown('  \n'.join(out),
-                                            disable_web_page_preview=True,
-                                            disable_notification=True)
+    yield Markdown('  \n'.join(out),
+                   web_page_preview=False,
+                   notification=False)
 
 
 @bot.command('about', allow_backslash=True, allow_noslash=True)
 @bot.command('share', allow_backslash=True, allow_noslash=True)
-def cmd_about(update: Update, context: CallbackContext):
+def cmd_about(message: Message):
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
-@bot.command('zip', allow_backslash=True, prefix_match=True)
-@bot.command('zipcode', allow_backslash=True, prefix_match=True)
-@bot.command('post', allow_backslash=True, prefix_match=True)
-@bot.command('postal', allow_backslash=True, prefix_match=True)
-@bot.command('postcode', allow_backslash=True, prefix_match=True)
-@bot.command('postalcode', allow_backslash=True, prefix_match=True)
-def cmd_zip(update: Update, context: CallbackContext, query=None):
+@bot.command('zip', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('zipcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('post', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('postal', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('postcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('postalcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
+@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'),
+             allow_backslash=True, allow_noslash=True, boundary=False, prefix_match=True)
+def cmd_zip(message: Message, query=None):
     if query is None:
-        query = update.effective_message.text
-        command, query = utils.split_command(query)
-        assert command is not None
+        assert message.match is not None
+        query = message.argument
 
     zip_code, response = __fix_zip(query)
     if zip_code is None:
-        return response
+        yield response
+    else:
+        loc = locate_zipcode(zip_code)
+        if not loc:
+            logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
+            yield Markdown('  \n'.join([
+                f'Zip code not found: "{zip_code}"',
+            ]), notification=False)
+            return None  # invalid postal code
 
-    loc = locate_zipcode(zip_code)
-    if not loc:
-        logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
-        update.effective_message.reply_markdown('  \n'.join([
-            f'Zip code not found: "{zip_code}"',
-        ]), disable_notification=True)
-        return None  # invalid postal code
+        # noinspection PyTypeChecker
+        forecast: Forecast = loc.nearest(weather_2h())
+        yield Markdown('  \n'.join([
+            f'*Weather near your zipcode ({forecast.name})*',
+            f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+        ]), notification=False, web_page_preview=False)
 
-    # noinspection PyTypeChecker
-    forecast: Forecast = loc.nearest(weather_2h())
-    update.effective_message.reply_markdown('  \n'.join([
-        f'*Weather near your zipcode ({forecast.name})*',
-        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
-    ]), disable_notification=True, disable_web_page_preview=True)
-
-    # found!
-    update.effective_message.reply_text(f'Displaying nearest 5 results to "{loc.address}"',
-                                        disable_notification=True)
-    logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-    return __nearby(loc)
+        # found!
+        yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
+        logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
+        yield from __nearby(loc)
 
 
 @bot.command('rain', allow_backslash=True, allow_noslash=True)
 @bot.command('weather', allow_backslash=True, allow_noslash=True)
 @bot.command('forecast', allow_backslash=True, allow_noslash=True)
-def cmd_weather(update: Update, context: CallbackContext):
+def cmd_weather(message: Message):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
         start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
@@ -294,14 +292,12 @@ def cmd_weather(update: Update, context: CallbackContext):
             lines.append(f'{forecast.name}: {forecast.forecast}')
 
         # send message
-        update.effective_message.reply_markdown('  \n'.join(lines),
-                                                disable_notification=True,
-                                                disable_web_page_preview=True)
+        yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
 
 
 @bot.command('day', allow_backslash=True, allow_noslash=True)
 @bot.command('today', allow_backslash=True, allow_noslash=True)
-def cmd_today(update: Update, context: CallbackContext):
+def cmd_today(message: Message):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
         if time_start <= soon < time_end:
@@ -314,33 +310,31 @@ def cmd_today(update: Update, context: CallbackContext):
                 lines.append(f'{forecast.name}: {forecast.forecast}')
 
             # send message
-            update.effective_message.reply_markdown('  \n'.join(lines),
-                                                    disable_notification=True,
-                                                    disable_web_page_preview=True)
+            yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
             break
 
     # send what's closed today
-    return __closed(datetime.date.today(), 'today')
+    yield __closed(datetime.date.today(), 'today')
 
 
 @bot.command('tomorrow', allow_backslash=True, allow_noslash=True)
-def cmd_tomorrow(update: Update, context: CallbackContext):
+def cmd_tomorrow(message: Message):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
         if detailed_forecast.date == tomorrow:
-            update.effective_message.reply_markdown('  \n'.join([
+            yield Markdown('  \n'.join([
                 f'*Weather forecast for tomorrow, {format_date(tomorrow, print_day=True)}:*',
                 detailed_forecast.forecast,
-            ]), disable_notification=True, disable_web_page_preview=True)
+            ]), notification=False, web_page_preview=False)
             break
 
-    return __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
+    yield __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
 
 @bot.command('week', allow_backslash=True, allow_noslash=True)
 @bot.command('thisweek', allow_backslash=True, allow_noslash=True)
 @bot.command('this_week', allow_backslash=True, allow_noslash=True)
-def cmd_this_week(update: Update, context: CallbackContext):
+def cmd_this_week(message: Message):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
     return __closed(DateRange(today, week_end), 'this week')
@@ -349,7 +343,7 @@ def cmd_this_week(update: Update, context: CallbackContext):
 @bot.command('next', allow_backslash=True, allow_noslash=True)
 @bot.command('nextweek', allow_backslash=True, allow_noslash=True)
 @bot.command('next_week', allow_backslash=True, allow_noslash=True)
-def cmd_next_week(update: Update, context: CallbackContext):
+def cmd_next_week(message: Message):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
@@ -359,7 +353,7 @@ def cmd_next_week(update: Update, context: CallbackContext):
 @bot.command('month', allow_backslash=True, allow_noslash=True)
 @bot.command('thismonth', allow_backslash=True, allow_noslash=True)
 @bot.command('this_month', allow_backslash=True, allow_noslash=True)
-def cmd_this_month(update: Update, context: CallbackContext):
+def cmd_this_month(message: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     return __closed(DateRange(today, month_end), 'this month')
@@ -367,7 +361,7 @@ def cmd_this_month(update: Update, context: CallbackContext):
 
 @bot.command('nextmonth', allow_backslash=True, allow_noslash=True)
 @bot.command('next_month', allow_backslash=True, allow_noslash=True)
-def cmd_next_month(update: Update, context: CallbackContext):
+def cmd_next_month(message: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     next_month_start = month_end + datetime.timedelta(days=1)
@@ -378,7 +372,7 @@ def cmd_next_month(update: Update, context: CallbackContext):
 @bot.command('year', allow_backslash=True, allow_noslash=True)
 @bot.command('thisyear', allow_backslash=True, allow_noslash=True)
 @bot.command('this_year', allow_backslash=True, allow_noslash=True)
-def cmd_this_year(update: Update, context: CallbackContext):
+def cmd_this_year(message: Message):
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
     return __closed(DateRange(today, year_end), 'this year')
@@ -409,21 +403,21 @@ def cmd_unknown(update: Update, context: CallbackContext):
 
 
 @bot.command('ping')
-def cmd_ping(update: Update, context: CallbackContext):
+def cmd_ping(message: Message):
     return Text('pong', notification=False)
 
 
 @bot.default
-def handle_text(update: Update, context: CallbackContext):
-    if update.effective_message.via_bot is not None:
-        bot_username = update.effective_message.via_bot.username
+def handle_text(message: Message):
+    if message.via_bot is not None:
+        bot_username = message.via_bot.username
         if bot_username in config.BOT_USERNAMES:
             logging.debug(f'VIA_BOT="{bot_username}"')
             return
 
-    query = update.effective_message.text.strip()
+    query = message.text
     if utils.get_command(query) is not None:
-        cmd_unknown(update, context)
+        cmd_unknown(message.update, message.context)
         return
 
     fuzzy_matches = {
@@ -456,13 +450,14 @@ def handle_text(update: Update, context: CallbackContext):
     if query.casefold() in fuzzy_matches:
         func_name, func = fuzzy_matches[query.casefold()]
         logging.info(f'FUZZY_MATCHED_COMMAND="{utils.get_command(query)}" COMMAND="/{func_name}"')
-        update.effective_message.reply_markdown(f'Assuming you meant:  \n'
-                                                f'`/{func_name}`')
-        func(update, context)
+        yield Markdown(f'Assuming you meant:  \n'
+                       f'`/{func_name}`',
+                       notification=False)
+        func(message)
 
     else:
         results, responses = __search(query, onemap=True)
-        return responses
+        yield from responses
 
 
 def handle_location(update: Update, context: CallbackContext):
@@ -489,8 +484,7 @@ def handle_location(update: Update, context: CallbackContext):
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)
 
-
-    message = Message(update,context)
+    message = Message(update, context)
     responses = __nearby(loc)
     for response in responses:
         response.send(message)
@@ -569,9 +563,6 @@ if __name__ == '__main__':
 
     # inline handler
     bot.add_inline_handler(handle_inline)
-
-    # by name / zip code
-    bot.add_message_handler(handle_text, Filters.text)
 
     # by location
     bot.add_message_handler(handle_location, Filters.location)
