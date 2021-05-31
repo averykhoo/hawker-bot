@@ -5,6 +5,7 @@ from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import Iterable
+from typing import Optional
 from typing import Pattern
 from typing import Set
 from typing import TypeVar
@@ -33,6 +34,7 @@ class Route:
     pattern: Pattern
     endpoint: Endpoint
     allowed_matches: Set[Match]
+    key: Optional[str] = None
 
     def match(self, message: Message) -> Match:
         match = self.pattern.search(message.text)
@@ -58,12 +60,13 @@ class Route:
 
     def handle_message(self, message: Message) -> None:
         match = self.pattern.search(message.text)
-        assert match is not None, self.pattern
-        assert len(match.groups()) > 0, match
-        assert len(match.groupdict()) > 0, match
-        assert 'command' in match.groupdict(), match
+        assert match is not None, (self.pattern, match)
+        # assert len(match.groups()) > 0, (self.pattern, match)
+        # assert len(match.groupdict()) > 0, (self.pattern, match)
+        # assert 'command' in match.groupdict(), (self.pattern, match)
 
-        message.prefix = match.groupdict('command')
+        message.match = match
+        message.command = self.key
 
         # ret = self.endpoint(message)
         ret = self.endpoint(message.update, message.context)
@@ -89,7 +92,7 @@ class Route:
 
 
 def make_keyword_route(endpoint: Endpoint,
-                       word: str,
+                       keyword: str,
                        case: bool = False,
                        boundary: bool = True,
                        full_match: bool = True,
@@ -103,9 +106,9 @@ def make_keyword_route(endpoint: Endpoint,
 
     # boundary checking
     if boundary:
-        pattern = re.compile(rf'(?P<command>(?:^|\b){re.escape(word)}(?:\b|$))', flags=flags)
+        pattern = re.compile(rf'(?P<command>(?:^|\b){re.escape(keyword)}(?:\b|$))', flags=flags)
     else:
-        pattern = re.compile(rf'(?P<command>{re.escape(word)})', flags=flags)
+        pattern = re.compile(rf'(?P<command>{re.escape(keyword)})', flags=flags)
 
     # create route
     return make_regex_route(endpoint,
@@ -116,7 +119,7 @@ def make_keyword_route(endpoint: Endpoint,
 
 
 def make_command_route(endpoint: Endpoint,
-                       word: str,
+                       command: str,
                        case: bool = False,
                        allow_backslash: bool = False,
                        allow_noslash: bool = False,
@@ -139,9 +142,9 @@ def make_command_route(endpoint: Endpoint,
 
     # boundary checking
     if boundary:
-        pattern = re.compile(rf'(?P<command>(?:^|\s){slash}{re.escape(word)}(?:\b|$))', flags=flags)
+        pattern = re.compile(rf'(?P<command>(?:^|\s){slash}{re.escape(command)}(?:\b|$))', flags=flags)
     else:
-        pattern = re.compile(rf'(?P<command>{slash}{re.escape(word)})', flags=flags)
+        pattern = re.compile(rf'(?P<command>{slash}{re.escape(command)})', flags=flags)
 
     # create route
     return make_regex_route(endpoint,

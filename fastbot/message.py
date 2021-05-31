@@ -14,7 +14,8 @@ from telegram.ext import CallbackContext
 class Message:
     update: Update
     context: CallbackContext
-    prefix: Optional[str] = None
+    prefix: Optional[str] = None  # matched command string
+    command: Optional[str] = None  # canonical command name
 
     @property
     def text(self) -> str:

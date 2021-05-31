@@ -1,10 +1,9 @@
+import re
 from dataclasses import dataclass
 from dataclasses import field
 from re import Pattern
 from typing import Callable
 from typing import List
-# noinspection PyPackageRequirements
-from typing import Union
 
 from telegram import Update
 # noinspection PyPackageRequirements
@@ -19,16 +18,27 @@ from fastbot.route import make_keyword_route
 from fastbot.route import make_regex_route
 
 
+# noinspection PyPackageRequirements
+
+
 @dataclass
 class Router:
-    routes: List[Route] = field(default_factory=list, init=False)
+    __routes: List[Route] = field(default_factory=list, init=False)
+    __default = None
+
+    @property
+    def routes(self):
+        if self.__default is None:
+            return self.__routes[:]
+        else:
+            return self.__routes + [self.__default]
 
     def match(self, message: Message) -> Match:
         if not message.text:
             return Match.NO_MATCH
 
         best_match = Match.NO_MATCH
-        for route in self.routes:
+        for route in self.__routes + [self.__default]:
             best_match = max(best_match, route.match(message))
             if best_match == Match.FULL_MATCH:
                 return best_match
@@ -41,7 +51,7 @@ class Router:
 
         partial_match = None
         any_match = None
-        for route in self.routes:
+        for route in self.__routes + [self.__default]:
             match = route.match(message)
 
             if match == Match.FULL_MATCH:
@@ -69,67 +79,58 @@ class Router:
         self.handle_message(Message(update, context))
 
     def keyword(self,
-                arg: Union[str, Callable],
+                word: str,
                 /,
                 *,
                 case: bool = False,
-                substring_match: bool = False,
                 boundary: bool = True,
-                ) -> Union[Endpoint, Callable[[Endpoint], Endpoint]]:
+                full_match: bool = True,
+                prefix_match: bool = False,
+                substring_match: bool = False,
+                ) -> Callable[[Endpoint], Endpoint]:
+        assert isinstance(word, str)
 
-        # check if this is a decorator initialization
-        if isinstance(arg, str):
-            def decorator(endpoint: Endpoint):
-                self.routes.append(make_keyword_route(endpoint=endpoint,
-                                                      word=arg,
-                                                      case=case,
-                                                      substring_match=substring_match,
-                                                      boundary=boundary))
-                return endpoint
+        def decorator(endpoint: Endpoint):
+            self.__routes.append(make_keyword_route(endpoint=endpoint,
+                                                    keyword=word,
+                                                    case=case,
+                                                    boundary=boundary,
+                                                    full_match=full_match,
+                                                    prefix_match=prefix_match,
+                                                    substring_match=substring_match,
+                                                    ))
+            return endpoint
 
-            return decorator
-
-        # nope, this is being called as a decorator
-        assert isinstance(arg, Callable)
-        self.routes.append(make_keyword_route(endpoint=arg,
-                                              word=arg.__name__,  # take function name as keyword
-                                              case=case,
-                                              substring_match=substring_match,
-                                              boundary=boundary))
-        return arg
+        return decorator
 
     def command(self,
-                arg: Union[str, Callable],
+                cmd: str,
                 /,
                 *,
                 case: bool = False,
                 allow_backslash: bool = False,
                 allow_noslash: bool = False,
                 boundary: bool = True,
-                ) -> Union[Endpoint, Callable[[Endpoint], Endpoint]]:
+                full_match: bool = True,
+                prefix_match: bool = False,
+                substring_match: bool = False,
+                ) -> Callable[[Endpoint], Endpoint]:
+        assert isinstance(cmd, str)
 
-        # check if this is a decorator initialization
-        if isinstance(arg, str):
-            def decorator(endpoint: Endpoint):
-                self.routes.append(make_command_route(endpoint=endpoint,
-                                                      word=arg,
-                                                      case=case,
-                                                      allow_backslash=allow_backslash,
-                                                      allow_noslash=allow_noslash,
-                                                      boundary=boundary))
-                return endpoint
+        def decorator(endpoint: Endpoint):
+            self.__routes.append(make_command_route(endpoint=endpoint,
+                                                    command=cmd,
+                                                    case=case,
+                                                    allow_backslash=allow_backslash,
+                                                    allow_noslash=allow_noslash,
+                                                    boundary=boundary,
+                                                    full_match=full_match,
+                                                    prefix_match=prefix_match,
+                                                    substring_match=substring_match,
+                                                    ))
+            return endpoint
 
-            return decorator
-
-        # nope, this is being called as a decorator
-        assert isinstance(arg, Callable)
-        self.routes.append(make_command_route(endpoint=arg,
-                                              word=arg.__name__,  # take function name as keyword
-                                              case=case,
-                                              allow_backslash=allow_backslash,
-                                              allow_noslash=allow_noslash,
-                                              boundary=boundary))
-        return arg
+        return decorator
 
     def regex(self,
               pattern: Pattern,
@@ -138,17 +139,25 @@ class Router:
               full_match: bool = True,
               prefix_match: bool = False,
               substring_match: bool = False,
-              ) -> Union[Endpoint, Callable[[Endpoint], Endpoint]]:
-
-        # this MUST a decorator initialization
+              ) -> Callable[[Endpoint], Endpoint]:
         assert isinstance(pattern, Pattern)
 
         def decorator(endpoint: Endpoint):
-            self.routes.append(make_regex_route(endpoint=endpoint,
-                                                pattern=pattern,
-                                                full_match=full_match,
-                                                prefix_match=prefix_match,
-                                                substring_match=substring_match))
+            self.__routes.append(make_regex_route(endpoint=endpoint,
+                                                  pattern=pattern,
+                                                  full_match=full_match,
+                                                  prefix_match=prefix_match,
+                                                  substring_match=substring_match))
             return endpoint
 
         return decorator
+
+    def default(self, endpoint: Endpoint) -> Endpoint:
+        # RE_COMMAND = re.compile(r'(?P<cmd>[/\\][a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
+        assert self.__default is None
+        self.__default = make_regex_route(endpoint=endpoint,
+                                          pattern=re.compile(r'(?P<command>[\s\S]+?)'),
+                                          full_match=True,
+                                          prefix_match=True,
+                                          substring_match=True)
+        return endpoint

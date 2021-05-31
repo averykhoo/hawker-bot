@@ -38,15 +38,15 @@ class FastBot:
         self.router = Router()
         self.add_message_handler(self.router.callback, Filters.text)
 
-    def add_inline_handler(self,
-                           callback: Callback,
-                           group: int = 10,
-                           ) -> None:
-        self.bot_updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
+        # convenience mappings so we can add stuff directly
+        self.keyword = self.router.keyword
+        self.command = self.router.command
+        self.regex = self.router.regex
+        self.default = self.router.default
 
     def add_message_handler(self,
                             callback: Callback,
-                            message_filter: MessageFilter = Filters.all,
+                            message_filter: MessageFilter,
                             group: int = 10,
                             ) -> None:
         self.bot_updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
@@ -57,6 +57,12 @@ class FastBot:
                             group: int = 10,
                             ) -> None:
         self.bot_updater.dispatcher.add_handler(CommandHandler(command, callback), group)
+
+    def add_inline_handler(self,
+                           callback: Callback,
+                           group: int = 10,
+                           ) -> None:
+        self.bot_updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
 
     def add_error_handler(self,
                           callback: Callback,

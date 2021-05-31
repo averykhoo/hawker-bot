@@ -4,6 +4,8 @@ import json
 import logging
 import uuid
 from typing import List
+from typing import Optional
+from typing import Tuple
 
 from telegram import InlineQueryResultArticle
 from telegram import InlineQueryResultVenue
@@ -13,6 +15,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import Filters
 
+import config
 import utils
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg import onemap_search
@@ -29,79 +32,68 @@ from api_wrappers.weather import weather_24h_grouped
 from api_wrappers.weather import weather_2h
 from api_wrappers.weather import weather_4d
 from fastbot.fast_bot import FastBot
+from fastbot.message import Message
 from fastbot.response import Markdown
+from fastbot.response import Response
 from fastbot.response import Text
 from hawkers import DateRange
 from hawkers import Hawker
 
+# set up logging appropriately
 utils.setup_logging(app_name='hawker-bot')
+
+# disable SSL verification because of the enterprise firewall
 utils.no_ssl_verification()
 
-with open('secrets.json') as f:
-    secrets = json.load(f)
-
-bot = FastBot(secrets['hawker_center_bot_token (dev)'])
-
-BOT_USERNAMES = {
-    'hawker_centre_bot',  # prod
-    'hawker_center_bot',  # dev
-}
-
+# load hawker center data
 hawkers = utils.load_hawker_data()
 
+# create bot
+bot = FastBot(config.SECRETS['hawker_center_bot_token (dev)'])
 
-def _fix_zip(query, effective_message=None):
+
+def __fix_zip(query: str) -> Tuple[Optional[str], Optional[Markdown]]:
     try:
-        return fix_zipcode(query)
+        return fix_zipcode(query), None
 
     except ZipBlank:
-        if effective_message is not None:
-            effective_message.reply_markdown('  \n'.join([
-                'No zip code provided',
-                '`/zip` usage example:',
-                '`/zip 078881`',
-            ]), disable_notification=True)
+        return None, Markdown('  \n'.join([
+            'No zip code provided',
+            '`/zip` usage example:',
+            '`/zip 078881`',
+        ]), notification=False)
 
     except ZipNonNumeric:
-        if effective_message is not None:
-            effective_message.reply_markdown('  \n'.join([
-                f'Invalid zip code provided: "{query}"',
-                'Zip code must be digits 0-9',
-                '`/zip` usage example:',
-                '`/zip 078881`',
-            ]), disable_notification=True)
+        return None, Markdown('  \n'.join([
+            f'Invalid zip code provided: "{query}"',
+            'Zip code must be digits 0-9',
+            '`/zip` usage example:',
+            '`/zip 078881`',
+        ]), notification=False)
 
     except ZipNonExistent:
-        if effective_message is not None:
-            effective_message.reply_markdown('  \n'.join([
-                f'Zip code provided cannot possibly exist in Singapore: "{int(query):06d}"',
-                '`/zip` usage example:',
-                '`/zip 078881`',
-            ]), disable_notification=True)
+        return None, Markdown('  \n'.join([
+            f'Zip code provided cannot possibly exist in Singapore: "{int(query):06d}"',
+            '`/zip` usage example:',
+            '`/zip 078881`',
+        ]), notification=False)
 
 
-def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
+def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], List[Response]]:
     if not query:
-        if effective_message is not None:
-            effective_message.reply_text('no search query received',
-                                         disable_notification=True)
         logging.info('QUERY_BLANK')
-        return []
+        return [], [Text('no search query received', notification=False)]
 
     # try exact match for zip code
     try:
         zip_code = fix_zipcode(query)
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
-            if effective_message is not None:
-                effective_message.reply_text(f'Displaying zip code match for "{zip_code}"',
-                                             disable_notification=True)
+            responses = [Text(f'Displaying zip code match for "{zip_code}"', notification=False)]
             for result in results:
                 logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
-                if effective_message is not None:
-                    effective_message.reply_markdown(result.to_markdown(),
-                                                     disable_notification=True)
-            return results
+                responses.append(Markdown(result.to_markdown(), notification=False))
+            return results, responses
     except InvalidZip:
         pass
 
@@ -109,48 +101,34 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
     for hawker in hawkers:
         if hawker.name.casefold() == query.casefold():
             logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
-            if effective_message is not None:
-                effective_message.reply_text(f'Displaying exact match for "{query}"',
-                                             disable_notification=True)
-                effective_message.reply_markdown(hawker.to_markdown(),
-                                                 disable_notification=True)
-            return [hawker]
+            return [hawker], [Text(f'Displaying exact match for "{query}"', notification=False),
+                              Markdown(hawker.to_markdown(), notification=False)]
 
     # run fuzzy search over fields
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
-        if effective_message is not None:
-            effective_message.reply_text(f'Displaying top {min(5, len(results))} results for "{query}"',
-                                         disable_notification=True)
+        responses = [Text(f'Displaying top {min(5, len(results))} results for "{query}"', notification=False)]
         for hawker, score in results[:5]:
             logging.info(f'QUERY="{query}" SIMILARITY={hawker.text_similarity(query)} RESULT="{hawker.name}"')
-            if effective_message is not None:
-                effective_message.reply_markdown(hawker.to_markdown(),
-                                                 disable_notification=True)
-        return [hawker for hawker, score in results]
+            responses.append(Markdown(hawker.to_markdown(), notification=False))
+        return [hawker for hawker, score in results], responses
 
-    else:
-        logging.info(f'QUERY_NO_RESULTS="{query}"')
-        if effective_message is not None:
-            effective_message.reply_text(f'Zero hawker centres match "{query}"',
-                                         disable_notification=True)
-        # return []
+    logging.info(f'QUERY_NO_RESULTS="{query}"')
+    responses = [Text(f'Zero hawker centres match "{query}"', notification=False)]
+    if not onemap:
+        return [], responses
 
     # if we have don't have to reply, exit early
-    if effective_message is None:
-        return []
     results = onemap_search(query)
 
     # if we have to reply, try to be a bit more intelligent
     if not results:
         logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
-        effective_message.reply_text(f'Zero matches from OneMap.sg for {query}',
-                                     disable_notification=True)
-        return []
+        responses.append(Text(f'Zero matches from OneMap.sg for {query}', notification=False))
+        return [], responses
 
-    effective_message.reply_text(f'Displaying top {min(5, len(results))} results from OneMapSG',
-                                 disable_notification=True)
+    responses.append(Text(f'Displaying top {min(5, len(results))} results from OneMapSG', notification=False))
 
     lines = []
     for result in results[:5]:
@@ -161,13 +139,11 @@ def _search(query, effective_message=None, threshold=0.6) -> List[Hawker]:
             f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
             ''
         ])
-    effective_message.reply_markdown('  \n'.join(lines),
-                                     disable_web_page_preview=True,
-                                     disable_notification=True)
-    return []
+    responses.append(Markdown('  \n'.join(lines), notification=False, web_page_preview=False))
+    return [], responses
 
 
-def _closed(date, effective_message, date_name):
+def __closed(date, date_name) -> Markdown:
     lines = [f'Closed {date_name}:']
 
     for hawker in sorted(hawkers, key=lambda x: x.name):
@@ -175,22 +151,22 @@ def _closed(date, effective_message, date_name):
             logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
             lines.append(f'{len(lines)}.  {hawker.name}')
 
-    effective_message.reply_markdown('  \n'.join(lines),
-                                     disable_notification=True)
+    return Markdown('  \n'.join(lines), notification=False)
 
 
-def _nearby(loc, effective_message):
+def __nearby(loc):
     assert isinstance(loc, Location), loc
     # noinspection PyTypeChecker
     results: List[Hawker] = loc.k_nearest(hawkers, k=-1)
+    responses = []
     for result in results[:5]:
         logging.info(f'LAT={loc.latitude} LON={loc.longitude} DISTANCE={loc.distance(result)} RESULT="{result.name}"')
-        text = f'{round(loc.distance(result))} meters away:  \n' + result.to_markdown()
-        effective_message.reply_markdown(text,
-                                         disable_notification=True)
+        responses.append(Markdown(f'{round(loc.distance(result))} meters away:  \n{result.to_markdown()}',
+                                  notification=False))
+    return responses
 
 
-@bot.router.command('start', allow_backslash=True, allow_noslash=True)
+@bot.command('start', allow_backslash=True, allow_noslash=True)
 def cmd_start(update: Update, context: CallbackContext):
     update.effective_message.reply_text('Hi!',
                                         disable_notification=True)
@@ -198,30 +174,33 @@ def cmd_start(update: Update, context: CallbackContext):
                                             disable_notification=True)
 
 
-@bot.router.command('help', allow_backslash=True, allow_noslash=True)
-@bot.router.command('halp', allow_backslash=True, allow_noslash=True)
-@bot.router.command('h', allow_backslash=True, allow_noslash=True)
-@bot.router.command('?', allow_backslash=True, allow_noslash=True)
-@bot.router.command('??', allow_backslash=True, allow_noslash=True)
-@bot.router.command('???', allow_backslash=True, allow_noslash=True)
+@bot.command('help', allow_backslash=True, allow_noslash=True)
+@bot.command('halp', allow_backslash=True, allow_noslash=True)
+@bot.command('h', allow_backslash=True, allow_noslash=True)
+@bot.command('?', allow_backslash=True, allow_noslash=True)
+@bot.command('??', allow_backslash=True, allow_noslash=True)
+@bot.command('???', allow_backslash=True, allow_noslash=True)
 def cmd_help(update: Update, context: CallbackContext):
     return Markdown(utils.load_template('help'), notification=False)
 
 
-@bot.router.command('search')
-def cmd_search(update: Update, context: CallbackContext):
-    query = update.effective_message.text
-    command, query = utils.split_command(query, 'search')
-    assert command is not None
+@bot.command('search', allow_backslash=True, prefix_match=True)
+def cmd_search(update: Update, context: CallbackContext, query=None):
+    if query is None:
+        query = update.effective_message.text
+        command, query = utils.split_command(query, 'search')
+        assert command is not None
 
-    _search(query, update.effective_message)
+    results, responses = __search(query, onemap=True)
+    return responses
 
 
-@bot.router.command('onemap')
-def cmd_onemap(update: Update, context: CallbackContext):
-    query = update.effective_message.text
-    command, query = utils.split_command(query, 'onemap')
-    assert command is not None
+@bot.command('onemap', allow_backslash=True, prefix_match=True)
+def cmd_onemap(update: Update, context: CallbackContext, query=None):
+    if query is None:
+        query = update.effective_message.text
+        command, query = utils.split_command(query, 'onemap')
+        assert command is not None
 
     if not query:
         update.effective_message.reply_markdown('  \n'.join([
@@ -256,26 +235,27 @@ def cmd_onemap(update: Update, context: CallbackContext):
                                             disable_notification=True)
 
 
-@bot.router.command('about', allow_backslash=True, allow_noslash=True)
-@bot.router.command('share', allow_backslash=True, allow_noslash=True)
+@bot.command('about', allow_backslash=True, allow_noslash=True)
+@bot.command('share', allow_backslash=True, allow_noslash=True)
 def cmd_about(update: Update, context: CallbackContext):
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
-@bot.router.command('zip', allow_backslash=True, allow_noslash=True)
-@bot.router.command('zipcode', allow_backslash=True, allow_noslash=True)
-@bot.router.command('post', allow_backslash=True, allow_noslash=True)
-@bot.router.command('postal', allow_backslash=True, allow_noslash=True)
-@bot.router.command('postcode', allow_backslash=True, allow_noslash=True)
-@bot.router.command('postalcode', allow_backslash=True, allow_noslash=True)
-def cmd_zip(update: Update, context: CallbackContext):
-    query = update.effective_message.text
-    command, query = utils.split_command(query)
-    assert command is not None
+@bot.command('zip', allow_backslash=True, prefix_match=True)
+@bot.command('zipcode', allow_backslash=True, prefix_match=True)
+@bot.command('post', allow_backslash=True, prefix_match=True)
+@bot.command('postal', allow_backslash=True, prefix_match=True)
+@bot.command('postcode', allow_backslash=True, prefix_match=True)
+@bot.command('postalcode', allow_backslash=True, prefix_match=True)
+def cmd_zip(update: Update, context: CallbackContext, query=None):
+    if query is None:
+        query = update.effective_message.text
+        command, query = utils.split_command(query)
+        assert command is not None
 
-    zip_code = _fix_zip(query, update.effective_message)
-    if not zip_code:
-        return None
+    zip_code, response = __fix_zip(query)
+    if zip_code is None:
+        return response
 
     loc = locate_zipcode(zip_code)
     if not loc:
@@ -296,12 +276,12 @@ def cmd_zip(update: Update, context: CallbackContext):
     update.effective_message.reply_text(f'Displaying nearest 5 results to "{loc.address}"',
                                         disable_notification=True)
     logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-    _nearby(loc, update.effective_message)
+    return __nearby(loc)
 
 
-@bot.router.command('rain', allow_backslash=True, allow_noslash=True)
-@bot.router.command('weather', allow_backslash=True, allow_noslash=True)
-@bot.router.command('forecast', allow_backslash=True, allow_noslash=True)
+@bot.command('rain', allow_backslash=True, allow_noslash=True)
+@bot.command('weather', allow_backslash=True, allow_noslash=True)
+@bot.command('forecast', allow_backslash=True, allow_noslash=True)
 def cmd_weather(update: Update, context: CallbackContext):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
@@ -319,8 +299,8 @@ def cmd_weather(update: Update, context: CallbackContext):
                                                 disable_web_page_preview=True)
 
 
-@bot.router.command('day', allow_backslash=True, allow_noslash=True)
-@bot.router.command('today', allow_backslash=True, allow_noslash=True)
+@bot.command('day', allow_backslash=True, allow_noslash=True)
+@bot.command('today', allow_backslash=True, allow_noslash=True)
 def cmd_today(update: Update, context: CallbackContext):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
@@ -340,10 +320,10 @@ def cmd_today(update: Update, context: CallbackContext):
             break
 
     # send what's closed today
-    _closed(datetime.date.today(), update.effective_message, 'today')
+    return __closed(datetime.date.today(), 'today')
 
 
-@bot.router.command('tomorrow', allow_backslash=True, allow_noslash=True)
+@bot.command('tomorrow', allow_backslash=True, allow_noslash=True)
 def cmd_tomorrow(update: Update, context: CallbackContext):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
@@ -354,45 +334,54 @@ def cmd_tomorrow(update: Update, context: CallbackContext):
             ]), disable_notification=True, disable_web_page_preview=True)
             break
 
-    _closed(datetime.date.today() + datetime.timedelta(days=1), update.effective_message, 'tomorrow')
+    return __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
 
-@bot.router.command('week', allow_backslash=True, allow_noslash=True)
-@bot.router.command('thisweek', allow_backslash=True, allow_noslash=True)
-@bot.router.command('this_week', allow_backslash=True, allow_noslash=True)
+@bot.command('week', allow_backslash=True, allow_noslash=True)
+@bot.command('thisweek', allow_backslash=True, allow_noslash=True)
+@bot.command('this_week', allow_backslash=True, allow_noslash=True)
 def cmd_this_week(update: Update, context: CallbackContext):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
-    _closed(DateRange(today, week_end), update.effective_message, 'this week')
+    return __closed(DateRange(today, week_end), 'this week')
 
 
-@bot.router.command('next', allow_backslash=True, allow_noslash=True)
-@bot.router.command('nextweek', allow_backslash=True, allow_noslash=True)
-@bot.router.command('next_week', allow_backslash=True, allow_noslash=True)
+@bot.command('next', allow_backslash=True, allow_noslash=True)
+@bot.command('nextweek', allow_backslash=True, allow_noslash=True)
+@bot.command('next_week', allow_backslash=True, allow_noslash=True)
 def cmd_next_week(update: Update, context: CallbackContext):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
-    _closed(DateRange(next_week_start, next_week_end), update.effective_message, '_next_ week')
+    return __closed(DateRange(next_week_start, next_week_end), '_next_ week')
 
 
-@bot.router.command('month', allow_backslash=True, allow_noslash=True)
-@bot.router.command('thismonth', allow_backslash=True, allow_noslash=True)
-@bot.router.command('this_month', allow_backslash=True, allow_noslash=True)
+@bot.command('month', allow_backslash=True, allow_noslash=True)
+@bot.command('thismonth', allow_backslash=True, allow_noslash=True)
+@bot.command('this_month', allow_backslash=True, allow_noslash=True)
 def cmd_this_month(update: Update, context: CallbackContext):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-    _closed(DateRange(today, month_end), update.effective_message, 'this month')
+    return __closed(DateRange(today, month_end), 'this month')
 
 
-@bot.router.command('nextmonth', allow_backslash=True, allow_noslash=True)
-@bot.router.command('next_month', allow_backslash=True, allow_noslash=True)
+@bot.command('nextmonth', allow_backslash=True, allow_noslash=True)
+@bot.command('next_month', allow_backslash=True, allow_noslash=True)
 def cmd_next_month(update: Update, context: CallbackContext):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     next_month_start = month_end + datetime.timedelta(days=1)
     next_month_end = next_month_start.replace(day=calendar.monthrange(next_month_start.year, next_month_start.month)[1])
-    _closed(DateRange(next_month_start, next_month_end), update.effective_message, 'next month')
+    return __closed(DateRange(next_month_start, next_month_end), 'next month')
+
+
+@bot.command('year', allow_backslash=True, allow_noslash=True)
+@bot.command('thisyear', allow_backslash=True, allow_noslash=True)
+@bot.command('this_year', allow_backslash=True, allow_noslash=True)
+def cmd_this_year(update: Update, context: CallbackContext):
+    today = datetime.date.today()
+    year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
+    return __closed(DateRange(today, year_end), 'this year')
 
 
 def cmd_unknown(update: Update, context: CallbackContext):
@@ -410,8 +399,8 @@ def cmd_unknown(update: Update, context: CallbackContext):
         if _command is not None:
             logging.info(f'FUZZY_MATCHED_COMMAND="{utils.get_command(query)}" COMMAND="{command}"')
             update.effective_message.reply_markdown(f'Assuming you meant:  \n'
-                                                    f'`{query[:len(command)]} {query[len(command):]}`')
-            func(update, context)
+                                                    f'`/{command} {_query}`')
+            func(update, context, _query)
             break
     else:
         logging.info(f'UNSUPPORTED_COMMAND="{utils.get_command(query)}" QUERY="{query}"')
@@ -419,15 +408,16 @@ def cmd_unknown(update: Update, context: CallbackContext):
                                                 disable_notification=True)
 
 
-@bot.router.command('ping')
+@bot.command('ping')
 def cmd_ping(update: Update, context: CallbackContext):
     return Text('pong', notification=False)
 
 
+@bot.default
 def handle_text(update: Update, context: CallbackContext):
     if update.effective_message.via_bot is not None:
         bot_username = update.effective_message.via_bot.username
-        if bot_username in BOT_USERNAMES:
+        if bot_username in config.BOT_USERNAMES:
             logging.debug(f'VIA_BOT="{bot_username}"')
             return
 
@@ -471,7 +461,8 @@ def handle_text(update: Update, context: CallbackContext):
         func(update, context)
 
     else:
-        _search(query, update.effective_message)
+        results, responses = __search(query, onemap=True)
+        return responses
 
 
 def handle_location(update: Update, context: CallbackContext):
@@ -497,7 +488,12 @@ def handle_location(update: Update, context: CallbackContext):
 
     update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
                                         disable_notification=True)
-    _nearby(loc, update.effective_message)
+
+
+    message = Message(update,context)
+    responses = __nearby(loc)
+    for response in responses:
+        response.send(message)
 
 
 def handle_unknown(update: Update, context: CallbackContext):
@@ -513,7 +509,7 @@ def error(update: Update, context: CallbackContext):
     Log Errors caused by Updates.
     """
     logging.warning(f'ERROR="{context.error}" MESSAGE_JSON={json.dumps(update.to_dict() if update else None)}')
-    # raise context.error
+    raise context.error
 
 
 def log_message(update: Update, context: CallbackContext):
@@ -525,7 +521,7 @@ def handle_inline(update: Update, _: CallbackContext) -> None:
     query = update.inline_query.query.strip()
     logging.info(f'INLINE="{query}"')
 
-    results = _search(query)
+    results, responses = __search(query)
     if results:
         update.inline_query.answer([
             InlineQueryResultVenue(
@@ -576,8 +572,10 @@ if __name__ == '__main__':
 
     # by name / zip code
     bot.add_message_handler(handle_text, Filters.text)
+
     # by location
     bot.add_message_handler(handle_location, Filters.location)
+
     # handle non-commands
     bot.add_message_handler(handle_unknown, Filters.all)
 
