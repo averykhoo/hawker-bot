@@ -8,8 +8,8 @@ from fastbot.message import Message
 @dataclass
 class Response(ABC):
     content: str
-    web_page_preview: bool = True
     notification: bool = True
+    web_page_preview: bool = True
 
     @abstractmethod
     def send(self, message: Message):

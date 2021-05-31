@@ -36,8 +36,6 @@ class Router:
         return best_match
 
     def handle_message(self, message: Message):
-        print('router:', message.text)
-
         if not message.text:
             return Match.NO_MATCH
 

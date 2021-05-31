@@ -29,6 +29,8 @@ from api_wrappers.weather import weather_24h_grouped
 from api_wrappers.weather import weather_2h
 from api_wrappers.weather import weather_4d
 from fastbot.fast_bot import FastBot
+from fastbot.response import Markdown
+from fastbot.response import Text
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -203,8 +205,7 @@ def cmd_start(update: Update, context: CallbackContext):
 @bot.router.command('??', allow_backslash=True, allow_noslash=True)
 @bot.router.command('???', allow_backslash=True, allow_noslash=True)
 def cmd_help(update: Update, context: CallbackContext):
-    update.effective_message.reply_markdown(utils.load_template('help'),
-                                            disable_notification=True)
+    return Markdown(utils.load_template('help'), notification=False)
 
 
 @bot.router.command('search')
@@ -258,9 +259,7 @@ def cmd_onemap(update: Update, context: CallbackContext):
 @bot.router.command('about', allow_backslash=True, allow_noslash=True)
 @bot.router.command('share', allow_backslash=True, allow_noslash=True)
 def cmd_about(update: Update, context: CallbackContext):
-    update.effective_message.reply_markdown(utils.load_template('about'),
-                                            disable_notification=True,
-                                            disable_web_page_preview=True)
+    return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
 @bot.router.command('zip', allow_backslash=True, allow_noslash=True)
@@ -422,8 +421,7 @@ def cmd_unknown(update: Update, context: CallbackContext):
 
 @bot.router.command('ping')
 def cmd_ping(update: Update, context: CallbackContext):
-    update.effective_message.reply_text(f'pong',
-                                        disable_notification=True)
+    return Text('pong', notification=False)
 
 
 def handle_text(update: Update, context: CallbackContext):
@@ -504,6 +502,8 @@ def handle_location(update: Update, context: CallbackContext):
 
 def handle_unknown(update: Update, context: CallbackContext):
     logging.warning(f'INVALID_MESSAGE_TYPE MESSAGE_JSON={json.dumps(update.to_dict())}')
+
+    # return Text('Unable to handle this message type', notification=False)
     update.effective_message.reply_text('Unable to handle this message type',
                                         disable_notification=True)
 
