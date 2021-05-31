@@ -423,7 +423,7 @@ def handle_location(update: Update, context: CallbackContext):
     message = Message(update, context)
     responses = __nearby(loc)
     for response in responses:
-        response.send(message)
+        response.send_reply(message.update)
 
 
 def handle_unknown(update: Update, context: CallbackContext):
@@ -443,7 +443,7 @@ def error(update: Update, context: CallbackContext):
 
 
 def log_message(update: Update, context: CallbackContext):
-    logging.debug(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
+    logging.info(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
 
 
 def handle_inline(update: Update, _: CallbackContext) -> None:

@@ -13,9 +13,9 @@ from typing import Union
 
 from fastbot.message import Message
 from fastbot.response import Response
-from fastbot.response import Text
-
 # fastapi.types.DecoratedCallable: stricter type inference, guaranteeing same type signature for decorated function
+from fastbot.response import normalize_responses
+
 AnyResponse = Union[str, Response]
 Endpoint = TypeVar('Endpoint', bound=Callable[[Message], Union[AnyResponse,
                                                                Iterable[AnyResponse],
@@ -73,24 +73,7 @@ class Route:
 
         ret = self.endpoint(message)
         if ret is not None:
-            if isinstance(ret, Response):
-                responses = [ret]
-            elif isinstance(ret, str):
-                responses = [Text(ret)]
-            elif isinstance(ret, (Iterable, Generator)):
-                responses = []
-                for response in ret:
-                    if isinstance(response, Response):
-                        responses.append(response)
-                    elif isinstance(response, str):
-                        responses.append(Text(response))
-                    else:
-                        raise TypeError(response)
-            else:
-                raise TypeError(ret)
-
-            for response in responses:
-                response.send(message)
+            message.reply(normalize_responses(ret))
 
 
 def make_keyword_route(endpoint: Endpoint,
