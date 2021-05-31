@@ -34,7 +34,10 @@ class Route:
     pattern: Pattern
     endpoint: Endpoint
     allowed_matches: Set[Match]
-    key: Optional[str] = None
+    canonical_name: Optional[str] = None
+
+    def __post_init__(self):
+        print(self)
 
     def match(self, message: Message) -> Match:
         match = self.pattern.search(message.text)
@@ -66,7 +69,7 @@ class Route:
         # assert 'command' in match.groupdict(), (self.pattern, match)
 
         message.match = match
-        message.command = self.key
+        message.command = self.canonical_name
 
         ret = self.endpoint(message)
         if ret is not None:
@@ -94,6 +97,7 @@ def make_keyword_route(endpoint: Endpoint,
                        keyword: str,
                        case: bool = False,
                        boundary: bool = True,
+                       canonical_name: Optional[str] = None,
                        full_match: bool = True,
                        prefix_match: bool = False,
                        substring_match: bool = False,
@@ -112,9 +116,11 @@ def make_keyword_route(endpoint: Endpoint,
     # create route
     return make_regex_route(endpoint,
                             pattern,
+                            canonical_name=canonical_name,
                             full_match=full_match,
                             prefix_match=prefix_match,
-                            substring_match=substring_match)
+                            substring_match=substring_match,
+                            )
 
 
 def make_command_route(endpoint: Endpoint,
@@ -124,6 +130,7 @@ def make_command_route(endpoint: Endpoint,
                        allow_backslash: bool = False,
                        allow_noslash: bool = False,
                        boundary: bool = True,
+                       canonical_name: Optional[str] = None,
                        full_match: bool = True,
                        prefix_match: bool = True,
                        substring_match: bool = False,
@@ -157,13 +164,16 @@ def make_command_route(endpoint: Endpoint,
     # create route
     return make_regex_route(endpoint,
                             pattern,
+                            canonical_name=canonical_name,
                             full_match=full_match,
                             prefix_match=prefix_match,
-                            substring_match=substring_match)
+                            substring_match=substring_match,
+                            )
 
 
 def make_regex_route(endpoint: Endpoint,
                      pattern: Pattern,
+                     canonical_name: Optional[str] = None,
                      full_match: bool = True,
                      prefix_match: bool = False,
                      substring_match: bool = False,
@@ -180,4 +190,8 @@ def make_regex_route(endpoint: Endpoint,
         raise ValueError('no matches allowed')
 
     # create route
-    return Route(pattern, endpoint, allowed_matches)
+    return Route(pattern=pattern,
+                 endpoint=endpoint,
+                 allowed_matches=allowed_matches,
+                 canonical_name=canonical_name,
+                 )

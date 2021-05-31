@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from re import Pattern
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -22,7 +23,8 @@ from fastbot.route import make_regex_route
 @dataclass
 class Router:
     __routes: List[Route] = field(default_factory=list, init=False)
-    __default = None
+    __default: Optional[Route] = field(default=None, init=False)
+    __names: Dict[int, str] = field(default_factory=dict, init=False)
 
     @property
     def routes(self):
@@ -30,6 +32,11 @@ class Router:
             return self.__routes[:]
         else:
             return self.__routes + [self.__default]
+
+    def _get_name(self, endpoint: Endpoint, default: Optional[str]) -> Optional[str]:
+        if default is not None:
+            self.__names.setdefault(id(endpoint), default)
+        return self.__names.get(id(endpoint))
 
     def match(self, message: Message) -> Match:
         if not message.text:
@@ -93,6 +100,7 @@ class Router:
                                                     keyword=word,
                                                     case=case,
                                                     boundary=boundary,
+                                                    canonical_name=self._get_name(endpoint, word),
                                                     full_match=full_match,
                                                     prefix_match=prefix_match,
                                                     substring_match=substring_match,
@@ -107,8 +115,8 @@ class Router:
                 *,
                 argument_pattern: Optional[Pattern] = None,
                 case: bool = False,
-                allow_backslash: bool = False,
-                allow_noslash: bool = False,
+                backslash: bool = False,
+                noslash: bool = False,
                 boundary: bool = True,
                 full_match: bool = True,
                 prefix_match: bool = False,
@@ -121,9 +129,10 @@ class Router:
                                                     command=cmd,
                                                     argument_pattern=argument_pattern,
                                                     case=case,
-                                                    allow_backslash=allow_backslash,
-                                                    allow_noslash=allow_noslash,
+                                                    allow_backslash=backslash,
+                                                    allow_noslash=noslash,
                                                     boundary=boundary,
+                                                    canonical_name=self._get_name(endpoint, cmd),
                                                     full_match=full_match,
                                                     prefix_match=prefix_match,
                                                     substring_match=substring_match,
@@ -145,6 +154,7 @@ class Router:
         def decorator(endpoint: Endpoint):
             self.__routes.append(make_regex_route(endpoint=endpoint,
                                                   pattern=pattern,
+                                                  canonical_name=self._get_name(endpoint, None),
                                                   full_match=full_match,
                                                   prefix_match=prefix_match,
                                                   substring_match=substring_match))
@@ -153,7 +163,6 @@ class Router:
         return decorator
 
     def default(self, endpoint: Endpoint) -> Endpoint:
-        # RE_COMMAND = re.compile(r'(?P<cmd>[/\\][a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
         assert self.__default is None
         self.__default = make_regex_route(endpoint=endpoint,
                                           pattern=re.compile(r'(?P<command>[\s\S]+?)'),

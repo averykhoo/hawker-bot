@@ -21,7 +21,6 @@ import utils
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg import onemap_search
 from api_wrappers.postal_code import InvalidZip
-from api_wrappers.postal_code import RE_ZIPCODE
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
 from api_wrappers.postal_code import ZipNonNumeric
@@ -33,11 +32,11 @@ from api_wrappers.weather import Forecast
 from api_wrappers.weather import weather_24h_grouped
 from api_wrappers.weather import weather_2h
 from api_wrappers.weather import weather_4d
-from fastbot.fast_bot import FastBot
-from fastbot.message import Message
-from fastbot.response import Markdown
-from fastbot.response import Response
-from fastbot.response import Text
+from fastbot import FastBot
+from fastbot import Markdown
+from fastbot import Message
+from fastbot import Response
+from fastbot import Text
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -168,37 +167,33 @@ def __nearby(loc):
     return responses
 
 
-@bot.command('start', allow_backslash=True, allow_noslash=True)
+@bot.command('start', backslash=True, noslash=True)
 def cmd_start(message: Message):
     return [Text('Hi!', notification=False),
             Markdown(utils.load_template('start'), notification=False)]
 
 
-@bot.command('help', allow_backslash=True, allow_noslash=True)
-@bot.command('halp', allow_backslash=True, allow_noslash=True)
-@bot.command('h', allow_backslash=True, allow_noslash=True)
-@bot.command('?', allow_backslash=True, allow_noslash=True)
-@bot.command('??', allow_backslash=True, allow_noslash=True)
-@bot.command('???', allow_backslash=True, allow_noslash=True)
+@bot.regex(re.compile(r'(?P<command>[/\\]?\?+)'))
+@bot.command('halp', backslash=True, noslash=True)
+@bot.command('h', backslash=True, noslash=True)
+@bot.command('help', backslash=True, noslash=True)  # canonical name, because bottom decorator is applied first
 def cmd_help(message: Message):
     return Markdown(utils.load_template('help'), notification=False)
 
 
-@bot.command('search', allow_backslash=True, boundary=False, prefix_match=True)
-def cmd_search(message: Message, query=None):
-    if query is None:
-        assert message.match is not None
-        query = message.argument
+@bot.command('search', backslash=True, boundary=False, prefix_match=True)
+def cmd_search(message: Message):
+    assert message.match is not None
+    query = message.argument
 
     results, responses = __search(query, onemap=True)
     return responses
 
 
-@bot.command('onemap', allow_backslash=True, boundary=False, prefix_match=True)
-def cmd_onemap(message: Message, query=None):
-    if query is None:
-        assert message.match is not None
-        query = message.argument
+@bot.command('onemap', backslash=True, boundary=False, prefix_match=True)
+def cmd_onemap(message: Message):
+    assert message.match is not None
+    query = message.argument
 
     if not query:
         yield Markdown('  \n'.join([
@@ -233,24 +228,22 @@ def cmd_onemap(message: Message, query=None):
                    notification=False)
 
 
-@bot.command('about', allow_backslash=True, allow_noslash=True)
-@bot.command('share', allow_backslash=True, allow_noslash=True)
+@bot.command('share', backslash=True, noslash=True)
+@bot.command('about', backslash=True, noslash=True)
 def cmd_about(message: Message):
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
-@bot.command('zip', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('zipcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('post', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('postal', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('postcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('postalcode', argument_pattern=RE_ZIPCODE, allow_backslash=True, boundary=False, prefix_match=True)
-@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'),
-             allow_backslash=True, allow_noslash=True, boundary=False, prefix_match=True)
-def cmd_zip(message: Message, query=None):
-    if query is None:
-        assert message.match is not None
-        query = message.argument
+@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'), backslash=True, noslash=True, boundary=False)
+@bot.command('zipcode', backslash=True, boundary=False, prefix_match=True)
+@bot.command('zip', backslash=True, boundary=False, prefix_match=True)
+@bot.command('postcode', backslash=True, boundary=False, prefix_match=True)
+@bot.command('post', backslash=True, boundary=False, prefix_match=True)
+@bot.command('postalcode', backslash=True, boundary=False, prefix_match=True)
+@bot.command('postal', backslash=True, boundary=False, prefix_match=True)
+def cmd_zip(message: Message):
+    assert message.match is not None
+    query = message.argument
 
     zip_code, response = __fix_zip(query)
     if zip_code is None:
@@ -277,9 +270,9 @@ def cmd_zip(message: Message, query=None):
         yield from __nearby(loc)
 
 
-@bot.command('rain', allow_backslash=True, allow_noslash=True)
-@bot.command('weather', allow_backslash=True, allow_noslash=True)
-@bot.command('forecast', allow_backslash=True, allow_noslash=True)
+@bot.command('rain', backslash=True, noslash=True)
+@bot.command('forecast', backslash=True, noslash=True)
+@bot.command('weather', backslash=True, noslash=True)
 def cmd_weather(message: Message):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
@@ -295,8 +288,8 @@ def cmd_weather(message: Message):
         yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
 
 
-@bot.command('day', allow_backslash=True, allow_noslash=True)
-@bot.command('today', allow_backslash=True, allow_noslash=True)
+@bot.command('day', backslash=True, noslash=True)
+@bot.command('today', backslash=True, noslash=True)
 def cmd_today(message: Message):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
@@ -317,7 +310,7 @@ def cmd_today(message: Message):
     yield __closed(datetime.date.today(), 'today')
 
 
-@bot.command('tomorrow', allow_backslash=True, allow_noslash=True)
+@bot.command('tomorrow', backslash=True, noslash=True)
 def cmd_tomorrow(message: Message):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
@@ -331,18 +324,18 @@ def cmd_tomorrow(message: Message):
     yield __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
 
-@bot.command('week', allow_backslash=True, allow_noslash=True)
-@bot.command('thisweek', allow_backslash=True, allow_noslash=True)
-@bot.command('this_week', allow_backslash=True, allow_noslash=True)
+@bot.command('thisweek', backslash=True, noslash=True)
+@bot.command('this_week', backslash=True, noslash=True)
+@bot.command('week', backslash=True, noslash=True)
 def cmd_this_week(message: Message):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
     return __closed(DateRange(today, week_end), 'this week')
 
 
-@bot.command('next', allow_backslash=True, allow_noslash=True)
-@bot.command('nextweek', allow_backslash=True, allow_noslash=True)
-@bot.command('next_week', allow_backslash=True, allow_noslash=True)
+@bot.command('next', backslash=True, noslash=True)
+@bot.command('next_week', backslash=True, noslash=True)
+@bot.command('nextweek', backslash=True, noslash=True)
 def cmd_next_week(message: Message):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
@@ -350,17 +343,17 @@ def cmd_next_week(message: Message):
     return __closed(DateRange(next_week_start, next_week_end), '_next_ week')
 
 
-@bot.command('month', allow_backslash=True, allow_noslash=True)
-@bot.command('thismonth', allow_backslash=True, allow_noslash=True)
-@bot.command('this_month', allow_backslash=True, allow_noslash=True)
+@bot.command('this_month', backslash=True, noslash=True)
+@bot.command('thismonth', backslash=True, noslash=True)
+@bot.command('month', backslash=True, noslash=True)
 def cmd_this_month(message: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     return __closed(DateRange(today, month_end), 'this month')
 
 
-@bot.command('nextmonth', allow_backslash=True, allow_noslash=True)
-@bot.command('next_month', allow_backslash=True, allow_noslash=True)
+@bot.command('next_month', backslash=True, noslash=True)
+@bot.command('nextmonth', backslash=True, noslash=True)
 def cmd_next_month(message: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
@@ -369,37 +362,13 @@ def cmd_next_month(message: Message):
     return __closed(DateRange(next_month_start, next_month_end), 'next month')
 
 
-@bot.command('year', allow_backslash=True, allow_noslash=True)
-@bot.command('thisyear', allow_backslash=True, allow_noslash=True)
-@bot.command('this_year', allow_backslash=True, allow_noslash=True)
+@bot.command('thisyear', backslash=True, noslash=True)
+@bot.command('this_year', backslash=True, noslash=True)
+@bot.command('year', backslash=True, noslash=True)
 def cmd_this_year(message: Message):
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
     return __closed(DateRange(today, year_end), 'this year')
-
-
-def cmd_unknown(update: Update, context: CallbackContext):
-    # todo: this is terrible
-    fuzzy_matches = {
-        'postal': ('postal', cmd_zip),  # /postal123456 or /postalcode123456
-        'zip':    ('postal', cmd_zip),  # /zip123456 or /zipcode123456
-        'onemap': ('onemap', cmd_onemap),  # /onemapclementi
-        'search': ('search', cmd_search),  # /searchclementi
-    }
-
-    query = update.effective_message.text.strip()
-    for command, (func_name, func) in fuzzy_matches.items():
-        _command, _query = utils.split_command(query, command)
-        if _command is not None:
-            logging.info(f'FUZZY_MATCHED_COMMAND="{utils.get_command(query)}" COMMAND="{command}"')
-            update.effective_message.reply_markdown(f'Assuming you meant:  \n'
-                                                    f'`/{command} {_query}`')
-            func(update, context, _query)
-            break
-    else:
-        logging.info(f'UNSUPPORTED_COMMAND="{utils.get_command(query)}" QUERY="{query}"')
-        update.effective_message.reply_markdown(f'Unsupported command: {utils.get_command(query)}',
-                                                disable_notification=True)
 
 
 @bot.command('ping')
@@ -409,54 +378,21 @@ def cmd_ping(message: Message):
 
 @bot.default
 def handle_text(message: Message):
+    # ignore stuff sent via my own inline bot
     if message.via_bot is not None:
         bot_username = message.via_bot.username
         if bot_username in config.BOT_USERNAMES:
             logging.debug(f'VIA_BOT="{bot_username}"')
             return
 
-    query = message.text
-    if utils.get_command(query) is not None:
-        cmd_unknown(message.update, message.context)
-        return
+    # looks like a command
+    elif utils.get_command(message.text) is not None:
+        logging.info(f'UNSUPPORTED_COMMAND="{utils.get_command(message.text)}" QUERY="{message.text}"')
+        yield Markdown(f'Unsupported command: {utils.get_command(message.text)}', notification=False)
 
-    fuzzy_matches = {
-        'about':      ('about', cmd_about),
-        'help':       ('help', cmd_help),
-        '?':          ('help', cmd_help),
-        '??':         ('help', cmd_help),
-        '???':        ('help', cmd_help),
-        '/?':         ('help', cmd_help),
-        'today':      ('today', cmd_today),
-        'tomorrow':   ('tomorrow', cmd_tomorrow),
-        'week':       ('week', cmd_this_week),
-        'thisweek':   ('week', cmd_this_week),
-        'this week':  ('week', cmd_this_week),
-        'next':       ('nextweek', cmd_next_week),
-        'nextweek':   ('nextweek', cmd_next_week),
-        'next_week':  ('nextweek', cmd_next_week),
-        'next week':  ('nextweek', cmd_next_week),
-        'month':      ('month', cmd_this_month),
-        'thismonth':  ('month', cmd_this_month),
-        'this month': ('month', cmd_this_month),
-        'nextmonth':  ('nextmonth', cmd_next_month),
-        'next_month': ('nextmonth', cmd_next_month),
-        'next month': ('nextmonth', cmd_next_month),
-        'weather':    ('weather', cmd_weather),
-        'forecast':   ('weather', cmd_weather),
-        'rain':       ('weather', cmd_weather),
-    }
-
-    if query.casefold() in fuzzy_matches:
-        func_name, func = fuzzy_matches[query.casefold()]
-        logging.info(f'FUZZY_MATCHED_COMMAND="{utils.get_command(query)}" COMMAND="/{func_name}"')
-        yield Markdown(f'Assuming you meant:  \n'
-                       f'`/{func_name}`',
-                       notification=False)
-        func(message)
-
+    # handle a search
     else:
-        results, responses = __search(query, onemap=True)
+        results, responses = __search(message.text, onemap=True)
         yield from responses
 
 
