@@ -1,16 +1,15 @@
 from typing import Callable
-from typing import Union
 
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import CommandHandler
 from telegram.ext import Filters
+from telegram.ext import InlineQueryHandler
 from telegram.ext import MessageFilter
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
-from fastbot.route import Endpoint
-from fastbot.route import Route
+from fastbot.router import Router
 
 Callback = Callable[[Update, CallbackContext], None]
 
@@ -36,28 +35,34 @@ class FastBot:
 
         self.middleware = []  # usually logging?
 
-        self.keyword_handlers = dict()
-        self.command_handlers = dict()  # including start deep links
-        self.regex_handlers = []
+        self.router = Router()
+        self.add_message_handler(self.router.callback, Filters.text)
 
-        self.message_handler = None
-        self.inline_handler = None
-
-        self.error_handler = None
+    def add_inline_handler(self,
+                           callback: Callback,
+                           group: int = 10,
+                           ) -> None:
+        self.bot_updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
 
     def add_message_handler(self,
-                            callback: Union[Route, Callback],
+                            callback: Callback,
                             message_filter: MessageFilter = Filters.all,
                             group: int = 10,
                             ) -> None:
         self.bot_updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
 
     def add_command_handler(self,
+                            callback: Callback,
                             command: str,
-                            callback: Union[Route, Callback],
                             group: int = 10,
                             ) -> None:
         self.bot_updater.dispatcher.add_handler(CommandHandler(command, callback), group)
+
+    def add_error_handler(self,
+                          callback: Callback,
+                          ) -> None:
+        # noinspection PyTypeChecker
+        self.bot_updater.dispatcher.add_error_handler(callback)
 
     def run_forever(self):
         # Start the Bot
@@ -66,32 +71,3 @@ class FastBot:
         # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
         # This should be used most of the time, since start_polling() is non-blocking and will stop the bot gracefully.
         self.bot_updater.idle()
-
-    def add_command(self, command, endpoint):
-        # check for duplicates
-        if command in self.command_handlers:
-            raise KeyError(command)
-
-        # do something
-        print(command, endpoint.__name__)
-
-    def command(self,
-                command: str,
-                /, *,
-                allow_backslash: bool = True,
-                ) -> Callable[[Endpoint], Endpoint]:
-        # we don't need functools.wraps because we're not actually wrapping the function
-        def decorator(endpoint: Endpoint) -> Endpoint:
-            self.add_command(command, endpoint)
-            return endpoint
-
-        return decorator
-
-
-if __name__ == '__main__':
-    fb = FastBot('asd')
-
-
-    @fb.command('a')
-    def func():
-        return 1

@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -21,11 +21,11 @@ Endpoint = TypeVar('Endpoint', bound=Callable[[Message], Union[AnyResponse,
                                                                Generator[AnyResponse, Any, None]]])
 
 
-class Match(Enum):
-    FULL_MATCH = 1
+class Match(IntEnum):
+    FULL_MATCH = 3
     PREFIX_MATCH = 2
-    SUBSTRING_MATCH = 3
-    NO_MATCH = 4
+    SUBSTRING_MATCH = 1
+    NO_MATCH = 0
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ class Route:
         else:
             return Match.NO_MATCH
 
-    def callback(self, message: Message) -> None:
+    def handle_message(self, message: Message) -> None:
         match = self.pattern.search(message.text)
         assert match is not None, self.pattern
         assert len(match.groups()) > 0, match
@@ -65,44 +65,41 @@ class Route:
 
         message.prefix = match.groupdict('command')
 
-        ret = self.endpoint(message)
+        # ret = self.endpoint(message)
+        ret = self.endpoint(message.update, message.context)
+        if ret is not None:
+            if isinstance(ret, Response):
+                responses = [ret]
+            elif isinstance(ret, str):
+                responses = [Text(ret)]
+            elif isinstance(ret, (Iterable, Generator)):
+                responses = []
+                for response in ret:
+                    if isinstance(response, Response):
+                        responses.append(response)
+                    elif isinstance(response, str):
+                        responses.append(Text(response))
+                    else:
+                        raise TypeError(response)
+            else:
+                raise TypeError(ret)
 
-        if isinstance(ret, Response):
-            responses = [ret]
-        elif isinstance(ret, str):
-            responses = [Text(ret)]
-        elif isinstance(ret, (Iterable, Generator)):
-            responses = []
-            for response in ret:
-                if isinstance(response, Response):
-                    responses.append(response)
-                elif isinstance(response, str):
-                    responses.append(Text(response))
-                else:
-                    raise TypeError(response)
-        else:
-            raise TypeError(ret)
-
-        for response in responses:
-            response.send(message)
+            for response in responses:
+                response.send(message)
 
 
 def make_keyword_route(endpoint: Endpoint,
-                        word: str,
-                        case: bool = False,
-                        substring_match: bool = False,
-                        boundary: bool = True,
-                        ) -> Route:
+                       word: str,
+                       case: bool = False,
+                       boundary: bool = True,
+                       full_match: bool = True,
+                       prefix_match: bool = False,
+                       substring_match: bool = False,
+                       ) -> Route:
     # case sensitivity
     flags = re.U
     if not case:
         flags |= re.I
-
-    # substring match: respect boundaries
-    if substring_match:
-        allowed_matches = {Match.FULL_MATCH, Match.PREFIX_MATCH, Match.SUBSTRING_MATCH}
-    else:
-        allowed_matches = {Match.FULL_MATCH}
 
     # boundary checking
     if boundary:
@@ -111,16 +108,23 @@ def make_keyword_route(endpoint: Endpoint,
         pattern = re.compile(rf'(?P<command>{re.escape(word)})', flags=flags)
 
     # create route
-    return Route(pattern, endpoint, allowed_matches)
+    return make_regex_route(endpoint,
+                            pattern,
+                            full_match=full_match,
+                            prefix_match=prefix_match,
+                            substring_match=substring_match)
 
 
 def make_command_route(endpoint: Endpoint,
-                        word: str,
-                        case: bool = False,
-                        allow_backslash: bool = False,
-                        allow_noslash: bool = False,
-                        boundary: bool = True,
-                        ) -> Route:
+                       word: str,
+                       case: bool = False,
+                       allow_backslash: bool = False,
+                       allow_noslash: bool = False,
+                       boundary: bool = True,
+                       full_match: bool = True,
+                       prefix_match: bool = True,
+                       substring_match: bool = False,
+                       ) -> Route:
     # case sensitivity
     flags = re.U
     if not case:
@@ -133,9 +137,6 @@ def make_command_route(endpoint: Endpoint,
     if allow_noslash:
         slash += '?'
 
-    # allow prefix matches only
-    allowed_matches = {Match.FULL_MATCH, Match.PREFIX_MATCH}
-
     # boundary checking
     if boundary:
         pattern = re.compile(rf'(?P<command>(?:^|\s){slash}{re.escape(word)}(?:\b|$))', flags=flags)
@@ -143,15 +144,19 @@ def make_command_route(endpoint: Endpoint,
         pattern = re.compile(rf'(?P<command>{slash}{re.escape(word)})', flags=flags)
 
     # create route
-    return Route(pattern, endpoint, allowed_matches)
+    return make_regex_route(endpoint,
+                            pattern,
+                            full_match=full_match,
+                            prefix_match=prefix_match,
+                            substring_match=substring_match)
 
 
 def make_regex_route(endpoint: Endpoint,
-                      pattern: Pattern,
-                      full_match: bool = True,
-                      prefix_match: bool = False,
-                      substring_match: bool = False,
-                      ) -> Route:
+                     pattern: Pattern,
+                     full_match: bool = True,
+                     prefix_match: bool = False,
+                     substring_match: bool = False,
+                     ) -> Route:
     # allow these matches only
     allowed_matches = set()
     if full_match:

@@ -8,10 +8,32 @@ from typing import Optional
 from typing import Tuple
 
 import pandas as pd
+import requests
 
 from api_wrappers.data_gov_sg import RESOURCE_IDS
 from api_wrappers.data_gov_sg import get_resource
 from hawkers import Hawker
+
+
+def no_ssl_verification():
+    old_merge_environment_settings = requests.Session.merge_environment_settings
+    opened_adapters = set()
+
+    def merge_environment_settings(self, url, proxies, stream, verify, cert):
+        # Verification happens only once per connection so we need to close
+        # all the opened adapters once we're done. Otherwise, the effects of
+        # verify=False persist beyond the end of this context manager.
+        opened_adapters.add(self.get_adapter(url))
+
+        settings = old_merge_environment_settings(self, url, proxies, stream, verify, cert)
+        settings['verify'] = False
+
+        return settings
+
+    requests.Session.merge_environment_settings = merge_environment_settings
+
+    # noinspection PyUnresolvedReferences
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def setup_logging(app_name) -> logging.Logger:
