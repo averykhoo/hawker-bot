@@ -2,21 +2,33 @@
 stuff all the python-telegram-bot imports in one file
 because `telegram` doesn't match the package name, so the linter thinks it's an undeclared dependency
 and I don't want to have to deal with tagging every single import with a noinspection flag
+so I'll just leave them all here and ignore the linter warnings for this file
 """
 
-# noinspection PyPackageRequirements
-import telegram.ext
+from telegram import InlineQueryResultArticle
+from telegram import InlineQueryResultVenue
+from telegram import InputTextMessageContent
+from telegram import ParseMode
+from telegram import Update
+from telegram.ext import CallbackContext
+from telegram.ext import CommandHandler
+from telegram.ext import Filters
+from telegram.ext import InlineQueryHandler
+from telegram.ext import MessageFilter
+from telegram.ext import MessageHandler
+from telegram.ext import Updater
 
-InlineQueryResultArticle = telegram.InlineQueryResultArticle
-InlineQueryResultVenue = telegram.InlineQueryResultVenue
-InputTextMessageContent = telegram.InputTextMessageContent
-ParseMode = telegram.ParseMode
-Update = telegram.Update
-
-CallbackContext = telegram.ext.CallbackContext
-CommandHandler = telegram.ext.CommandHandler
-Filters = telegram.ext.Filters
-InlineQueryHandler = telegram.ext.InlineQueryHandler
-MessageFilter = telegram.ext.MessageFilter
-MessageHandler = telegram.ext.MessageHandler
-Updater = telegram.ext.Updater
+__all__ = (
+    'CallbackContext',
+    'CommandHandler',
+    'Filters',
+    'InlineQueryHandler',
+    'InlineQueryResultArticle',
+    'InlineQueryResultVenue',
+    'InputTextMessageContent',
+    'MessageFilter',
+    'MessageHandler',
+    'ParseMode',
+    'Update',
+    'Updater',
+)
