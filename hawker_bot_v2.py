@@ -189,7 +189,7 @@ def cmd_help(_: Message):
     return Markdown(utils.load_template('help'), notification=False)
 
 
-@bot.command('search', backslash=True, boundary=False, prefix_match=True)
+@bot.command('search', backslash=True, noslash=True, boundary=False, prefix_match=True)
 def cmd_search(message: Message):
     assert message.match is not None
     query = message.argument
@@ -198,7 +198,7 @@ def cmd_search(message: Message):
     return responses
 
 
-@bot.command('onemap', backslash=True, boundary=False, prefix_match=True)
+@bot.command('onemap', backslash=True, noslash=True, boundary=False, prefix_match=True)
 def cmd_onemap(message: Message):
     assert message.match is not None
     query = message.argument
