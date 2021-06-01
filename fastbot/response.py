@@ -69,12 +69,16 @@ class FileResponse(Response, ABC):
     timeout_seconds: Union[int, float] = 20
     quote: bool = False
 
+    @property
+    def size_bytes(self):
+        return self.path.stat().st_size
+
     def __post_init__(self):
         if not self.path.exists():
             raise FileNotFoundError(self.path)
         if not self.path.is_file():
             raise IsADirectoryError(self.path)
-        if self.path.stat().st_size > 50 * 1000 * 1000:
+        if self.size_bytes > 50 * 1000 * 1000:
             raise IOError(self.path)
 
 
@@ -88,6 +92,9 @@ class Animation(FileResponse):
             raise ValueError(self.path)
 
     def send_reply(self, update: Update):
+        if self.size_bytes > 1 * 1000 * 1000:
+            BusyWait(ChatAction.UPLOAD_PHOTO).send_reply(update)
+
         with self.path.open('rb') as f:
             update.effective_message.reply_animation(animation=f,
                                                      caption=self.caption,
@@ -101,6 +108,9 @@ class Animation(FileResponse):
 @dataclass(frozen=True)
 class Document(FileResponse):
     def send_reply(self, update: Update):
+        if self.size_bytes > 1 * 1000 * 1000:
+            BusyWait(ChatAction.UPLOAD_DOCUMENT).send_reply(update)
+
         with self.path.open('rb') as f:
             update.effective_message.reply_document(document=f,
                                                     caption=self.caption,
