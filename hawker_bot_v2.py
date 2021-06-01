@@ -3,6 +3,8 @@ import datetime
 import logging
 import re
 from pathlib import Path
+from typing import Any
+from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -139,15 +141,20 @@ def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], Lis
     return [], responses
 
 
-def __closed(date, date_name) -> Markdown:
+def __closed(date, date_name) -> Generator[Markdown, Any, None]:
     lines = [f'Closed {date_name}:']
+    idx = 0
 
     for hawker in sorted(hawkers, key=lambda x: x.name):
         if hawker.closed_on_dates(date):
+            idx += 1
             logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
-            lines.append(f'{len(lines)}.  {hawker.name}')
-
-    return Markdown('  \n'.join(lines), notification=False)
+            lines.append(f'{idx}.  {hawker.name}')
+            if sum(map(len, lines)) > 3200:
+                yield Markdown('  \n'.join(lines), notification=False)
+                lines = []
+    if lines:
+        yield Markdown('  \n'.join(lines), notification=False)
 
 
 def __nearby(loc):
@@ -308,7 +315,7 @@ def cmd_today(_: Message):
             break
 
     # send what's closed today
-    yield __closed(datetime.date.today(), 'today')
+    yield from __closed(datetime.date.today(), 'today')
 
 
 @bot.command('tomorrow', backslash=True, noslash=True)
@@ -322,18 +329,20 @@ def cmd_tomorrow(_: Message):
             ]), notification=False, web_page_preview=False)
             break
 
-    yield __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
+    yield from __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
 
+@bot.keyword('this week')
 @bot.command('thisweek', backslash=True, noslash=True)
 @bot.command('this_week', backslash=True, noslash=True)
 @bot.command('week', backslash=True, noslash=True)
 def cmd_this_week(_: Message):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
-    return __closed(DateRange(today, week_end), 'this week')
+    yield from __closed(DateRange(today, week_end), 'this week')
 
 
+@bot.keyword('next week')
 @bot.command('next', backslash=True, noslash=True)
 @bot.command('next_week', backslash=True, noslash=True)
 @bot.command('nextweek', backslash=True, noslash=True)
@@ -341,18 +350,20 @@ def cmd_next_week(_: Message):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
-    return __closed(DateRange(next_week_start, next_week_end), '_next_ week')
+    yield from __closed(DateRange(next_week_start, next_week_end), '_next_ week')
 
 
+@bot.keyword('this month')
 @bot.command('this_month', backslash=True, noslash=True)
 @bot.command('thismonth', backslash=True, noslash=True)
 @bot.command('month', backslash=True, noslash=True)
 def cmd_this_month(_: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-    return __closed(DateRange(today, month_end), 'this month')
+    yield from __closed(DateRange(today, month_end), 'this month')
 
 
+@bot.keyword('next month')
 @bot.command('next_month', backslash=True, noslash=True)
 @bot.command('nextmonth', backslash=True, noslash=True)
 def cmd_next_month(_: Message):
@@ -360,16 +371,17 @@ def cmd_next_month(_: Message):
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     next_month_start = month_end + datetime.timedelta(days=1)
     next_month_end = next_month_start.replace(day=calendar.monthrange(next_month_start.year, next_month_start.month)[1])
-    return __closed(DateRange(next_month_start, next_month_end), 'next month')
+    yield from __closed(DateRange(next_month_start, next_month_end), 'next month')
 
 
+@bot.keyword('next year')
 @bot.command('thisyear', backslash=True, noslash=True)
 @bot.command('this_year', backslash=True, noslash=True)
 @bot.command('year', backslash=True, noslash=True)
 def cmd_this_year(_: Message):
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
-    return __closed(DateRange(today, year_end), 'this year')
+    yield from __closed(DateRange(today, year_end), 'this year')
 
 
 @bot.command('ping')
