@@ -12,6 +12,7 @@ from telegram.ext import Updater
 
 from fastbot.inline import InlineRoute
 from fastbot.route import Endpoint
+from fastbot.route import Route
 from fastbot.router import Router
 
 Callback = Callable[[Update, CallbackContext], None]
@@ -42,6 +43,9 @@ class FastBot:
         # migration handler
         self.add_message_handler(chat_migration, Filters.status_update.migrate)
 
+        # logger
+        self._logger: Optional[Route] = None
+
         # text handlers
         self._router = Router()
         self.add_message_handler(self._router.callback, Filters.text)
@@ -49,17 +53,20 @@ class FastBot:
         # inline handler
         self._inline: Optional[InlineRoute] = None
 
+        # location handler
+        self._location: Optional[Route] = None
+
+        # unrecognized message type handler
+        self._unrecognized: Optional[Route] = None
+
+        # error handler
+        self._error: Optional[Route] = None
+
         # convenience mappings so we can add stuff directly
         self.keyword = self._router.keyword
         self.command = self._router.command
         self.regex = self._router.regex
         self.default = self._router.default
-
-    def inline(self, endpoint: Endpoint) -> Endpoint:
-        assert self._inline is None
-        self._inline = InlineRoute(endpoint)
-        self.add_inline_handler(self._inline.callback)
-        return endpoint
 
     def add_message_handler(self,
                             callback: Callback,
@@ -67,6 +74,24 @@ class FastBot:
                             group: int = 10,
                             ) -> None:
         self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+
+    def logger(self, endpoint: Endpoint) -> Endpoint:
+        assert self._logger is None
+        self._logger = Route(endpoint)
+        self.add_message_handler(self._logger.callback, Filters.all, 1)
+        return endpoint
+
+    def location(self, endpoint: Endpoint) -> Endpoint:
+        assert self._location is None
+        self._location = Route(endpoint)
+        self.add_message_handler(self._location.callback, Filters.location)
+        return endpoint
+
+    def unrecognized(self, endpoint: Endpoint) -> Endpoint:
+        assert self._unrecognized is None
+        self._unrecognized = Route(endpoint)
+        self.add_message_handler(self._unrecognized.callback, Filters.all)
+        return endpoint
 
     def add_command_handler(self,
                             callback: Callback,
@@ -81,11 +106,23 @@ class FastBot:
                            ) -> None:
         self._updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
 
+    def inline(self, endpoint: Endpoint) -> Endpoint:
+        assert self._inline is None
+        self._inline = InlineRoute(endpoint)
+        self.add_inline_handler(self._inline.callback)
+        return endpoint
+
     def add_error_handler(self,
                           callback: Callback,
                           ) -> None:
         # noinspection PyTypeChecker
         self._updater.dispatcher.add_error_handler(callback)
+
+    def error(self, endpoint: Endpoint) -> Endpoint:
+        assert self._error is None
+        self._error = Route(endpoint)
+        self.add_error_handler(self._error.callback)
+        return endpoint
 
     def run_forever(self):
         # Start the Bot

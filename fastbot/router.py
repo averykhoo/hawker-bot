@@ -15,7 +15,7 @@ from telegram.ext import CallbackContext
 from fastbot.message import Message
 from fastbot.route import Endpoint
 from fastbot.route import Match
-from fastbot.route import Route
+from fastbot.route import RegexRoute
 from fastbot.route import make_command_route
 from fastbot.route import make_keyword_route
 from fastbot.route import make_regex_route
@@ -23,8 +23,8 @@ from fastbot.route import make_regex_route
 
 @dataclass
 class Router:
-    __routes: List[Route] = field(default_factory=list, init=False)
-    __default: Optional[Route] = field(default=None, init=False)
+    __routes: List[RegexRoute] = field(default_factory=list, init=False)
+    __default: Optional[RegexRoute] = field(default=None, init=False)
     __names: Dict[int, str] = field(default_factory=dict, init=False)
 
     @property

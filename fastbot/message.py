@@ -45,10 +45,13 @@ class Message:
         return self.update.effective_message.via_bot
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.update.to_dict()
+        if self.update is None:
+            return {}
+        else:
+            return self.update.to_dict()
 
     def to_json(self) -> str:
-        return json.dumps(self.update.to_dict())
+        return json.dumps(self.to_dict())
 
     def reply(self, responses: List[Response]):
         for response in responses:

@@ -1,15 +1,10 @@
 import calendar
 import datetime
-import json
 import logging
 import re
 from typing import List
 from typing import Optional
 from typing import Tuple
-
-from telegram import Update
-from telegram.ext import CallbackContext
-from telegram.ext import Filters
 
 import config
 import utils
@@ -394,54 +389,49 @@ def handle_text(message: Message):
         yield from responses
 
 
-def handle_location(update: Update, context: CallbackContext):
-    loc = Location(latitude=update.effective_message.location.latitude,
-                   longitude=update.effective_message.location.longitude,
+@bot.location
+def handle_location(message: Message):
+    loc = Location(latitude=message.update.effective_message.location.latitude,
+                   longitude=message.update.effective_message.location.longitude,
                    )
-
-    # lat = update.effective_message.location.latitude
-    # lon = update.effective_message.location.longitude
 
     # outside the SVY21 bounding box
     if not loc.within_singapore():
-        update.effective_message.reply_text(f'You appear to be outside of Singapore, '
-                                            f'so this bot will probably not be very useful to you',
-                                            disable_notification=True)
+        yield Text('You appear to be outside of Singapore, so this bot will probably not be very useful to you',
+                   notification=False)
 
     # noinspection PyTypeChecker
     forecast: Forecast = loc.nearest(weather_2h())
-    update.effective_message.reply_markdown('  \n'.join([
-        f'*Weather near you ({forecast.name})*',
-        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
-    ]), disable_notification=True, disable_web_page_preview=True)
+    yield Markdown(f'*Weather near you ({forecast.name})*  \n'
+                   f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: '
+                   f'{forecast.forecast}',
+                   notification=False,
+                   web_page_preview=False)
 
-    update.effective_message.reply_text(f'Displaying nearest 5 results to your location',
-                                        disable_notification=True)
-
-    message = Message(update, context)
-    responses = __nearby(loc)
-    for response in responses:
-        response.send_reply(message.update)
+    yield Text('Displaying nearest 5 results to your location', notification=False)
+    yield from __nearby(loc)
 
 
-def handle_unknown(update: Update, context: CallbackContext):
-    logging.warning(f'INVALID_MESSAGE_TYPE MESSAGE_JSON={json.dumps(update.to_dict())}')
+@bot.unrecognized
+def handle_unrecognized(message: Message):
+    logging.warning(f'INVALID_MESSAGE_TYPE MESSAGE_JSON={message.to_json()}')
 
     # return Text('Unable to handle this message type', notification=False)
-    update.effective_message.reply_text('Unable to handle this message type',
-                                        disable_notification=True)
+    yield Text('Unable to handle this message type', notification=False)
 
 
-def error(update: Update, context: CallbackContext):
+@bot.error
+def error(message: Message):
     """
     Log Errors caused by Updates.
     """
-    logging.warning(f'ERROR="{context.error}" MESSAGE_JSON={json.dumps(update.to_dict() if update else None)}')
-    raise context.error
+    logging.warning(f'ERROR="{message.context.error}" MESSAGE_JSON={message.to_json()}')
+    raise message.context.error
 
 
-def log_message(update: Update, context: CallbackContext):
-    logging.info(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
+@bot.logger
+def log_message(message: Message):
+    logging.info(f'MESSAGE_JSON={message.to_json()}')
 
 
 @bot.inline
@@ -469,17 +459,4 @@ def handle_inline(message: InlineQuery) -> None:
 
 
 if __name__ == '__main__':
-    # log message
-    bot.add_message_handler(log_message, Filters.all, 1)
-
-    # by location
-    bot.add_message_handler(handle_location, Filters.location)
-
-    # handle non-commands
-    bot.add_message_handler(handle_unknown, Filters.all)
-
-    # log all errors
-    bot.add_error_handler(error)
-
-    # run the Bot
     bot.run_forever()

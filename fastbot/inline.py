@@ -22,7 +22,7 @@ from telegram import Update
 # noinspection PyPackageRequirements
 from telegram.ext import CallbackContext
 
-from fastbot.route import Endpoint
+from fastbot.route import Route
 
 
 @dataclass(frozen=True)
@@ -85,8 +85,7 @@ class InlineQuery:
 
 
 @dataclass(frozen=True)
-class InlineRoute:
-    endpoint: Endpoint
+class InlineRoute(Route):
 
     def handle_message(self, message: InlineQuery) -> None:
         ret = self.endpoint(message)

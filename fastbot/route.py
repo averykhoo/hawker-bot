@@ -11,6 +11,11 @@ from typing import Set
 from typing import TypeVar
 from typing import Union
 
+# noinspection PyPackageRequirements
+from telegram import Update
+# noinspection PyPackageRequirements
+from telegram.ext import CallbackContext
+
 from fastbot.message import Message
 from fastbot.response import Response
 from fastbot.response import normalize_responses
@@ -31,8 +36,23 @@ class Match(IntEnum):
 
 @dataclass(frozen=True)
 class Route:
-    pattern: Pattern
     endpoint: Endpoint
+
+    def handle_message(self, message: Message) -> None:
+        ret = self.endpoint(message)
+        if ret is not None:
+            message.reply(normalize_responses(ret))
+
+    def callback(self,
+                 update: Update,
+                 context: CallbackContext,
+                 ) -> None:
+        self.handle_message(Message(update, context))
+
+
+@dataclass(frozen=True)
+class RegexRoute(Route):
+    pattern: Pattern
     allowed_matches: Set[Match]
     canonical_name: Optional[str] = None
 
@@ -61,16 +81,17 @@ class Route:
     def handle_message(self, message: Message) -> None:
         match = self.pattern.search(message.text)
         assert match is not None, (self.pattern, match)
-        # assert len(match.groups()) > 0, (self.pattern, match)
-        # assert len(match.groupdict()) > 0, (self.pattern, match)
-        # assert 'command' in match.groupdict(), (self.pattern, match)
 
         message.match = match
         message.command = self.canonical_name
 
-        ret = self.endpoint(message)
-        if ret is not None:
-            message.reply(normalize_responses(ret))
+        super().handle_message(message)
+
+    def callback(self,
+                 update: Update,
+                 context: CallbackContext,
+                 ) -> None:
+        self.handle_message(Message(update, context))
 
 
 def make_keyword_route(endpoint: Endpoint,
@@ -81,7 +102,7 @@ def make_keyword_route(endpoint: Endpoint,
                        full_match: bool = True,
                        prefix_match: bool = False,
                        substring_match: bool = False,
-                       ) -> Route:
+                       ) -> RegexRoute:
     # case sensitivity
     flags = re.U
     if not case:
@@ -114,7 +135,7 @@ def make_command_route(endpoint: Endpoint,
                        full_match: bool = True,
                        prefix_match: bool = True,
                        substring_match: bool = False,
-                       ) -> Route:
+                       ) -> RegexRoute:
     # case sensitivity
     flags = re.U
     if not case:
@@ -157,7 +178,7 @@ def make_regex_route(endpoint: Endpoint,
                      full_match: bool = True,
                      prefix_match: bool = False,
                      substring_match: bool = False,
-                     ) -> Route:
+                     ) -> RegexRoute:
     # allow these matches only
     allowed_matches = set()
     if full_match:
@@ -170,8 +191,8 @@ def make_regex_route(endpoint: Endpoint,
         raise ValueError('no matches allowed')
 
     # create route
-    return Route(pattern=pattern,
-                 endpoint=endpoint,
-                 allowed_matches=allowed_matches,
-                 canonical_name=canonical_name,
-                 )
+    return RegexRoute(endpoint=endpoint,
+                      pattern=pattern,
+                      allowed_matches=allowed_matches,
+                      canonical_name=canonical_name,
+                      )
