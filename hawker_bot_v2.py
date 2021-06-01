@@ -170,7 +170,7 @@ def cmd_start(_: Message):
 
 @bot.keyword('thank you')
 @bot.command('thanks', backslash=True, noslash=True)
-def cmd_start(_: Message):
+def cmd_thanks(_: Message):
     return Animation(Path("data/moana-you're-welcome.gif"))
 
 
