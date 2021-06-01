@@ -4,7 +4,7 @@ because `telegram` doesn't match the package name, so the linter thinks it's an 
 and I don't want to have to deal with tagging every single import with a noinspection flag
 so I'll just leave them all here and ignore the linter warnings for this file
 """
-
+from telegram import ChatAction
 from telegram import InlineQueryResultArticle
 from telegram import InlineQueryResultVenue
 from telegram import InputTextMessageContent
@@ -20,6 +20,7 @@ from telegram.ext import Updater
 
 __all__ = (
     'CallbackContext',
+    'ChatAction',
     'CommandHandler',
     'Filters',
     'InlineQueryHandler',

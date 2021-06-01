@@ -2,6 +2,7 @@ import calendar
 import datetime
 import logging
 import re
+from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -30,14 +31,15 @@ from fastbot import Text
 from fastbot.inline import InlineArticle
 from fastbot.inline import InlineQuery
 from fastbot.inline import InlineVenue
+from fastbot.response import Animation
 from hawkers import DateRange
 from hawkers import Hawker
 
 # set up logging appropriately
 utils.setup_logging(app_name='hawker-bot-v2')
 
-# disable SSL verification
-utils.no_ssl_verification()
+# # disable SSL verification
+# utils.no_ssl_verification()
 
 # load hawker center data
 hawkers = utils.load_hawker_data()
@@ -161,16 +163,22 @@ def __nearby(loc):
 
 
 @bot.command('start', backslash=True, noslash=True)
-def cmd_start(message: Message):
+def cmd_start(_: Message):
     return [Text('Hi!', notification=False),
             Markdown(utils.load_template('start'), notification=False)]
+
+
+@bot.keyword('thank you')
+@bot.command('thanks', backslash=True, noslash=True)
+def cmd_start(_: Message):
+    return Animation(Path("data/moana-you're-welcome.gif"))
 
 
 @bot.regex(re.compile(r'(?P<command>[/\\]?\?+)'))
 @bot.command('halp', backslash=True, noslash=True)
 @bot.command('h', backslash=True, noslash=True)
 @bot.command('help', backslash=True, noslash=True)  # canonical name, because bottom decorator is applied first
-def cmd_help(message: Message):
+def cmd_help(_: Message):
     return Markdown(utils.load_template('help'), notification=False)
 
 
@@ -223,7 +231,7 @@ def cmd_onemap(message: Message):
 
 @bot.command('share', backslash=True, noslash=True)
 @bot.command('about', backslash=True, noslash=True)
-def cmd_about(message: Message):
+def cmd_about(_: Message):
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
@@ -266,7 +274,7 @@ def cmd_zip(message: Message):
 @bot.command('rain', backslash=True, noslash=True)
 @bot.command('forecast', backslash=True, noslash=True)
 @bot.command('weather', backslash=True, noslash=True)
-def cmd_weather(message: Message):
+def cmd_weather(_: Message):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
         start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
@@ -283,7 +291,7 @@ def cmd_weather(message: Message):
 
 @bot.command('day', backslash=True, noslash=True)
 @bot.command('today', backslash=True, noslash=True)
-def cmd_today(message: Message):
+def cmd_today(_: Message):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
         if time_start <= soon < time_end:
@@ -304,7 +312,7 @@ def cmd_today(message: Message):
 
 
 @bot.command('tomorrow', backslash=True, noslash=True)
-def cmd_tomorrow(message: Message):
+def cmd_tomorrow(_: Message):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
         if detailed_forecast.date == tomorrow:
@@ -320,7 +328,7 @@ def cmd_tomorrow(message: Message):
 @bot.command('thisweek', backslash=True, noslash=True)
 @bot.command('this_week', backslash=True, noslash=True)
 @bot.command('week', backslash=True, noslash=True)
-def cmd_this_week(message: Message):
+def cmd_this_week(_: Message):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
     return __closed(DateRange(today, week_end), 'this week')
@@ -329,7 +337,7 @@ def cmd_this_week(message: Message):
 @bot.command('next', backslash=True, noslash=True)
 @bot.command('next_week', backslash=True, noslash=True)
 @bot.command('nextweek', backslash=True, noslash=True)
-def cmd_next_week(message: Message):
+def cmd_next_week(_: Message):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
@@ -339,7 +347,7 @@ def cmd_next_week(message: Message):
 @bot.command('this_month', backslash=True, noslash=True)
 @bot.command('thismonth', backslash=True, noslash=True)
 @bot.command('month', backslash=True, noslash=True)
-def cmd_this_month(message: Message):
+def cmd_this_month(_: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     return __closed(DateRange(today, month_end), 'this month')
@@ -347,7 +355,7 @@ def cmd_this_month(message: Message):
 
 @bot.command('next_month', backslash=True, noslash=True)
 @bot.command('nextmonth', backslash=True, noslash=True)
-def cmd_next_month(message: Message):
+def cmd_next_month(_: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     next_month_start = month_end + datetime.timedelta(days=1)
@@ -358,14 +366,14 @@ def cmd_next_month(message: Message):
 @bot.command('thisyear', backslash=True, noslash=True)
 @bot.command('this_year', backslash=True, noslash=True)
 @bot.command('year', backslash=True, noslash=True)
-def cmd_this_year(message: Message):
+def cmd_this_year(_: Message):
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
     return __closed(DateRange(today, year_end), 'this year')
 
 
 @bot.command('ping')
-def cmd_ping(message: Message):
+def cmd_ping(_: Message):
     return Text('pong', notification=False)
 
 
