@@ -13,9 +13,9 @@ from typing import Union
 
 from fastbot.message import Message
 from fastbot.response import Response
-# fastapi.types.DecoratedCallable: stricter type inference, guaranteeing same type signature for decorated function
 from fastbot.response import normalize_responses
 
+# fastapi.types.DecoratedCallable: stricter type inference, guaranteeing same type signature for decorated function
 AnyResponse = Union[str, Response]
 Endpoint = TypeVar('Endpoint', bound=Callable[[Message], Union[AnyResponse,
                                                                Iterable[AnyResponse],
@@ -35,9 +35,6 @@ class Route:
     endpoint: Endpoint
     allowed_matches: Set[Match]
     canonical_name: Optional[str] = None
-
-    def __post_init__(self):
-        print(self)
 
     def match(self, message: Message) -> Match:
         match = self.pattern.search(message.text)

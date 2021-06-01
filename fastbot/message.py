@@ -6,14 +6,12 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+# noinspection PyPackageRequirements
 from telegram import Update
 # noinspection PyPackageRequirements
 from telegram.ext import CallbackContext
 
-from fastbot import Response
-
-
-# noinspection PyPackageRequirements
+from fastbot.response import Response
 
 
 @dataclass
@@ -55,25 +53,3 @@ class Message:
     def reply(self, responses: List[Response]):
         for response in responses:
             response.send_reply(self.update)
-
-
-@dataclass
-class InlineQuery:
-    update: Update
-    context: CallbackContext
-
-    @property
-    def query(self) -> str:
-        return self.update.inline_query.query.strip()
-
-    def to_dict(self) -> Dict[str, Any]:
-        return self.update.to_dict()
-
-    def to_json(self) -> str:
-        return json.dumps(self.update.to_dict())
-
-    def reply(self, responses: List[Response]):
-        self.update
-        for response in responses:
-            response.send_reply(self.update)
-

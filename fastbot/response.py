@@ -8,26 +8,23 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
+# noinspection PyPackageRequirements
 from telegram import Update
 
 
-@dataclass
+@dataclass(frozen=True)
 class Response(ABC):
+    content: str
+    notification: bool = True
+    web_page_preview: bool = True
 
     @abstractmethod
     def send_reply(self, update: Update):
         ...
 
 
-@dataclass
-class StringResponse(Response, ABC):
-    content: str
-    notification: bool = True
-    web_page_preview: bool = True
-
-
-@dataclass
-class Text(StringResponse):
+@dataclass(frozen=True)
+class Text(Response):
     def send_reply(self, update: Update):
         update.effective_message.reply_text(self.content,
                                             disable_notification=not self.notification,
@@ -35,37 +32,13 @@ class Text(StringResponse):
                                             )
 
 
-@dataclass
-class Markdown(StringResponse):
+@dataclass(frozen=True)
+class Markdown(Response):
     def send_reply(self, update: Update):
         update.effective_message.reply_markdown(self.content,
                                                 disable_notification=not self.notification,
                                                 disable_web_page_preview=not self.web_page_preview,
                                                 )
-
-
-@dataclass
-class InlineResponse(Response, ABC):
-    title: str
-    content: str
-
-
-@dataclass
-class InlineMarkdownArticle(InlineResponse):
-
-    def _reply(self, update: Update):
-        message.update.inline_query.answer([
-            InlineQueryResultVenue(
-                id=str(uuid.uuid4()),
-                latitude=hawker.latitude,
-                longitude=hawker.longitude,
-                title=hawker.name,
-                address=hawker.address_myenv,
-                input_message_content=InputTextMessageContent(hawker.to_markdown(),
-                                                              parse_mode=ParseMode.MARKDOWN
-                                                              ),
-            ) for hawker in results[:5]
-        ])
 
 
 def normalize_responses(responses: Union[Response,
