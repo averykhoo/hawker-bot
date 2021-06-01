@@ -6,11 +6,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-# noinspection PyPackageRequirements
-from telegram import Update
-# noinspection PyPackageRequirements
-from telegram.ext import CallbackContext
-
+from fastbot._telegram_api import CallbackContext
+from fastbot._telegram_api import Update
 from fastbot.response import Response
 
 

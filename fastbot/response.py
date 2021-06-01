@@ -8,8 +8,7 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
-# noinspection PyPackageRequirements
-from telegram import Update
+from fastbot._telegram_api import Update
 
 
 @dataclass(frozen=True)

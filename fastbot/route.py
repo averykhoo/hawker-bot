@@ -11,11 +11,8 @@ from typing import Set
 from typing import TypeVar
 from typing import Union
 
-# noinspection PyPackageRequirements
-from telegram import Update
-# noinspection PyPackageRequirements
-from telegram.ext import CallbackContext
-
+from fastbot._telegram_api import CallbackContext
+from fastbot._telegram_api import Update
 from fastbot.message import Message
 from fastbot.response import Response
 from fastbot.response import normalize_responses

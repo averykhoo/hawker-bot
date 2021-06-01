@@ -1,14 +1,14 @@
 from typing import Callable
 from typing import Optional
 
-from telegram import Update
-from telegram.ext import CallbackContext
-from telegram.ext import CommandHandler
-from telegram.ext import Filters
-from telegram.ext import InlineQueryHandler
-from telegram.ext import MessageFilter
-from telegram.ext import MessageHandler
-from telegram.ext import Updater
+from fastbot._telegram_api import Update
+from fastbot._telegram_api import CallbackContext
+from fastbot._telegram_api import CommandHandler
+from fastbot._telegram_api import Filters
+from fastbot._telegram_api import InlineQueryHandler
+from fastbot._telegram_api import MessageFilter
+from fastbot._telegram_api import MessageHandler
+from fastbot._telegram_api import Updater
 
 from fastbot.inline import InlineRoute
 from fastbot.route import Endpoint

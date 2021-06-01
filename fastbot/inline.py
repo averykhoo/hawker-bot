@@ -9,19 +9,12 @@ from typing import Generator
 from typing import Iterable
 from typing import List
 
-# noinspection PyPackageRequirements
-from telegram import InlineQueryResultArticle
-# noinspection PyPackageRequirements
-from telegram import InlineQueryResultVenue
-# noinspection PyPackageRequirements
-from telegram import InputTextMessageContent
-# noinspection PyPackageRequirements
-from telegram import ParseMode
-# noinspection PyPackageRequirements
-from telegram import Update
-# noinspection PyPackageRequirements
-from telegram.ext import CallbackContext
-
+from fastbot._telegram_api import CallbackContext
+from fastbot._telegram_api import InlineQueryResultArticle
+from fastbot._telegram_api import InlineQueryResultVenue
+from fastbot._telegram_api import InputTextMessageContent
+from fastbot._telegram_api import ParseMode
+from fastbot._telegram_api import Update
 from fastbot.route import Route
 
 
