@@ -9,11 +9,17 @@ from typing import Generator
 from typing import Iterable
 from typing import List
 
+# noinspection PyPackageRequirements
 from telegram import InlineQueryResultArticle
+# noinspection PyPackageRequirements
 from telegram import InlineQueryResultVenue
+# noinspection PyPackageRequirements
 from telegram import InputTextMessageContent
+# noinspection PyPackageRequirements
 from telegram import ParseMode
+# noinspection PyPackageRequirements
 from telegram import Update
+# noinspection PyPackageRequirements
 from telegram.ext import CallbackContext
 
 from fastbot.route import Endpoint
@@ -97,3 +103,9 @@ class InlineRoute:
             message.reply(responses)
         else:
             raise TypeError(ret)
+
+    def callback(self,
+                 update: Update,
+                 context: CallbackContext,
+                 ) -> None:
+        self.handle_message(InlineQuery(update, context))

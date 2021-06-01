@@ -3,15 +3,10 @@ import datetime
 import json
 import logging
 import re
-import uuid
 from typing import List
 from typing import Optional
 from typing import Tuple
 
-from telegram import InlineQueryResultArticle
-from telegram import InlineQueryResultVenue
-from telegram import InputTextMessageContent
-from telegram import ParseMode
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import Filters
@@ -37,6 +32,9 @@ from fastbot import Markdown
 from fastbot import Message
 from fastbot import Response
 from fastbot import Text
+from fastbot.inline import InlineArticle
+from fastbot.inline import InlineQuery
+from fastbot.inline import InlineVenue
 from hawkers import DateRange
 from hawkers import Hawker
 
@@ -446,59 +444,33 @@ def log_message(update: Update, context: CallbackContext):
     logging.info(f'MESSAGE_JSON={json.dumps(update.to_dict())}')
 
 
-def handle_inline(update: Update, _: CallbackContext) -> None:
-    """Handle the inline query."""
-    query = update.inline_query.query.strip()
+@bot.inline
+def handle_inline(message: InlineQuery) -> None:
+    query = message.text
     logging.info(f'INLINE="{query}"')
 
     results, responses = __search(query)
     if results:
-        update.inline_query.answer([
-            InlineQueryResultVenue(
-                id=str(uuid.uuid4()),
-                latitude=hawker.latitude,
-                longitude=hawker.longitude,
-                title=hawker.name,
-                address=hawker.address_myenv,
-                input_message_content=InputTextMessageContent(hawker.to_markdown(),
-                                                              parse_mode=ParseMode.MARKDOWN
-                                                              ),
-            ) for hawker in results[:5]
-        ])
+        for hawker in results[:5]:
+            yield InlineVenue(title=hawker.name,
+                              content=hawker.to_markdown(),
+                              latitude=hawker.latitude,
+                              longitude=hawker.longitude,
+                              address=hawker.address_myenv,
+                              )
     elif query:
-        update.inline_query.answer([
-            InlineQueryResultArticle(
-                id=str(uuid.uuid4()),
-                title='No results found',
-                input_message_content=InputTextMessageContent('  \n'.join([
-                    'No hawker centres match the provided search term:',
-                    f'`{query}`',
-                ]),
-                    parse_mode=ParseMode.MARKDOWN,
-                ),
-            )
-        ])
+        yield InlineArticle(title='No results found',
+                            content=f'No hawker centres match the provided search term:  \n`{query}`',
+                            )
     else:
-        update.inline_query.answer([
-            InlineQueryResultArticle(
-                id=str(uuid.uuid4()),
-                title='Enter search query',
-                input_message_content=InputTextMessageContent('  \n'.join([
-                    '*Inline mode usage example:*',
-                    '`@hawker_centre_bot clementi`',
-                ]),
-                    parse_mode=ParseMode.MARKDOWN,
-                ),
-            )
-        ])
+        yield InlineArticle(title='Enter search query',
+                            content='*Inline mode usage example:*  \n`@hawker_centre_bot clementi`',
+                            )
 
 
 if __name__ == '__main__':
     # log message
     bot.add_message_handler(log_message, Filters.all, 1)
-
-    # inline handler
-    bot.add_inline_handler(handle_inline)
 
     # by location
     bot.add_message_handler(handle_location, Filters.location)

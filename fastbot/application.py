@@ -1,4 +1,5 @@
 from typing import Callable
+from typing import Optional
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -9,6 +10,8 @@ from telegram.ext import MessageFilter
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
+from fastbot.inline import InlineRoute
+from fastbot.route import Endpoint
 from fastbot.router import Router
 
 Callback = Callable[[Update, CallbackContext], None]
@@ -30,50 +33,64 @@ def chat_migration(update, context):
 
 class FastBot:
     def __init__(self, api_key: str):
-        self.bot_updater = Updater(api_key)
+        """
+        todo: middleware? (eg. logging)
+        """
+        # initialize python-telegram-bot with bot api key
+        self._updater = Updater(api_key)
+
+        # migration handler
         self.add_message_handler(chat_migration, Filters.status_update.migrate)
 
-        self.middleware = []  # usually logging?
+        # text handlers
+        self._router = Router()
+        self.add_message_handler(self._router.callback, Filters.text)
 
-        self.router = Router()
-        self.add_message_handler(self.router.callback, Filters.text)
+        # inline handler
+        self._inline: Optional[InlineRoute] = None
 
         # convenience mappings so we can add stuff directly
-        self.keyword = self.router.keyword
-        self.command = self.router.command
-        self.regex = self.router.regex
-        self.default = self.router.default
+        self.keyword = self._router.keyword
+        self.command = self._router.command
+        self.regex = self._router.regex
+        self.default = self._router.default
+
+    def inline(self, endpoint: Endpoint) -> Endpoint:
+        assert self._inline is None
+        self._inline = InlineRoute(endpoint)
+        self.add_inline_handler(self._inline.callback)
+        return endpoint
 
     def add_message_handler(self,
                             callback: Callback,
                             message_filter: MessageFilter,
                             group: int = 10,
                             ) -> None:
-        self.bot_updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+        self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
 
     def add_command_handler(self,
                             callback: Callback,
                             command: str,
                             group: int = 10,
                             ) -> None:
-        self.bot_updater.dispatcher.add_handler(CommandHandler(command, callback), group)
+        self._updater.dispatcher.add_handler(CommandHandler(command, callback), group)
 
     def add_inline_handler(self,
                            callback: Callback,
                            group: int = 10,
                            ) -> None:
-        self.bot_updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
+        self._updater.dispatcher.add_handler(InlineQueryHandler(callback), group)
 
     def add_error_handler(self,
                           callback: Callback,
                           ) -> None:
         # noinspection PyTypeChecker
-        self.bot_updater.dispatcher.add_error_handler(callback)
+        self._updater.dispatcher.add_error_handler(callback)
 
     def run_forever(self):
         # Start the Bot
-        self.bot_updater.start_polling()
+        self._updater.start_polling()
 
         # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
         # This should be used most of the time, since start_polling() is non-blocking and will stop the bot gracefully.
-        self.bot_updater.idle()
+        self._updater.idle()
