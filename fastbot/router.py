@@ -25,7 +25,7 @@ from fastbot.route import make_regex_route
 class Router:
     __routes: List[RegexRoute] = field(default_factory=list, init=False)
     __default: Optional[RegexRoute] = field(default=None, init=False)
-    __names: Dict[int, str] = field(default_factory=dict, init=False)
+    __names: Dict[int, str] = field(default_factory=dict, init=False, repr=False)
 
     @property
     def routes(self):
