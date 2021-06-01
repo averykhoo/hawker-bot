@@ -34,9 +34,9 @@ from hawkers import DateRange
 from hawkers import Hawker
 
 # set up logging appropriately
-utils.setup_logging(app_name='hawker-bot')
+utils.setup_logging(app_name='hawker-bot-v2')
 
-# disable SSL verification because of the enterprise firewall
+# disable SSL verification
 utils.no_ssl_verification()
 
 # load hawker center data
@@ -422,9 +422,6 @@ def handle_unrecognized(message: Message):
 
 @bot.error
 def error(message: Message):
-    """
-    Log Errors caused by Updates.
-    """
     logging.warning(f'ERROR="{message.context.error}" MESSAGE_JSON={message.to_json()}')
     raise message.context.error
 
