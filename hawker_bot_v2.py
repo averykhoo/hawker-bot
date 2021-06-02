@@ -444,7 +444,7 @@ def handle_unrecognized(message: Message):
 @bot.error
 def error(message: Message):
     logging.warning(f'ERROR="{message.context.error}" MESSAGE_JSON={message.to_json()}')
-    raise message.context.error
+    # raise message.context.error
 
 
 @bot.logger
