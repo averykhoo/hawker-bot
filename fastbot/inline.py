@@ -1,3 +1,4 @@
+import inspect
 import json
 import uuid
 from abc import ABC
@@ -80,8 +81,49 @@ class InlineQuery:
 @dataclass(frozen=True)
 class InlineRoute(Route):
 
+    def __post_init__(self):
+        # get all argument names
+        arg_names = list(inspect.signature(self.endpoint).parameters.keys())
+        arg_types = {arg_name: arg_type
+                     for arg_name, arg_type in self.endpoint.__annotations__.items()
+                     if arg_name != 'return'}
+
+        # inline function taking no input is useless
+        if len(arg_names) == 0:
+            raise TypeError(self.endpoint)
+
+        # singleton untyped argument, assume InlineQuery
+        if len(arg_types) == 0 and len(arg_names) == 1:
+            self._message_converters[arg_names[0]] = lambda m: m
+            return
+
+        # can't predict what this function expects to receive
+        if len(arg_types) != len(arg_names):
+            raise TypeError(self.endpoint)
+
+        # check type signature and convert message appropriately
+        for arg_name, arg_type in arg_types.items():
+            if arg_type == InlineQuery:
+                self._message_converters[arg_name] = lambda m: m
+            elif arg_type == Update:
+                self._message_converters[arg_name] = lambda m: m.update
+            elif arg_type == CallbackContext:
+                self._message_converters[arg_name] = lambda m: m.context
+            elif arg_type == str:
+                self._message_converters[arg_name] = lambda m: m.text
+            else:
+                raise TypeError(self.endpoint)
+
+    def strict_endpoint(self, message: InlineQuery) -> List[InlineResponse]:
+        kwargs = {name: converter(message) for name, converter in self._message_converters.items()}
+        ret = self.endpoint(**kwargs)
+        if ret is None:
+            return []
+        else:
+            return list(ret)
+
     def handle_message(self, message: InlineQuery) -> None:
-        ret = self.endpoint(message)
+        ret = self.strict_endpoint(message)
         if ret is None:
             pass
         elif isinstance(ret, InlineResponse):
