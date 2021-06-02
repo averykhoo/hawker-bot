@@ -14,6 +14,7 @@ import utils
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg import onemap_search
 from api_wrappers.postal_code import InvalidZip
+from api_wrappers.postal_code import RE_ZIPCODE
 from api_wrappers.postal_code import ZipBlank
 from api_wrappers.postal_code import ZipNonExistent
 from api_wrappers.postal_code import ZipNonNumeric
@@ -243,7 +244,7 @@ def cmd_about():
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
-@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'), noslash=True, boundary=False)
+@bot.regex(re.compile(rf'[/\\]?(?P<argument>{RE_ZIPCODE.pattern})', flags=re.I | re.U))
 @bot.command('zipcode', boundary=False, prefix_match=True)
 @bot.command('zip', boundary=False, prefix_match=True)
 @bot.command('postcode', boundary=False, prefix_match=True)
@@ -256,15 +257,13 @@ def cmd_zip(message: Message):
 
     zip_code, response = __fix_zip(query)
     if zip_code is None:
-        yield response
+        if response is not None:
+            yield response
     else:
         loc = locate_zipcode(zip_code)
         if not loc:
             logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
-            yield Markdown('  \n'.join([
-                f'Zip code not found: "{zip_code}"',
-            ]), notification=False)
-            return None  # invalid postal code
+            yield Markdown(f'Postal code does not exist in Singapore: "{zip_code}"', notification=False)
 
         # noinspection PyTypeChecker
         forecast: Forecast = loc.nearest(weather_2h())
@@ -274,8 +273,8 @@ def cmd_zip(message: Message):
         ]), notification=False, web_page_preview=False)
 
         # found!
-        yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
         logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
+        yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
         yield from __nearby(loc)
 
 
