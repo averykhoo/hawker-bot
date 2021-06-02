@@ -334,8 +334,8 @@ def cmd_tomorrow():
 
 
 @bot.keyword('this week')
-@bot.command('thisweek', noslash=True)
 @bot.command('this_week', noslash=True)
+@bot.command('thisweek', noslash=True)
 @bot.command('week', noslash=True)
 def cmd_this_week():
     today = datetime.date.today()
@@ -344,8 +344,8 @@ def cmd_this_week():
 
 
 @bot.keyword('next week')
-@bot.command('next', noslash=True)
 @bot.command('next_week', noslash=True)
+@bot.command('next', noslash=True)
 @bot.command('nextweek', noslash=True)
 def cmd_next_week():
     today = datetime.date.today()
@@ -375,14 +375,23 @@ def cmd_next_month():
     yield from __closed(DateRange(next_month_start, next_month_end), 'next month')
 
 
-@bot.keyword('next year')
-@bot.command('thisyear', noslash=True)
+@bot.keyword('this year')
 @bot.command('this_year', noslash=True)
+@bot.command('thisyear', noslash=True)
 @bot.command('year', noslash=True)
 def cmd_this_year():
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
     yield from __closed(DateRange(today, year_end), 'this year')
+
+
+@bot.keyword('next year')
+@bot.command('next_year', noslash=True)
+@bot.command('nextyear', noslash=True)
+def cmd_next_year():
+    year_start = datetime.date(year=datetime.date.today().year + 1, month=1, day=1)
+    year_end = year_start.replace(month=12, day=calendar.monthrange(year_start.year, 12)[1])
+    yield from __closed(DateRange(year_start, year_end), 'next year')
 
 
 @bot.command('ping')
