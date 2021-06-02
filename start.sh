@@ -16,8 +16,8 @@ fi
 touch stop.sh
 chmod +x stop.sh
 echo "starting..."
-#nohup python hawker_bot.py > $LOGFILE 2>&1 &
-nohup python hawker_bot.py > /dev/null 2>&1 &
+#nohup python hawker_bot_v2.py > $LOGFILE 2>&1 &
+nohup python hawker_bot_v2.py > /dev/null 2>&1 &
 echo "kill -9 $!" > stop.sh
 # shellcheck disable=SC2016
 echo 'rm -- "$0"' >> stop.sh
