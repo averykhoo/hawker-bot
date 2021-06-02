@@ -54,7 +54,7 @@ class Router:
 
         partial_match = None
         any_match = None
-        for route in self.__routes + [self.__default]:
+        for route in self.routes:
             match = route.match(message)
 
             if match == Match.FULL_MATCH:
