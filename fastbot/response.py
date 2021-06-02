@@ -2,10 +2,6 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-from typing import Generator
-from typing import Iterable
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -121,7 +117,10 @@ class Document(FileResponse):
                                                     )
 
 
-def _normalize_response(response: Union[Response, str, Path]) -> Response:
+AnyResponse = Union[Response, str, Path]
+
+
+def normalize_response(response: AnyResponse) -> Response:
     if isinstance(response, Response):
         return response
     if isinstance(response, str):
@@ -129,15 +128,3 @@ def _normalize_response(response: Union[Response, str, Path]) -> Response:
     if isinstance(response, Path):
         return Document(response)
     raise TypeError(response)
-
-
-def normalize_responses(responses: Union[Response,
-                                         Iterable[Response],
-                                         Generator[Response, Any, None]],
-                        ) -> List[Response]:
-    if isinstance(responses, (Response, str, Path)):
-        return [_normalize_response(responses)]
-    elif isinstance(responses, (Iterable, Generator)):
-        return list(map(_normalize_response, responses))
-    else:
-        raise TypeError(responses)

@@ -171,14 +171,14 @@ def __nearby(loc):
 
 @bot.keyword('start')
 @bot.command('start', prefix_match=True)
-def cmd_start(_: Message):
+def cmd_start():
     return [Text('Hi!', notification=False),
             Markdown(utils.load_template('start'), notification=False)]
 
 
 @bot.keyword('thank you')
 @bot.command('thanks', noslash=True)
-def cmd_thanks(_: Message):
+def cmd_thanks():
     return Animation(Path("data/moana-you're-welcome.gif"))
 
 
@@ -186,7 +186,7 @@ def cmd_thanks(_: Message):
 @bot.command('halp', noslash=True)
 @bot.command('h', noslash=True)
 @bot.command('help', noslash=True)  # canonical name, because bottom decorator is applied first
-def cmd_help(_: Message):
+def cmd_help():
     return Markdown(utils.load_template('help'), notification=False)
 
 
@@ -239,7 +239,7 @@ def cmd_onemap(message: Message):
 
 @bot.command('share', noslash=True)
 @bot.command('about', noslash=True)
-def cmd_about(_: Message):
+def cmd_about():
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
@@ -282,7 +282,7 @@ def cmd_zip(message: Message):
 @bot.command('rain', noslash=True)
 @bot.command('forecast', noslash=True)
 @bot.command('weather', noslash=True)
-def cmd_weather(_: Message):
+def cmd_weather():
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
         start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
@@ -299,7 +299,7 @@ def cmd_weather(_: Message):
 
 @bot.command('day', noslash=True)
 @bot.command('today', noslash=True)
-def cmd_today(_: Message):
+def cmd_today():
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
         if time_start <= soon < time_end:
@@ -320,7 +320,7 @@ def cmd_today(_: Message):
 
 
 @bot.command('tomorrow', noslash=True)
-def cmd_tomorrow(_: Message):
+def cmd_tomorrow():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
         if detailed_forecast.date == tomorrow:
@@ -337,7 +337,7 @@ def cmd_tomorrow(_: Message):
 @bot.command('thisweek', noslash=True)
 @bot.command('this_week', noslash=True)
 @bot.command('week', noslash=True)
-def cmd_this_week(_: Message):
+def cmd_this_week():
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
     yield from __closed(DateRange(today, week_end), 'this week')
@@ -347,7 +347,7 @@ def cmd_this_week(_: Message):
 @bot.command('next', noslash=True)
 @bot.command('next_week', noslash=True)
 @bot.command('nextweek', noslash=True)
-def cmd_next_week(_: Message):
+def cmd_next_week():
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
     next_week_end = next_week_start + datetime.timedelta(days=6)
@@ -358,7 +358,7 @@ def cmd_next_week(_: Message):
 @bot.command('this_month', noslash=True)
 @bot.command('thismonth', noslash=True)
 @bot.command('month', noslash=True)
-def cmd_this_month(_: Message):
+def cmd_this_month():
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     yield from __closed(DateRange(today, month_end), 'this month')
@@ -367,7 +367,7 @@ def cmd_this_month(_: Message):
 @bot.keyword('next month')
 @bot.command('next_month', noslash=True)
 @bot.command('nextmonth', noslash=True)
-def cmd_next_month(_: Message):
+def cmd_next_month():
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     next_month_start = month_end + datetime.timedelta(days=1)
@@ -379,14 +379,14 @@ def cmd_next_month(_: Message):
 @bot.command('thisyear', noslash=True)
 @bot.command('this_year', noslash=True)
 @bot.command('year', noslash=True)
-def cmd_this_year(_: Message):
+def cmd_this_year():
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
     yield from __closed(DateRange(today, year_end), 'this year')
 
 
 @bot.command('ping')
-def cmd_ping(_: Message):
+def cmd_ping():
     return Text('pong', notification=False)
 
 

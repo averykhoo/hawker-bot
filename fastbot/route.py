@@ -1,10 +1,13 @@
 import re
 from dataclasses import dataclass
 from enum import IntEnum
+from functools import wraps
+from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import Iterable
+from typing import List
 from typing import Optional
 from typing import Pattern
 from typing import Set
@@ -14,14 +17,49 @@ from typing import Union
 from fastbot._telegram_api import CallbackContext
 from fastbot._telegram_api import Update
 from fastbot.message import Message
+from fastbot.response import AnyResponse
 from fastbot.response import Response
-from fastbot.response import normalize_responses
+from fastbot.response import normalize_response
 
 # fastapi.types.DecoratedCallable: stricter type inference, guaranteeing same type signature for decorated function
-AnyResponse = Union[str, Response]
-Endpoint = TypeVar('Endpoint', bound=Callable[[Message], Union[AnyResponse,
-                                                               Iterable[AnyResponse],
-                                                               Generator[AnyResponse, Any, None]]])
+Endpoint = TypeVar('Endpoint', bound=Callable[[Message], List[Response]])
+LenientEndpoint = Callable[..., Union[None, AnyResponse, Iterable[AnyResponse], Generator[AnyResponse, Any, None]]]
+
+
+def normalize_responses(responses: Union[None, AnyResponse, Iterable[AnyResponse], Generator[AnyResponse, Any, None]],
+                        ) -> List[Response]:
+    if responses is None:
+        return []
+    if isinstance(responses, (Response, str, Path)):
+        return [normalize_response(responses)]
+    elif isinstance(responses, (Iterable, Generator)):
+        return list(map(normalize_response, responses))
+    else:
+        raise TypeError(responses)
+
+
+def make_endpoint(func: LenientEndpoint,
+                  ) -> Endpoint:
+    """
+    wrap a function to make it an endpoint
+    """
+    _converters = dict()
+    # noinspection PyUnresolvedReferences
+    for arg_name, arg_type in func.__annotations__.items():
+        if arg_type == Message:
+            _converters[arg_name] = lambda m: m
+        elif arg_type == Update:
+            _converters[arg_name] = lambda m: m.update
+        elif arg_type == CallbackContext:
+            _converters[arg_name] = lambda m: m.context
+        else:
+            raise TypeError(func)
+
+    @wraps(func)
+    def endpoint(message: Message) -> List[Response]:
+        return normalize_responses(func(**{name: converter(message) for name, converter in _converters.items()}))
+
+    return endpoint
 
 
 class Match(IntEnum):
@@ -91,7 +129,7 @@ class RegexRoute(Route):
         self.handle_message(Message(update, context))
 
 
-def make_keyword_route(endpoint: Endpoint,
+def make_keyword_route(endpoint: LenientEndpoint,
                        keyword: str,
                        case: bool = False,
                        boundary: bool = True,
@@ -121,7 +159,7 @@ def make_keyword_route(endpoint: Endpoint,
                             )
 
 
-def make_command_route(endpoint: Endpoint,
+def make_command_route(endpoint: LenientEndpoint,
                        command: str,
                        argument_pattern: Optional[Pattern] = None,
                        case: bool = False,
@@ -169,7 +207,7 @@ def make_command_route(endpoint: Endpoint,
                             )
 
 
-def make_regex_route(endpoint: Endpoint,
+def make_regex_route(endpoint: LenientEndpoint,
                      pattern: Pattern,
                      canonical_name: Optional[str] = None,
                      full_match: bool = True,
@@ -188,7 +226,7 @@ def make_regex_route(endpoint: Endpoint,
         raise ValueError('no matches allowed')
 
     # create route
-    return RegexRoute(endpoint=endpoint,
+    return RegexRoute(endpoint=make_endpoint(endpoint),
                       pattern=pattern,
                       allowed_matches=allowed_matches,
                       canonical_name=canonical_name,

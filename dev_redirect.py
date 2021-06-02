@@ -21,13 +21,13 @@ def log_message(message: Message):
 
 
 @bot.command('ping')
-def cmd_ping(_: Message):
+def cmd_ping():
     return 'pong'
 
 
 @bot.unrecognized
 @bot.default
-def redirect(_: Message):
+def redirect():
     return 'Please use @hawker_centre_bot instead'
 
 
