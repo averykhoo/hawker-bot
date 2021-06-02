@@ -4,7 +4,6 @@ import config
 import utils
 from fastbot import FastBot
 from fastbot import Message
-from fastbot import Text
 
 # set up logging appropriately
 utils.setup_logging(app_name='hawker-bot-dev-redirect')
@@ -21,10 +20,15 @@ def log_message(message: Message):
     logging.info(f'MESSAGE_JSON={message.to_json()}')
 
 
+@bot.command('ping')
+def cmd_ping(_: Message):
+    return 'pong'
+
+
 @bot.unrecognized
 @bot.default
 def redirect(_: Message):
-    return Text('Please use @hawker_centre_bot', notification=False)
+    return 'Please use @hawker_centre_bot instead'
 
 
 @bot.error
