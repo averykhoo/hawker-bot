@@ -47,7 +47,7 @@ utils.setup_logging(app_name='hawker-bot-v2')
 hawkers = utils.load_hawker_data()
 
 # create bot
-bot = FastBot(config.SECRETS['hawker_center_bot_token (dev)'])
+bot = FastBot(config.SECRETS['hawker_bot_token'])
 
 
 def __fix_zip(query: str) -> Tuple[Optional[str], Optional[Markdown]]:
@@ -56,24 +56,24 @@ def __fix_zip(query: str) -> Tuple[Optional[str], Optional[Markdown]]:
 
     except ZipBlank:
         return None, Markdown('  \n'.join([
-            'No zip code provided',
-            '`/zip` usage example:',
-            '`/zip 078881`',
+            'No postal code provided',
+            '`/postal` usage example:',
+            '`/postal 078881`',
         ]), notification=False)
 
     except ZipNonNumeric:
         return None, Markdown('  \n'.join([
-            f'Invalid zip code provided: "{query}"',
-            'Zip code must be digits 0-9',
-            '`/zip` usage example:',
-            '`/zip 078881`',
+            f'Invalid postal code provided: "{query}"',
+            'Postal code must be digits 0-9',
+            '`/postal` usage example:',
+            '`/postal 078881`',
         ]), notification=False)
 
     except ZipNonExistent:
         return None, Markdown('  \n'.join([
-            f'Zip code provided cannot possibly exist in Singapore: "{int(query):06d}"',
-            '`/zip` usage example:',
-            '`/zip 078881`',
+            f'Postal code provided cannot possibly exist in Singapore: "{int(query):06d}"',
+            '`/postal` usage example:',
+            '`/postal 078881`',
         ]), notification=False)
 
 
@@ -169,27 +169,28 @@ def __nearby(loc):
     return responses
 
 
-@bot.command('start', backslash=True, noslash=True)
+@bot.keyword('start')
+@bot.command('start', prefix_match=True)
 def cmd_start(_: Message):
     return [Text('Hi!', notification=False),
             Markdown(utils.load_template('start'), notification=False)]
 
 
 @bot.keyword('thank you')
-@bot.command('thanks', backslash=True, noslash=True)
+@bot.command('thanks', noslash=True)
 def cmd_thanks(_: Message):
     return Animation(Path("data/moana-you're-welcome.gif"))
 
 
 @bot.regex(re.compile(r'(?P<command>[/\\]?\?+)'))
-@bot.command('halp', backslash=True, noslash=True)
-@bot.command('h', backslash=True, noslash=True)
-@bot.command('help', backslash=True, noslash=True)  # canonical name, because bottom decorator is applied first
+@bot.command('halp', noslash=True)
+@bot.command('h', noslash=True)
+@bot.command('help', noslash=True)  # canonical name, because bottom decorator is applied first
 def cmd_help(_: Message):
     return Markdown(utils.load_template('help'), notification=False)
 
 
-@bot.command('search', backslash=True, noslash=True, boundary=False, prefix_match=True)
+@bot.command('search', noslash=True, boundary=False, prefix_match=True)
 def cmd_search(message: Message):
     assert message.match is not None
     query = message.argument
@@ -198,7 +199,7 @@ def cmd_search(message: Message):
     return responses
 
 
-@bot.command('onemap', backslash=True, noslash=True, boundary=False, prefix_match=True)
+@bot.command('onemap', noslash=True, boundary=False, prefix_match=True)
 def cmd_onemap(message: Message):
     assert message.match is not None
     query = message.argument
@@ -236,19 +237,19 @@ def cmd_onemap(message: Message):
                    notification=False)
 
 
-@bot.command('share', backslash=True, noslash=True)
-@bot.command('about', backslash=True, noslash=True)
+@bot.command('share', noslash=True)
+@bot.command('about', noslash=True)
 def cmd_about(_: Message):
     return Markdown(utils.load_template('about'), notification=False, web_page_preview=False)
 
 
-@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'), backslash=True, noslash=True, boundary=False)
-@bot.command('zipcode', backslash=True, boundary=False, prefix_match=True)
-@bot.command('zip', backslash=True, boundary=False, prefix_match=True)
-@bot.command('postcode', backslash=True, boundary=False, prefix_match=True)
-@bot.command('post', backslash=True, boundary=False, prefix_match=True)
-@bot.command('postalcode', backslash=True, boundary=False, prefix_match=True)
-@bot.command('postal', backslash=True, boundary=False, prefix_match=True)
+@bot.command('singapore', argument_pattern=re.compile(r'\d{6}'), noslash=True, boundary=False)
+@bot.command('zipcode', boundary=False, prefix_match=True)
+@bot.command('zip', boundary=False, prefix_match=True)
+@bot.command('postcode', boundary=False, prefix_match=True)
+@bot.command('post', boundary=False, prefix_match=True)
+@bot.command('postalcode', boundary=False, prefix_match=True)
+@bot.command('postal', boundary=False, prefix_match=True)
 def cmd_zip(message: Message):
     assert message.match is not None
     query = message.argument
@@ -278,9 +279,9 @@ def cmd_zip(message: Message):
         yield from __nearby(loc)
 
 
-@bot.command('rain', backslash=True, noslash=True)
-@bot.command('forecast', backslash=True, noslash=True)
-@bot.command('weather', backslash=True, noslash=True)
+@bot.command('rain', noslash=True)
+@bot.command('forecast', noslash=True)
+@bot.command('weather', noslash=True)
 def cmd_weather(_: Message):
     weather_data = weather_24h_grouped()
     for time_start, time_end in sorted(weather_data.keys()):
@@ -296,8 +297,8 @@ def cmd_weather(_: Message):
         yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
 
 
-@bot.command('day', backslash=True, noslash=True)
-@bot.command('today', backslash=True, noslash=True)
+@bot.command('day', noslash=True)
+@bot.command('today', noslash=True)
 def cmd_today(_: Message):
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
     for (time_start, time_end), forecasts in weather_24h_grouped().items():
@@ -318,7 +319,7 @@ def cmd_today(_: Message):
     yield from __closed(datetime.date.today(), 'today')
 
 
-@bot.command('tomorrow', backslash=True, noslash=True)
+@bot.command('tomorrow', noslash=True)
 def cmd_tomorrow(_: Message):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     for detailed_forecast in weather_4d():
@@ -333,9 +334,9 @@ def cmd_tomorrow(_: Message):
 
 
 @bot.keyword('this week')
-@bot.command('thisweek', backslash=True, noslash=True)
-@bot.command('this_week', backslash=True, noslash=True)
-@bot.command('week', backslash=True, noslash=True)
+@bot.command('thisweek', noslash=True)
+@bot.command('this_week', noslash=True)
+@bot.command('week', noslash=True)
 def cmd_this_week(_: Message):
     today = datetime.date.today()
     week_end = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(days=6)
@@ -343,9 +344,9 @@ def cmd_this_week(_: Message):
 
 
 @bot.keyword('next week')
-@bot.command('next', backslash=True, noslash=True)
-@bot.command('next_week', backslash=True, noslash=True)
-@bot.command('nextweek', backslash=True, noslash=True)
+@bot.command('next', noslash=True)
+@bot.command('next_week', noslash=True)
+@bot.command('nextweek', noslash=True)
 def cmd_next_week(_: Message):
     today = datetime.date.today()
     next_week_start = today + datetime.timedelta(days=7) - datetime.timedelta(days=today.weekday())
@@ -354,9 +355,9 @@ def cmd_next_week(_: Message):
 
 
 @bot.keyword('this month')
-@bot.command('this_month', backslash=True, noslash=True)
-@bot.command('thismonth', backslash=True, noslash=True)
-@bot.command('month', backslash=True, noslash=True)
+@bot.command('this_month', noslash=True)
+@bot.command('thismonth', noslash=True)
+@bot.command('month', noslash=True)
 def cmd_this_month(_: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
@@ -364,8 +365,8 @@ def cmd_this_month(_: Message):
 
 
 @bot.keyword('next month')
-@bot.command('next_month', backslash=True, noslash=True)
-@bot.command('nextmonth', backslash=True, noslash=True)
+@bot.command('next_month', noslash=True)
+@bot.command('nextmonth', noslash=True)
 def cmd_next_month(_: Message):
     today = datetime.date.today()
     month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
@@ -375,9 +376,9 @@ def cmd_next_month(_: Message):
 
 
 @bot.keyword('next year')
-@bot.command('thisyear', backslash=True, noslash=True)
-@bot.command('this_year', backslash=True, noslash=True)
-@bot.command('year', backslash=True, noslash=True)
+@bot.command('thisyear', noslash=True)
+@bot.command('this_year', noslash=True)
+@bot.command('year', noslash=True)
 def cmd_this_year(_: Message):
     today = datetime.date.today()
     year_end = today.replace(month=12, day=calendar.monthrange(today.year, 12)[1])
@@ -401,7 +402,7 @@ def handle_text(message: Message):
     # looks like a command
     elif utils.get_command(message.text) is not None:
         logging.info(f'UNSUPPORTED_COMMAND="{utils.get_command(message.text)}" QUERY="{message.text}"')
-        yield Markdown(f'Unsupported command: {utils.get_command(message.text)}', notification=False)
+        yield Markdown(f'Unsupported command:  \n{message.text}', notification=False)
 
     # handle a search
     else:

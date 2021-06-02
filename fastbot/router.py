@@ -113,7 +113,7 @@ class Router:
                 *,
                 argument_pattern: Optional[Pattern] = None,
                 case: bool = False,
-                backslash: bool = False,
+                backslash: bool = True,
                 noslash: bool = False,
                 boundary: bool = True,
                 full_match: bool = True,
