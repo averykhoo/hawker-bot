@@ -7,7 +7,8 @@ from typing import Optional
 from api_wrappers.onemap_sg import OneMapResult
 from api_wrappers.onemap_sg import onemap_search
 
-RE_ZIPCODE = re.compile(r'(?:(?:code|S(G|ingapore)?)\s?)?(?P<zip>\d{6})', flags=re.I | re.U)
+RE_ZIPCODE = re.compile(r'(?:(?:code|S(G|ingapore)?)\s{0,5})?(?P<zip>\d{6})', flags=re.I | re.U)
+
 
 class InvalidZip(ValueError):
     pass
