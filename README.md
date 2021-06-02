@@ -1,4 +1,17 @@
-#   hawker-bot
+#   Hawker Centre Bot
+A bot to find hawker centres and figure out when they are closed
+
+
+##  Usage
+*   [@hawker_centre_bot](https://t.me/hawker_centre_bot) on Telegram
+*   To setup your own copy:
+    *   `git pull`
+    *   `pip install` from requirements.txt
+        *   optionally, also install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
+    *   create *secrets.json* with appropriate entries (see *secrets.example.json*)
+    *   update command list via @BotFather `/setcommands` with contents of *setcommands.txt*
+    *   allow inline mode via @BotFather `/setinline`
+    
 
 ##  copies source code from:
 *   [tokenizer](https://github.com/averykhoo/tokenize)
@@ -6,10 +19,6 @@
     *   literally invented for approx string matching when there are egregious typos
     *   nmd is much faster than nmd-bow, and actually faster than levenshtein
 
-##  setup
-*   optionally, install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
-*   update command list via @BotFather `/setcommands` with contents of *setcommands.txt*
-*   allow inline mode via @BotFather `/setinline`
 
 ##  todo
 *   major refactoring
