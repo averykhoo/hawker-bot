@@ -88,7 +88,7 @@ def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], Lis
         zip_code = fix_zipcode(query)
         results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
         if results:
-            responses = [Text(f'Displaying zip code match for "{zip_code}"', notification=False)]
+            responses = [Text(f'Displaying postal code match for "{zip_code}"', notification=False)]
             for result in results:
                 logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
                 responses.append(Markdown(result.to_markdown(), notification=False))
