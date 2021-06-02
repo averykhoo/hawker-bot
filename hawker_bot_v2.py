@@ -170,6 +170,8 @@ def __nearby(loc):
     return responses
 
 
+@bot.keyword('hi')
+@bot.keyword('hello')
 @bot.keyword('start')
 @bot.command('start', prefix_match=True)
 def cmd_start():
@@ -265,17 +267,18 @@ def cmd_zip(message: Message):
             logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
             yield Markdown(f'Postal code does not exist in Singapore: "{zip_code}"', notification=False)
 
-        # noinspection PyTypeChecker
-        forecast: Forecast = loc.nearest(weather_2h())
-        yield Markdown('  \n'.join([
-            f'*Weather near your zipcode ({forecast.name})*',
-            f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
-        ]), notification=False, web_page_preview=False)
+        else:
+            # noinspection PyTypeChecker
+            forecast: Forecast = loc.nearest(weather_2h())
+            yield Markdown('  \n'.join([
+                f'*Weather near your postal code ({forecast.name} Area)*',
+                f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+            ]), notification=False, web_page_preview=False)
 
-        # found!
-        logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-        yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
-        yield from __nearby(loc)
+            # found!
+            logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
+            yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
+            yield from __nearby(loc)
 
 
 @bot.command('rain', noslash=True)
