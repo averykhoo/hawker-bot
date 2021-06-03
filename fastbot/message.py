@@ -48,7 +48,7 @@ class Message:
             return self.update.to_dict()
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), ensure_ascii=False)
 
     def reply(self, responses: List[Response]):
         for response in responses:

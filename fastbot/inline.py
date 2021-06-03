@@ -72,7 +72,7 @@ class InlineQuery:
         return self.update.to_dict()
 
     def to_json(self) -> str:
-        return json.dumps(self.update.to_dict())
+        return json.dumps(self.update.to_dict(), ascii=False)
 
     def reply(self, responses: List[InlineResponse]):
         self.update.inline_query.answer([response.create_reply() for response in responses])
