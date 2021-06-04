@@ -9,7 +9,7 @@ A bot to find hawker centres and figure out when they are closed
     *   `pip install` from requirements.txt
         *   optionally, also install [`geographiclib-cython-bindings`](https://pypi.org/project/geographiclib-cython-bindings/)
     *   create *secrets.json* with appropriate entries (see *secrets.example.json*)
-    *   update command list via @BotFather `/setcommands` with contents of *setcommands.txt*
+    *   update command list via @BotFather `/setcommands` with contents of *templates/setcommands.txt*
     *   allow inline mode via @BotFather `/setinline`
     
 
