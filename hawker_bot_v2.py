@@ -163,12 +163,12 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
         yield Markdown(f'No records of any closures {date_name}')
 
 
-def __nearby(loc):
+def __nearby(loc, num_results=3):
     assert isinstance(loc, Location), loc
     # noinspection PyTypeChecker
     results: List[Hawker] = loc.k_nearest(hawkers, k=-1)
     responses = []
-    for result in results[:5]:
+    for result in results[:num_results]:
         logging.info(f'LAT={loc.latitude} LON={loc.longitude} DISTANCE={loc.distance(result)} RESULT="{result.name}"')
         responses.append(Markdown(f'{round(loc.distance(result))} meters away:  \n{result.to_markdown()}',
                                   notification=False))
@@ -283,7 +283,7 @@ def cmd_zip(message: Message):
 
             # found!
             logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-            yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
+            yield Text(f'Displaying nearest 3 results to "{loc.address}"', notification=False)
             yield from __nearby(loc)
 
 
@@ -308,7 +308,7 @@ def cmd_near(message: Message):
         yield Text(f'No results for {query}', notification=False)
 
     else:
-        yield Text(f'Displaying nearest 5 results to "{results[0].address}"', notification=False)
+        yield Text(f'Displaying nearest 3 results to "{results[0].address}"', notification=False)
         yield from __nearby(results[0])
 
 
@@ -489,7 +489,7 @@ def handle_location(message: Message):
                    notification=False,
                    web_page_preview=False)
 
-    yield Text('Displaying nearest 5 results to your location', notification=False)
+    yield Text('Displaying nearest 3 results to your location', notification=False)
     yield from __nearby(loc)
 
 
