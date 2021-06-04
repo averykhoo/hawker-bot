@@ -145,6 +145,7 @@ def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], Lis
 def __closed(date, date_name) -> Generator[Markdown, Any, None]:
     lines = [f'Closed {date_name}:']
     idx = 0
+    yielded = False
 
     for hawker in sorted(hawkers, key=lambda x: x.name):
         if hawker.closed_on_dates(date):
@@ -153,9 +154,12 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
             lines.append(f'{idx}.  {hawker.name}')
             if sum(map(len, lines)) > 3200:
                 yield Markdown('  \n'.join(lines), notification=False)
+                yielded = True
                 lines = []
-    if lines:
+    if len(lines) > 1 or yielded:
         yield Markdown('  \n'.join(lines), notification=False)
+    else:
+        yield Markdown(f'No records of closures {date_name}')
 
 
 def __nearby(loc):
