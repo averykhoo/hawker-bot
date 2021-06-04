@@ -55,7 +55,9 @@ class OneMapResult(Location):
         if self.block_no.lower() not in {'null', 'nil', 'na', '-', ''}:
             if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
                 parts.append(self.block_no)
-                parts.append(self.road_name)
+
+        if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
+            parts.append(self.road_name)
 
         if self.zipcode.lower() not in {'null', 'nil', 'na', '-', ''}:
             parts.append('SINGAPORE')
@@ -74,6 +76,8 @@ def _reorder_onemap_results(query: str, results: List[OneMapResult]) -> List[One
     match_name = []
     match_address = []
     match_acronym = []  # technically most of these would be an initialism, not an acronym
+    partial_name = []
+    partial_road = []
     non_match = []
 
     # bucketed sort (kind of like radix)
@@ -86,10 +90,14 @@ def _reorder_onemap_results(query: str, results: List[OneMapResult]) -> List[One
             match_address.append(result)
         elif result.building_name.casefold().endswith(f'({query.casefold()})'):
             match_acronym.append(result)
+        elif query.casefold() in result.building_name.casefold():
+            partial_name.append(result)
+        elif query.casefold() in result.road_name.casefold().split():
+            partial_road.append(result)
         else:
             non_match.append(result)
 
-    return match_zip + match_name + match_address + match_acronym + non_match
+    return match_zip + match_name + match_address + match_acronym + partial_name + partial_road + non_match
 
 
 @cache_1m
@@ -143,13 +151,13 @@ def onemap_search(query, result_limit=25) -> List[OneMapResult]:
         for result in data.get('results', []):
             results.append(OneMapResult(block_no=result['BLK_NO'].strip(),
                                         road_name=result['ROAD_NAME'].strip(),
-                                        building_name=result['BUILDING'].strip(),
+                                        building_name=result['BUILDING'].strip() or result['ADDRESS'].strip(),
                                         zipcode=result['POSTAL'].strip(),
                                         latitude=float(result['LATITUDE']),
                                         longitude=float(result['LONGITUDE']),
                                         svy21_x=float(result['X']),
                                         svy21_y=float(result['Y']),
-                                        _address=result['ADDRESS'],
+                                        _address=result['ADDRESS'].strip(),
                                         ))
 
         # check number of pages and results
