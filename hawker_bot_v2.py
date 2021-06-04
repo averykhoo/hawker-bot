@@ -159,6 +159,7 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
     if len(lines) > 1 or yielded:
         yield Markdown('  \n'.join(lines), notification=False)
     else:
+        logging.info(f'ZERO_CLOSED="{date_name}" DATE="{date}"')
         yield Markdown(f'No records of any closures {date_name}')
 
 
@@ -218,30 +219,31 @@ def cmd_onemap(message: Message):
             '`/onemap lau pa sat`',
         ]), notification=False)
         logging.info('QUERY_ONEMAP_BLANK')
-        return None
 
-    results = onemap_search(query)
-    if not results:
-        logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
-        yield Text('No results',
-                   notification=False)
-        return
+    else:
+        results = onemap_search(query)
+        if not results:
+            logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
+            yield Text(f'No results for {query}',
+                       notification=False)
 
-    yield Text(f'Displaying top {min(10, len(results))} results from OneMapSG',
-               notification=False)
+        else:
+            logging.info(f'QUERY_ONEMAP="{query}" NUM_RESULTS={len(results)}')
+            yield Text(f'Displaying top {min(10, len(results))} results from OneMapSG',
+                       notification=False)
 
-    out = []
-    for result in results[:10]:
-        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
-        out.extend([
-            f'*{result.building_name}*',
-            f'[{result.block_no} {result.road_name}, SINGAPORE {result.zipcode}]'
-            f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
-            ''
-        ])
-    yield Markdown('  \n'.join(out),
-                   web_page_preview=False,
-                   notification=False)
+            out = []
+            for result in results[:10]:
+                logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
+                out.extend([
+                    f'*{result.building_name}*',
+                    f'[{result.address_without_building}]'
+                    f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
+                    ''
+                ])
+            yield Markdown('  \n'.join(out),
+                           web_page_preview=False,
+                           notification=False)
 
 
 @bot.command('share', noslash=True)
@@ -283,6 +285,31 @@ def cmd_zip(message: Message):
             logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
             yield Text(f'Displaying nearest 5 results to "{loc.address}"', notification=False)
             yield from __nearby(loc)
+
+
+@bot.command('nearby', noslash=True, prefix_match=True)
+@bot.command('near', noslash=True, prefix_match=True)
+def cmd_near(message: Message):
+    assert message.match is not None
+    query = message.argument
+
+    if not query:
+        yield Markdown('  \n'.join([
+            'No query provided',
+            '`/near` usage example:',
+            '`/near MacPherson MRT Station`',
+        ]), notification=False)
+        logging.info('QUERY_NEAR_BLANK')
+        return None
+
+    results = onemap_search(query)
+    if not results:
+        logging.info(f'QUERY_NEAR_NO_RESULTS="{query}"')
+        yield Text(f'No results for {query}', notification=False)
+
+    else:
+        yield Text(f'Displaying nearest 5 results to "{results[0].address}"', notification=False)
+        yield from __nearby(results[0])
 
 
 @bot.command('rain', noslash=True)
