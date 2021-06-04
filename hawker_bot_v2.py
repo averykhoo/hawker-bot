@@ -155,11 +155,11 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
             if sum(map(len, lines)) > 3200:
                 yield Markdown('  \n'.join(lines), notification=False)
                 yielded = True
-                lines = []
+                lines.clear()
     if len(lines) > 1 or yielded:
         yield Markdown('  \n'.join(lines), notification=False)
     else:
-        yield Markdown(f'No records of closures {date_name}')
+        yield Markdown(f'No records of any closures {date_name}')
 
 
 def __nearby(loc):
@@ -301,6 +301,24 @@ def cmd_weather():
 
         # send message
         yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
+
+
+@bot.keyword('list all')
+@bot.command('all', noslash=True)
+@bot.command('list', noslash=True)
+def cmd_list():
+    lines = []
+    idx = 0
+
+    logging.info(f'LIST_ALL')
+    for hawker in sorted(hawkers, key=lambda x: x.name):
+        idx += 1
+        lines.append(f'{idx}.  {hawker.name}')
+        if sum(map(len, lines)) > 3200:
+            yield Markdown('  \n'.join(lines), notification=False)
+            lines.clear()
+    if lines:
+        yield Markdown('  \n'.join(lines), notification=False)
 
 
 @bot.command('day', noslash=True)
