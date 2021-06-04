@@ -35,7 +35,9 @@ class OneMapResult(Location):
         if self.block_no.lower() not in {'null', 'nil', 'na', '-', ''}:
             if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
                 parts.append(self.block_no)
-                parts.append(self.road_name)
+
+        if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
+            parts.append(self.road_name)
 
         if self.building_name.lower() not in {'null', 'nil', 'na', '-', ''}:
             parts.append(self.building_name)
