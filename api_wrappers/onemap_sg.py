@@ -31,14 +31,69 @@ class OneMapResult(Location):
         if self._address is not None:
             return self._address
 
+        parts = []
+        if self.block_no.lower() not in {'null', 'nil', 'na', '-', ''}:
+            if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
+                parts.append(self.block_no)
+                parts.append(self.road_name)
+
         if self.building_name.lower() not in {'null', 'nil', 'na', '-', ''}:
-            return f'{self.block_no} {self.road_name} {self.building_name} SINGAPORE {self.zipcode}'
+            parts.append(self.building_name)
+
+        if self.zipcode.lower() not in {'null', 'nil', 'na', '-', ''}:
+            parts.append('SINGAPORE')
+            parts.append(self.zipcode)
+
+        if parts:
+            return ' '.join(parts)
         else:
-            return f'{self.block_no} {self.road_name} SINGAPORE {self.zipcode}'
+            return 'No recorded address'
+
+    @property
+    def address_without_building(self):
+        parts = []
+        if self.block_no.lower() not in {'null', 'nil', 'na', '-', ''}:
+            if self.road_name.lower() not in {'null', 'nil', 'na', '-', ''}:
+                parts.append(self.block_no)
+                parts.append(self.road_name)
+
+        if self.zipcode.lower() not in {'null', 'nil', 'na', '-', ''}:
+            parts.append('SINGAPORE')
+            parts.append(self.zipcode)
+
+        if parts:
+            return ' '.join(parts)
+        elif self.latitude and self.longitude:
+            return f'{self.latitude}, {self.longitude}'
+        else:
+            return 'Unknown location'
+
+
+def _reorder_onemap_results(query: str, results: List[OneMapResult]) -> List[OneMapResult]:
+    match_zip = []
+    match_name = []
+    match_address = []
+    match_acronym = []  # technically most of these would be an initialism, not an acronym
+    non_match = []
+
+    # bucketed sort (kind of like radix)
+    for result in results:
+        if result.zipcode == query:
+            match_zip.append(result)
+        elif result.building_name.casefold() == query.casefold():
+            match_name.append(result)
+        elif result.road_name.casefold().split() == query.casefold():
+            match_address.append(result)
+        elif result.building_name.casefold().endswith(f'({query.casefold()})'):
+            match_acronym.append(result)
+        else:
+            non_match.append(result)
+
+    return match_zip + match_name + match_address + match_acronym + non_match
 
 
 @cache_1m
-def onemap_search(query) -> List[OneMapResult]:
+def onemap_search(query, result_limit=25) -> List[OneMapResult]:
     """
     Each page of json response is restricted to a maximum of 10 results.
     Parameter       Type    Optional    Description
@@ -82,14 +137,14 @@ def onemap_search(query) -> List[OneMapResult]:
         # catch error
         if 'error' in data:
             logging.warning(f'QUERY_ONEMAP_ERROR={query} PAGE_NUM={page_num}')
-            return results
+            return _reorder_onemap_results(query, results)[:result_limit]
 
         # append to results
         for result in data.get('results', []):
-            results.append(OneMapResult(block_no=result['BLK_NO'],
-                                        road_name=result['ROAD_NAME'],
-                                        building_name=result['BUILDING'],
-                                        zipcode=result['POSTAL'],
+            results.append(OneMapResult(block_no=result['BLK_NO'].strip(),
+                                        road_name=result['ROAD_NAME'].strip(),
+                                        building_name=result['BUILDING'].strip(),
+                                        zipcode=result['POSTAL'].strip(),
                                         latitude=float(result['LATITUDE']),
                                         longitude=float(result['LONGITUDE']),
                                         svy21_x=float(result['X']),
@@ -102,7 +157,12 @@ def onemap_search(query) -> List[OneMapResult]:
         assert page_num == data.get('pageNum', page_num), data
         if page_num == total_pages:
             assert len(results) == data['found'], data
-        return results
+
+        # if we have enough results, stop querying
+        if len(results) >= result_limit:
+            break
+
+    return _reorder_onemap_results(query, results)[:result_limit]
 
 
 @cache_1m
