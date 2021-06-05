@@ -1,10 +1,8 @@
-today -     list hawker centers closed today
-tomorrow -  list hawker centers closed tomorrow
-week -      list hawker centers closed this week
-nextweek -  list hawker centers closed next week
-near -    list hawker centers near a building, road, or postal code
-weather -   24h weather forecast
-postal -    list hawker centers near a given postal code
-onemap -    search OneMap.sg for a given query
+today -     list hawker centres closed today
+tomorrow -  hawkers closed tomorrow
+week -      hawkers closed for the rest of this week
+nextweek -  hawkers closed next week
+near -      find hawkers near a building, road, or postal code
+weather -   24h weather forecast (from NEA)
 about -     about this bot
 help -      list all commands

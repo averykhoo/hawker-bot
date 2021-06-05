@@ -1,0 +1,1 @@
+This bot helps you find hawker centres and lets you know if they are closed for cleaning.
