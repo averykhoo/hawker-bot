@@ -6,6 +6,6 @@ Send this bot your location to find nearby hawker centres
 /TOMORROW hawkers closed tomorrow
 /WEEK hawkers closed for the rest of this week
 /NEXTWEEK hawkers closed next week
-/NEARBY `<query>` hawkers near any place or postal code
+/NEAR `<query>` hawkers near any place or postal code
 /WEATHER 24h weather forecast
 /HELP list all commands

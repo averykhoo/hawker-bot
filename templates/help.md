@@ -9,7 +9,7 @@
 /MONTH hawkers closed for the rest of this month
 /LIST list all hawkers managed by NEA
 /WEATHER 24h weather forecast
-/NEARBY `<query>` hawkers near any place or postal code
+/NEAR `<query>` hawkers near any place or postal code
 /SEARCH `<query>` find hawker center by name
 /POSTAL `<postalcode>` hawkers near a postal code
 /ONEMAP `<query>` search OneMap.sg for any place or postal code

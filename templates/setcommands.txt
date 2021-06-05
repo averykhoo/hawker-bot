@@ -2,7 +2,7 @@ today -     list hawker centers closed today
 tomorrow -  list hawker centers closed tomorrow
 week -      list hawker centers closed this week
 nextweek -  list hawker centers closed next week
-nearby -    list hawker centers near a building, road, or postal code
+near -    list hawker centers near a building, road, or postal code
 weather -   24h weather forecast
 postal -    list hawker centers near a given postal code
 onemap -    search OneMap.sg for a given query
