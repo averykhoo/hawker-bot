@@ -78,7 +78,7 @@ def __fix_zip(query: str) -> Tuple[Optional[str], Optional[Markdown]]:
         ]), notification=False)
 
 
-def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], List[Response]]:
+def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[List[Hawker], List[Response]]:
     if not query:
         logging.info('QUERY_BLANK')
         return [], [Text('no search query received', notification=False)]
@@ -107,8 +107,8 @@ def __search(query: str, threshold=0.6, onemap=False) -> Tuple[List[Hawker], Lis
     results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
-        responses = [Text(f'Displaying top {min(5, len(results))} results for "{query}"', notification=False)]
-        for hawker, score in results[:5]:
+        responses = [Text(f'Displaying top {min(num_results, len(results))} results for "{query}"', notification=False)]
+        for hawker, score in results[:num_results]:
             logging.info(f'QUERY="{query}" SIMILARITY={hawker.text_similarity(query)} RESULT="{hawker.name}"')
             responses.append(Markdown(hawker.to_markdown(), notification=False))
         return [hawker for hawker, score in results], responses
