@@ -472,11 +472,11 @@ def handle_text(message: Message):
         yield Markdown(f'Unsupported command:  \n{message.text}', notification=False)
         return
 
-    # handle a search by name
-    results, responses = __search(message.text)
-    if results:
-        yield from responses
-        return
+    # # handle a search by name
+    # results, responses = __search(message.text)
+    # if results:
+    #     yield from responses
+    #     return
 
     # search nearby a place
     results = onemap_search(message.text)
