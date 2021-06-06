@@ -467,14 +467,28 @@ def handle_text(message: Message):
             return
 
     # looks like a command
-    elif utils.get_command(message.text) is not None:
+    if utils.get_command(message.text) is not None:
         logging.info(f'UNSUPPORTED_COMMAND="{utils.get_command(message.text)}" QUERY="{message.text}"')
         yield Markdown(f'Unsupported command:  \n{message.text}', notification=False)
+        return
 
-    # handle a search
-    else:
-        results, responses = __search(message.text, onemap=True)
+    # handle a search by name
+    results, responses = __search(message.text)
+    if results:
         yield from responses
+        return
+
+    # search nearby a place
+    results = onemap_search(message.text)
+    if not results:
+        logging.info(f'QUERY_NEAR_NO_RESULTS="{message.text}"')
+        yield Text(f'No results for {message.text}', notification=False)
+
+    else:
+        logging.info(f'NEARBY={message.text} LAT={results[0].latitude} LON={results[0].longitude} '
+                     f'ADDRESS="{results[0].address}"')
+        yield Text(f'Displaying nearest 3 results to "{results[0].address}"', notification=False)
+        yield from __nearby(results[0])
 
 
 @bot.location
