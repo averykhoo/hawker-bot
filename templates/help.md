@@ -10,11 +10,9 @@
 /LIST list all hawkers managed by NEA
 /WEATHER 24h weather forecast (from NEA)
 /NEAR `<query>` hawkers near any place or postal code
-/SEARCH `<query>` find hawker centre by name
+/SEARCH `<query>` find hawker centre by name or address
 /POSTAL `<postalcode>` hawkers near a postal code
 /ONEMAP `<query>` search OneMap.sg for any place or postal code
-
-If you send a misspelled hawker centre name, the bot will try to search for it
-If you share your location, the bot will search for hawker centres near you
+You can also send your location to find nearby hawker centres.
 
 If the bot can't find your hawker centre, then it's not managed or regulated by NEA; it's probably a privately-owned food court
