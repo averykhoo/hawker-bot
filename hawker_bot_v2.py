@@ -472,23 +472,9 @@ def handle_text(message: Message):
         yield Markdown(f'Unsupported command:  \n{message.text}', notification=False)
         return
 
-    # # handle a search by name
-    # results, responses = __search(message.text)
-    # if results:
-    #     yield from responses
-    #     return
-
-    # search nearby a place
-    results = onemap_search(message.text)
-    if not results:
-        logging.info(f'QUERY_NEAR_NO_RESULTS="{message.text}"')
-        yield Text(f'No results for {message.text}', notification=False)
-
-    else:
-        logging.info(f'NEARBY={message.text} LAT={results[0].latitude} LON={results[0].longitude} '
-                     f'ADDRESS="{results[0].address}"')
-        yield Text(f'Displaying nearest 3 results to "{results[0].address}"', notification=False)
-        yield from __nearby(results[0])
+    # reuse the nearby handler
+    message.match = re.fullmatch(r'(?P<argument>.*)', message.text)
+    yield from cmd_near(message)
 
 
 @bot.location
