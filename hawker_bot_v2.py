@@ -313,9 +313,13 @@ def cmd_near(message: Message):
         yield Text(f'No results for {query}', notification=False)
 
     else:
+        address = re.sub(r'\b(' + '|'.join(map(re.escape, query.split())) + r')\b',
+                         r'*\1*',
+                         results[0].address,
+                         flags=re.I | re.U)
         logging.info(f'NEARBY={query} LAT={results[0].latitude} LON={results[0].longitude} '
-                     f'ADDRESS="{results[0].address}"')
-        yield Text(f'Displaying nearest 3 results to "{results[0].address}"', notification=False)
+                     f'ADDRESS="{results[0].address}" MARKDOWN="{address}')
+        yield Markdown(f'Displaying nearest 3 results to "{address}"', notification=False)
         yield from __nearby(results[0])
 
 
