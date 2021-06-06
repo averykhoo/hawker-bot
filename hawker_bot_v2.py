@@ -213,37 +213,37 @@ def cmd_onemap(message: Message):
     query = message.argument
 
     if not query:
+        logging.info('QUERY_ONEMAP_BLANK')
         yield Markdown('  \n'.join([
             'No query provided',
             '`/onemap` usage example:',
             '`/onemap lau pa sat`',
         ]), notification=False)
-        logging.info('QUERY_ONEMAP_BLANK')
+        return
 
-    else:
-        results = onemap_search(query)
-        if not results:
-            logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
-            yield Text(f'No results for {query}',
-                       notification=False)
+    results = onemap_search(query)
+    if not results:
+        logging.info(f'QUERY_ONEMAP_NO_RESULTS="{query}"')
+        yield Text(f'No results for {query}',
+                   notification=False)
+        return
 
-        else:
-            logging.info(f'QUERY_ONEMAP="{query}" NUM_RESULTS={len(results)}')
-            yield Text(f'Displaying top {min(10, len(results))} results from OneMapSG',
-                       notification=False)
+    logging.info(f'QUERY_ONEMAP="{query}" NUM_RESULTS={len(results)}')
+    yield Text(f'Displaying top {min(10, len(results))} results from OneMapSG',
+               notification=False)
 
-            out = []
-            for result in results[:10]:
-                logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
-                out.extend([
-                    f'*{result.building_name}*',
-                    f'[{result.address_without_building}]'
-                    f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
-                    ''
-                ])
-            yield Markdown('  \n'.join(out),
-                           web_page_preview=False,
-                           notification=False)
+    out = []
+    for result in results[:10]:
+        logging.info(f'QUERY_ONEMAP="{query}" RESULT="{result.building_name}" ADDRESS="{result.address}"')
+        out.extend([
+            f'*{result.building_name}*',
+            f'[{result.address_without_building}]'
+            f'(https://www.google.com/maps/search/?api=1&query={result.latitude},{result.longitude})',
+            ''
+        ])
+    yield Markdown('  \n'.join(out),
+                   web_page_preview=False,
+                   notification=False)
 
 
 @bot.command('share', noslash=True)
@@ -267,24 +267,25 @@ def cmd_zip(message: Message):
     if zip_code is None:
         if response is not None:
             yield response
-    else:
-        loc = locate_zipcode(zip_code)
-        if not loc:
-            logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
-            yield Markdown(f'Postal code does not exist in Singapore: "{zip_code}"', notification=False)
+        return
 
-        else:
-            # noinspection PyTypeChecker
-            forecast: Forecast = loc.nearest(weather_2h())
-            yield Markdown('  \n'.join([
-                f'*Weather near your postal code ({forecast.name} Area)*',
-                f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
-            ]), notification=False, web_page_preview=False)
+    loc = locate_zipcode(zip_code)
+    if not loc:
+        logging.info(f'ZIPCODE_NOT_FOUND={zip_code}')
+        yield Markdown(f'Postal code does not exist in Singapore: "{zip_code}"', notification=False)
+        return
 
-            # found!
-            logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
-            yield Text(f'Displaying nearest 3 results to "{loc.address}"', notification=False)
-            yield from __nearby(loc)
+    # noinspection PyTypeChecker
+    forecast: Forecast = loc.nearest(weather_2h())
+    yield Markdown('  \n'.join([
+        f'*Weather near your postal code ({forecast.name} Area)*',
+        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+    ]), notification=False, web_page_preview=False)
+
+    # found!
+    logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
+    yield Text(f'Displaying nearest 3 results to "{loc.address}"', notification=False)
+    yield from __nearby(loc)
 
 
 @bot.command('nearby', noslash=True, prefix_match=True)
@@ -300,7 +301,11 @@ def cmd_near(message: Message):
             '`/near MacPherson MRT Station`',
         ]), notification=False)
         logging.info('QUERY_NEAR_BLANK')
-        return None
+        return
+
+    if query.lower() in {'me', 'myself', 'here', 'home'}:
+        yield Text('You seem to be looking for hawkers near your current location. '
+                   'If so, please send your location.')
 
     results = onemap_search(query)
     if not results:

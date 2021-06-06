@@ -17,4 +17,4 @@
 If you send a misspelled hawker centre name, the bot will try to search for it
 If you share your location, the bot will search for hawker centres near you
 
-If the bot can't find your hawker centre, then it's not managed by NEA
+If the bot can't find your hawker centre, then it's not managed or regulated by NEA; it's probably a privately-owned food court
