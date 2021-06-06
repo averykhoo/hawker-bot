@@ -242,7 +242,7 @@ class Hawker(Location):
 
     def text_similarity(self, text: str) -> Tuple[float, float]:
         results = []
-        for self_text in [self.name, self.description_myenv, self.address_myenv, self.addressbuildingname]:
+        for self_text in [self.name, self.address_myenv, self.addressbuildingname]:  # , self.description_myenv]:
             if self_text is not None:
                 results.append(text_similarity(text, self_text))
         if not results:
