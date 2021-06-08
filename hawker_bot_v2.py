@@ -199,6 +199,7 @@ def cmd_help():
 
 
 @bot.command('search', noslash=True, boundary=False, prefix_match=True)
+@bot.command('hawker', noslash=True, boundary=False, prefix_match=True)
 def cmd_search(message: Message):
     assert message.match is not None
     query = message.argument
@@ -207,6 +208,7 @@ def cmd_search(message: Message):
     return responses
 
 
+@bot.command('where', noslash=True, boundary=False, prefix_match=True)
 @bot.command('onemap', noslash=True, boundary=False, prefix_match=True)
 def cmd_onemap(message: Message):
     assert message.match is not None
@@ -323,6 +325,7 @@ def cmd_near(message: Message):
         yield from __nearby(results[0])
 
 
+@bot.keyword('weather forecast')
 @bot.command('rain', noslash=True)
 @bot.command('forecast', noslash=True)
 @bot.command('weather', noslash=True)
@@ -342,6 +345,8 @@ def cmd_weather():
 
 
 @bot.keyword('list all')
+@bot.keyword('list everything')
+@bot.command('everything', noslash=True)
 @bot.command('all', noslash=True)
 @bot.command('list', noslash=True)
 def cmd_list():

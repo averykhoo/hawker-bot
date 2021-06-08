@@ -10,7 +10,7 @@
 /LIST list all hawkers managed by NEA
 /WEATHER 24h weather forecast (from NEA)
 /NEAR `<query>` hawkers near any place or postal code
-/SEARCH `<query>` find hawker centre by name or address
+/HAWKER `<query>` find hawker centre by name or address
 /POSTAL `<postalcode>` hawkers near a postal code
 /ONEMAP `<query>` search OneMap.sg for any place or postal code
 You can also send your location to find nearby hawker centres.
