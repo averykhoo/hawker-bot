@@ -48,6 +48,7 @@ intensityColors = [
 
 def get_warning():
     r = requests.get('http://www.weather.gov.sg/mobile/rest-mobile-app-warning/')
+    raise NotImplementedError
 
 
 def haze_aqi_hourly():
@@ -57,17 +58,19 @@ def haze_aqi_hourly():
     # unix timestamp 5 mins
     # 1616915100 == Sun Mar 28 2021 15:05:00 GMT+0800 == 07:05:00 GMT+0000
     url = f'https://www-haze-gov-sg-admin.cwp.sg/api/airquality/jsondata/1616915100'
+    raise NotImplementedError
 
 
 def get_radar_3rd_party():
     # https://github.com/cheeaun/rainshot
     # https://rainshot.checkweather.sg
     # https://rainshot.now.sh
-    pass
+    raise NotImplementedError
 
 
 def get_drain_water_levels():
     r = requests.get('https://s3-ap-southeast-1.amazonaws.com/myenv2/water_level_card.json')
+    raise NotImplementedError
 
 
 def get_lightning():
@@ -143,7 +146,10 @@ def get_radar_70km() -> List[List[Tuple[int, int, int, int]]]:
     Upper longitude = 104.130°
 
 
-    if(arr1[i]['LATITUDE']<1.4836&&arr1[i]['LATITUDE']>1.170&&arr1[i]['LONGITUDE']<104.143&&arr1[i]['LONGITUDE']>103.565){
+    if(arr1[i]['LATITUDE']<1.4836 &&
+       arr1[i]['LATITUDE']>1.170 &&
+       arr1[i]['LONGITUDE']<104.143 &&
+       arr1[i]['LONGITUDE']>103.565) {...}
     :return:
     """
     timestamp = datetime.datetime.now()
@@ -201,6 +207,7 @@ def get_radar_240km() -> List[List[Tuple[int, int, int, int]]]:
     # return [[pixel_access[x, y]  # (r,g,b,a) where a=255
     #          for y in range(im.size[1]) if pixel_access[x, y][-1]]
     #         for x in range(im.size[1])]
+    raise NotImplementedError
 
 
 def get_radar_480km() -> List[List[Tuple[int, int, int, int]]]:
@@ -230,6 +237,7 @@ def get_radar_480km() -> List[List[Tuple[int, int, int, int]]]:
     # return [[pixel_access[x, y]  # (r,g,b,a) where a=255
     #          for y in range(im.size[1]) if pixel_access[x, y][-1]]
     #         for x in range(im.size[1])]
+    raise NotImplementedError
 
 
 @dataclass
