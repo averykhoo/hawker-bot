@@ -142,4 +142,7 @@ if __name__ == '__main__':
     print(dataset_listing.resources[0])
 
     assert dataset_listing.resources[0].format == ResourceFormat.CSV
-    print(tabulate.tabulate(get_datastore(dataset_listing.resources[0].id).df))
+    dataset_listing_ds = get_datastore(dataset_listing.resources[0].id)
+    print(tabulate.tabulate(dataset_listing_ds.df.head(20), headers=dataset_listing_ds.df.columns))
+
+    dataset_listing_ds.df.to_csv('dataset-listing.csv', index=False)
