@@ -1,162 +1,34 @@
 import datetime
 import time
 from functools import wraps
+from typing import Optional
+from typing import Union
 
 import cachetools
 
 
-def cache_1s(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=1.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
+def cache_ttl(seconds: Union[int, float, datetime.timedelta],
+              maxsize: Optional[int] = None):
+    if isinstance(seconds, datetime.timedelta):
+        seconds = seconds.total_seconds()
+    assert isinstance(seconds, (int, float)), seconds
 
-    return wrapper
+    def decorator(func):
+        @wraps(func)
+        @cachetools.cached(cachetools.TTLCache(maxsize=maxsize, ttl=seconds))
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
 
+        return wrapper
 
-def cache_5s(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=5.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_10s(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=10.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
+    return decorator
 
 
-def cache_15s(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=15.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_30s(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=30.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_1m(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=60.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_5m(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=300.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_10m(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=600.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_15m(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=900.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_30m(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=1800.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_1h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=3600.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_2h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=7200.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_3h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=10800.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_4h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=14400.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_6h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=21600.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_12h(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=43200.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def cache_1d(func):
-    @wraps(func)
-    @cachetools.cached(cachetools.TTLCache(maxsize=0xFF, ttl=86400.0))
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
+cache_1s = cache_ttl(1, 0xFF)
+cache_5s = cache_ttl(5, 0xFF)
+cache_1m = cache_ttl(60, 0xFF)
+cache_1h = cache_ttl(60 * 60, 0xFF)
+cache_1d = cache_ttl(24 * 60 * 60, 0xFF)
 
 if __name__ == '__main__':
 
