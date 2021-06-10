@@ -1,7 +1,9 @@
 import datetime
+import os
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
+from pathlib import Path
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -9,6 +11,7 @@ from typing import Union
 from uuid import UUID
 
 import pandas as pd
+import requests
 
 
 class ResourceFormat(Enum):
@@ -54,6 +57,25 @@ class Resource:
                         coverage_end=datetime.date.fromisoformat(json_obj['coverage_end'])
                         if 'coverage_end' in json_obj else None,
                         )
+
+    def save(self, path: Union[str, os.PathLike, Path]):
+        # check not exists
+        path = Path(path).resolve()
+        if path.is_dir():
+            raise IsADirectoryError(path)
+        if path.exists():
+            raise FileExistsError(path)
+
+        # get file
+        r = requests.get(self.url)
+        if r.status_code != 200:
+            raise RuntimeError(self.url)
+
+        # save file
+        with path.open('wb') as f:
+            f.write(r.content)
+
+        return path
 
 
 @dataclass
@@ -142,4 +164,5 @@ class DataStoreResult:
             self.__df = pd.DataFrame(self.records)
             self.__df = self.__df.sort_values(by='_id')  # sort rows
             self.__df = self.__df[self.field_names]  # sort columns
+            self.__df = self.__df.drop(columns=['_id'])  # drop '_id' column
         return self.__df.copy()

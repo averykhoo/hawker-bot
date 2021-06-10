@@ -135,6 +135,12 @@ def get_dataset_df(dataset_id: Union[str, UUID]) -> pd.DataFrame:
 
 
 if __name__ == '__main__':
-    df_dataset_listing = get_dataset_df('dba9594b-fb5c-41c5-bb7c-92860ee31aeb')
+    dataset_listing_id = 'dba9594b-fb5c-41c5-bb7c-92860ee31aeb'
+
+    df_dataset_listing = get_dataset_df(dataset_listing_id)
     print(tabulate.tabulate(df_dataset_listing.head(20), headers=df_dataset_listing.columns))
-    df_dataset_listing.to_csv('dataset-listing.csv', index=False)
+    df_dataset_listing.to_csv('dataset-listing.csv', index=False, encoding='utf8')
+
+    # # contains broken unicode
+    # dataset_listing = get_dataset(dataset_listing_id)
+    # dataset_listing.resources[0].save('dataset-listing-2.csv')
