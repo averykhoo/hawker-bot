@@ -1,4 +1,5 @@
 import datetime
+import logging
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
@@ -131,6 +132,10 @@ class Hawker(Location):
     cleaning_date_ranges: List[DateRange] = field(default_factory=list)
 
     other_works_period: Optional[DateRange] = None
+
+    def __post_init__(self):
+        if self.location_hc and self.distance(self.location_hc) > 160:  # worst offender currently 154 meters
+            logging.warning(f'hawker center {self.name} is {self.distance(self.location_hc)} meters away from itself')
 
     @property
     def location_hc(self):
