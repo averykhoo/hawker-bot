@@ -1,9 +1,11 @@
+import logging
 from typing import Dict
 from typing import Optional
 from typing import Sequence
 from typing import Union
 from uuid import UUID
 
+import pandas as pd
 import requests
 import tabulate
 
@@ -122,6 +124,14 @@ def get_datastore(resource_id: Union[str, UUID],
 
     # create a df
     return DataStoreResult.from_json(data['result'])
+
+
+def get_dataset_df(dataset_id: str) -> pd.DataFrame:
+    dataset = get_dataset(dataset_id)
+    assert len(dataset.resources) == 1
+    assert dataset.resources[0].format == ResourceFormat.CSV
+    logging.info(f'loading from dataset: {dataset.title} ({dataset.resources[0].last_modified})')
+    return get_datastore(dataset.resources[0].id).df
 
 
 if __name__ == '__main__':
