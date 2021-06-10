@@ -10,8 +10,9 @@ from typing import Tuple
 import pandas as pd
 import requests
 
-from api_wrappers.data_gov_sg import RESOURCE_IDS
-from api_wrappers.data_gov_sg import get_resource
+from api_wrappers.hawker_closure import DATASET_IDS
+from api_wrappers.hawker_closure import get_dataset_df
+from api_wrappers.location import Location
 from hawkers import Hawker
 
 
@@ -75,8 +76,9 @@ def load_hawker_data():
     # hawkers = [hawker for hawker in hawkers if hawker.no_of_food_stalls > 0]
 
     # df = pd.read_csv('data/dates-of-hawker-centres-closure/dates-of-hawker-centres-closure--2021-03-18--22-52-07.csv')
-    df = get_resource(RESOURCE_IDS['Dates of Hawker Centres Closure'])
+    df = get_dataset_df(DATASET_IDS['Dates of Hawker Centres Closure'])
     for i, row in df.iterrows():
+        row_location = Location(float(row['latitude_hc']), float(row['longitude_hc']))
         for hawker in hawkers:
             # name exact match
             if hawker.name == row['name']:
@@ -84,16 +86,13 @@ def load_hawker_data():
                 break
 
             # geoloc within 1 meter
-            elif (abs(hawker.latitude - float(row['latitude_hc'])) ** 2 +
-                  abs(hawker.longitude - float(row['longitude_hc'])) ** 2) ** 0.5 < 9e-06:
+            elif hawker.distance(row_location) <= 1:
                 logging.info(f'matched by location: {hawker.name}, {row["name"]}')
                 hawker.add_cleaning_periods(row)
                 break
 
             # geoloc within 1 meter (alternative latlong)
-            elif hawker.latitude_hc and hawker.longitude_hc and \
-                    (abs(hawker.latitude_hc - float(row['latitude_hc'])) ** 2 +
-                     abs(hawker.longitude_hc - float(row['longitude_hc'])) ** 2) ** 0.5 < 9e-06:
+            elif hawker.location_hc and hawker.location_hc.distance(row_location) <= 1:
                 logging.info(f'matched by location_hc: {hawker.name}, {row["name"]}')
                 hawker.add_cleaning_periods(row)
                 break

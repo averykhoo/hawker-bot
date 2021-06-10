@@ -132,6 +132,11 @@ class Hawker(Location):
 
     other_works_period: Optional[DateRange] = None
 
+    @property
+    def location_hc(self):
+        if self.latitude_hc and self.longitude_hc:
+            return Location(self.latitude_hc, self.longitude_hc)
+
     @staticmethod
     def from_row(dataframe_row):
         # handle nan
