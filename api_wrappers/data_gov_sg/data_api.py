@@ -15,8 +15,7 @@ from api_wrappers.data_gov_sg.datatypes import Resource
 from api_wrappers.data_gov_sg.datatypes import ResourceFormat
 
 
-def get_resource(resource_id: Union[str, UUID],
-                 ) -> Resource:
+def get_resource(resource_id: Union[str, UUID]) -> Resource:
     """
     Return the metadata of a resource.
 
@@ -33,8 +32,7 @@ def get_resource(resource_id: Union[str, UUID],
     return Resource.from_json(data['result'])
 
 
-def get_dataset(dataset_id: Union[str, UUID],
-                ) -> Dataset:
+def get_dataset(dataset_id: Union[str, UUID]) -> Dataset:
     """
     Return the metadata of a dataset (package) and its resources
 
@@ -111,6 +109,8 @@ def get_datastore(resource_id: Union[str, UUID],
 
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
                      params=params)
+    if r.status_code != 200:
+        raise IndexError(resource_id)
     data = r.json()
     if not data['success']:
         raise IndexError(resource_id)
@@ -126,23 +126,15 @@ def get_datastore(resource_id: Union[str, UUID],
     return DataStoreResult.from_json(data['result'])
 
 
-def get_dataset_df(dataset_id: str) -> pd.DataFrame:
+def get_dataset_df(dataset_id: Union[str, UUID]) -> pd.DataFrame:
     dataset = get_dataset(dataset_id)
-    assert len(dataset.resources) == 1
-    assert dataset.resources[0].format == ResourceFormat.CSV
+    assert len(dataset.resources) == 1, [rsc.name for rsc in dataset.resources]
+    assert dataset.resources[0].format == ResourceFormat.CSV, dataset.resources[0]
     logging.info(f'loading from dataset: {dataset.title} ({dataset.resources[0].last_modified})')
     return get_datastore(dataset.resources[0].id).df
 
 
 if __name__ == '__main__':
-    dataset_listing = get_dataset('dba9594b-fb5c-41c5-bb7c-92860ee31aeb')
-    print(dataset_listing)
-
-    assert len(dataset_listing.resources) == 1
-    print(dataset_listing.resources[0])
-
-    assert dataset_listing.resources[0].format == ResourceFormat.CSV
-    dataset_listing_ds = get_datastore(dataset_listing.resources[0].id)
-    print(tabulate.tabulate(dataset_listing_ds.df.head(20), headers=dataset_listing_ds.df.columns))
-
-    dataset_listing_ds.df.to_csv('dataset-listing.csv', index=False)
+    df_dataset_listing = get_dataset_df('dba9594b-fb5c-41c5-bb7c-92860ee31aeb')
+    print(tabulate.tabulate(df_dataset_listing.head(20), headers=df_dataset_listing.columns))
+    df_dataset_listing.to_csv('dataset-listing.csv', index=False)
