@@ -42,6 +42,8 @@ class Router:
 
         best_match = Match.NO_MATCH
         for route in self.__routes + [self.__default]:
+            if route is None:
+                continue
             best_match = max(best_match, route.match(message))
             if best_match == Match.FULL_MATCH:
                 return best_match
