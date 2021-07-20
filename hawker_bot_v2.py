@@ -45,7 +45,7 @@ utils.setup_logging(app_name='hawker-bot-v2')
 # utils.no_ssl_verification()
 
 # load hawker center data
-hawkers = utils.load_hawker_data()
+hawker_data = utils.load_hawker_data()
 
 # create bot
 bot = FastBot(config.SECRETS['hawker_bot_token'])
@@ -86,7 +86,7 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
     # try exact match for zip code
     try:
         zip_code = fix_zipcode(query)
-        results = [hawker for hawker in hawkers if hawker.addresspostalcode == int(zip_code)]
+        results = [hawker for hawker in hawker_data if hawker.addresspostalcode == int(zip_code)]
         if results:
             responses = [Text(f'Displaying postal code match for "{zip_code}"', notification=False)]
             for result in results:
@@ -97,14 +97,15 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
         pass
 
     # try to find exact (case-insensitive) match for name
-    for hawker in hawkers:
+    for hawker in hawker_data:
         if hawker.name.casefold() == query.casefold():
             logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
             return [hawker], [Text(f'Displaying exact match for "{query}"', notification=False),
                               Markdown(hawker.to_markdown(), notification=False)]
 
     # run fuzzy search over fields
-    results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawkers], key=lambda x: x[1], reverse=True)
+    results = sorted([(hawker, hawker.text_similarity(query)) for hawker in hawker_data], key=lambda x: x[1],
+                     reverse=True)
     results = [result for result in results if result[1] > (threshold, 0)]  # filter out bad matches
     if results:
         responses = [Text(f'Displaying top {min(num_results, len(results))} results for "{query}"', notification=False)]
@@ -147,7 +148,7 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
     idx = 0
     yielded = False
 
-    for hawker in sorted(hawkers, key=lambda x: x.name):
+    for hawker in sorted(hawker_data, key=lambda x: x.name):
         if hawker.closed_on_dates(date):
             idx += 1
             logging.info(f'CLOSED="{date_name}" DATE="{date}" RESULT="{hawker.name}"')
@@ -166,7 +167,7 @@ def __closed(date, date_name) -> Generator[Markdown, Any, None]:
 def __nearby(loc, num_results=3):
     assert isinstance(loc, Location), loc
     # noinspection PyTypeChecker
-    results: List[Hawker] = loc.k_nearest(hawkers, k=-1)
+    results: List[Hawker] = loc.k_nearest(hawker_data, k=-1)
     responses = []
     for result in results[:num_results]:
         logging.info(f'LAT={loc.latitude} LON={loc.longitude} DISTANCE={loc.distance(result)} RESULT="{result.name}"')
@@ -306,7 +307,7 @@ def cmd_near(message: Message):
         return
 
     if query.lower() in {'me', 'myself', 'here', 'home'}:
-        yield Text('You seem to be looking for hawkers near your current location. '
+        yield Text('You seem to be looking for hawker_data near your current location. '
                    'If so, please send your location.')
 
     results = onemap_search(query)
@@ -354,7 +355,7 @@ def cmd_list():
     idx = 0
 
     logging.info(f'LIST_ALL')
-    for hawker in sorted(hawkers, key=lambda x: x.name):
+    for hawker in sorted(hawker_data, key=lambda x: x.name):
         idx += 1
         lines.append(f'{idx}.  {hawker.name}')
         if sum(map(len, lines)) > 3200:
@@ -463,7 +464,9 @@ def cmd_next_year():
 
 @bot.command('ping')
 def cmd_ping():
-    return Text('pong', notification=False)
+    yield Text('pong', notification=False)
+    global hawker_data
+    hawker_data = utils.load_hawker_data()
 
 
 @bot.default
