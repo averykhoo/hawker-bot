@@ -465,8 +465,13 @@ def cmd_next_year():
 @bot.command('ping')
 def cmd_ping():
     yield Text('pong', notification=False)
+
+
+@bot.command('update')
+def cmd_update():
     global hawker_data
     hawker_data = utils.load_hawker_data()
+    yield Text('updated', notification=False)
 
 
 @bot.default
