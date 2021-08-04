@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Dict
 from typing import Optional
@@ -130,7 +131,8 @@ def get_dataset_df(dataset_id: Union[str, UUID]) -> pd.DataFrame:
     dataset = get_dataset(dataset_id)
     assert len(dataset.resources) == 1, [rsc.name for rsc in dataset.resources]
     assert dataset.resources[0].format == ResourceFormat.CSV, dataset.resources[0]
-    logging.info(f'loading from dataset: {dataset.title} ({dataset.resources[0].last_modified})')
+    logging.info(f'loading from dataset: {dataset.title}'
+                 f' ({dataset.resources[0].last_modified + datetime.timedelta(hours=8)})')  # "convert" from UTC
     return get_datastore(dataset.resources[0].id).df
 
 
