@@ -315,10 +315,10 @@ def cmd_near(message: Message):
         logging.info(f'QUERY_NEAR_NO_RESULTS="{query}"')
         yield Text(f'No results for {query}', notification=False)
 
-        if re.search(r'\bhawker\s*(centre|center)\b', query, flags=re.I) is None:
+        if re.search(r'\b(hawker|food)\s*(centre|center)\b', query, flags=re.I) is None:
             return
 
-        query = ' '.join(re.sub(r'\bhawker\s*(centre|center)\b', ' ', query, flags=re.I).split())
+        query = ' '.join(re.sub(r'\b(hawker|food)\s*(centre|center)\b', ' ', query, flags=re.I).split())
         results = onemap_search(query)
         if not results:
             logging.info(f'QUERY_NEAR_RETRY_NO_RESULTS="{query}"')
