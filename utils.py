@@ -96,7 +96,7 @@ def load_hawker_data():
     for i, row in df.iterrows():
         row_location = Location(float(row['latitude_hc']), float(row['longitude_hc']))
         for hawker in hawkers:
-            # name exact match
+            # name exact matched
             if hawker.name == row['name']:
                 hawker.add_cleaning_periods(row)
                 break
@@ -113,13 +113,13 @@ def load_hawker_data():
                 hawker.add_cleaning_periods(row)
                 break
 
-            # address exact match
+            # address exact matched
             elif hawker.address_myenv == row['address_myenv']:
                 logging.info(f'matched by address: {hawker.name}, {row["name"]}')
                 hawker.add_cleaning_periods(row)
                 break
 
-        # no match
+        # no matched
         else:
             logging.warning(f'could not find {row["name"]}')
 
@@ -131,7 +131,7 @@ RE_COMMAND = re.compile(r'(?P<command>[/\\][a-zA-Z0-9_]{1,64})(?![a-zA-Z0-9_])')
 
 @lru_cache(maxsize=0xFF)
 def get_command(query):
-    m = RE_COMMAND.match(query)  # match starting from beginning of string
+    m = RE_COMMAND.match(query)  # matched starting from beginning of string
     if m is not None:
         return m.group('command')
 

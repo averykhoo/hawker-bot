@@ -62,7 +62,7 @@ ZIP_PREFIXES = {  # https://en.wikipedia.org/wiki/Postal_codes_in_Singapore#Post
 def fix_zipcode(query: str) -> str:
     query = query.strip()
 
-    # if we can match this, we know can parse it as a zipcode
+    # if we can matched this, we know can parse it as a zipcode
     # /zip code 123456
     # /zip 123456
     # /zip S123456

@@ -196,7 +196,7 @@ def _emd_1d_fast(positions_x: Sequence[Union[int, float]],
         connected_x = [idx for idx, is_y in locations[right:left - 1 if left else None:-1] if not is_y]
         connected_y = [idx for idx, is_y in locations[right:left - 1 if left else None:-1] if is_y]
 
-        # greedy-match constrained points with only one possible match at the SMALLER end of connected_y
+        # greedy-matched constrained points with only one possible matched at the SMALLER end of connected_y
         while connected_y:  # don't need to check connected_x since it cannot be shorter than y
             # if y_min <= x_min, then they must be paired
             if connected_y[-1] <= connected_x[-1]:
@@ -209,7 +209,7 @@ def _emd_1d_fast(positions_x: Sequence[Union[int, float]],
                     and (connected_y[-1] - connected_x[-1]) <= (connected_x[-2] - connected_y[-1]):
                 distance += connected_y.pop(-1) - connected_x.pop(-1)
 
-            # endpoints do not match, break loop
+            # endpoints do not matched, break loop
             else:
                 break
 
@@ -217,7 +217,7 @@ def _emd_1d_fast(positions_x: Sequence[Union[int, float]],
         connected_x.reverse()
         connected_y.reverse()
 
-        # greedy-match constrained points with only one possible match at the LARGER end of connected_y
+        # greedy-matched constrained points with only one possible matched at the LARGER end of connected_y
         while connected_y:
             # if y_max >= x_max, then they must be paired
             if connected_y[-1] >= connected_x[-1]:
@@ -230,7 +230,7 @@ def _emd_1d_fast(positions_x: Sequence[Union[int, float]],
                     and (connected_x[-1] - connected_y[-1]) <= (connected_y[-1] - connected_x[-1]):
                 distance += connected_y.pop(-1) - connected_x.pop(-1)
 
-            # endpoints don't match
+            # endpoints don't matched
             else:
                 break
 
@@ -242,8 +242,8 @@ def _emd_1d_fast(positions_x: Sequence[Union[int, float]],
 
         # enumerate all possible matches for this connected component
         # this code block works even if connected_y is empty
-        # possible: try to greedy-match unshared points (greedy match must succeed for all y)
-        # also possible: actually build the bipartite graph to exclude impossible match options
+        # possible: try to greedy-matched unshared points (greedy matched must succeed for all y)
+        # also possible: actually build the bipartite graph to exclude impossible matched options
         else:
             costs = [len(connected_y)]
             for x_combination in itertools.combinations(connected_x, len(connected_y)):

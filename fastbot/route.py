@@ -134,7 +134,7 @@ class RegexRoute(Route):
         match = self.pattern.search(message.text)
         assert match is not None, (self.pattern, match)
 
-        message.match = match
+        message.matched = match
         message.command = self.canonical_name
 
         super().handle_message(message)

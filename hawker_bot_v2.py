@@ -83,12 +83,12 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
         logging.info('QUERY_BLANK')
         return [], [Text('no search query received', notification=False)]
 
-    # try exact match for zip code
+    # try exact matched for zip code
     try:
         zip_code = fix_zipcode(query)
         results = [hawker for hawker in hawker_data if hawker.addresspostalcode == int(zip_code)]
         if results:
-            responses = [Text(f'Displaying postal code match for "{zip_code}"', notification=False)]
+            responses = [Text(f'Displaying postal code matched for "{zip_code}"', notification=False)]
             for result in results:
                 logging.info(f'QUERY_MATCHED_ZIP="{query}" ZIPCODE={zip_code} RESULT="{result.name}"')
                 responses.append(Markdown(result.to_markdown(), notification=False))
@@ -96,11 +96,11 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
     except InvalidZip:
         pass
 
-    # try to find exact (case-insensitive) match for name
+    # try to find exact (case-insensitive) matched for name
     for hawker in hawker_data:
         if hawker.name.casefold() == query.casefold():
             logging.info(f'QUERY_EXACT_MATCH="{query}" RESULT="{hawker.name}"')
-            return [hawker], [Text(f'Displaying exact match for "{query}"', notification=False),
+            return [hawker], [Text(f'Displaying exact matched for "{query}"', notification=False),
                               Markdown(hawker.to_markdown(), notification=False)]
 
     # run fuzzy search over fields
@@ -115,7 +115,7 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
         return [hawker for hawker, score in results], responses
 
     logging.info(f'QUERY_NO_RESULTS="{query}"')
-    responses = [Text(f'Zero hawker centres match "{query}"', notification=False)]
+    responses = [Text(f'Zero hawker centres matched "{query}"', notification=False)]
     if not onemap:
         return [], responses
 
@@ -202,7 +202,7 @@ def cmd_help():
 @bot.command('search', noslash=True, boundary=False, prefix_match=True)
 @bot.command('hawker', noslash=True, boundary=False, prefix_match=True)
 def cmd_search(message: Message):
-    assert message.match is not None
+    assert message.matched is not None
     query = message.argument
 
     results, responses = __search(query, onemap=True)
@@ -212,7 +212,7 @@ def cmd_search(message: Message):
 @bot.command('where', noslash=True, boundary=False, prefix_match=True)
 @bot.command('onemap', noslash=True, boundary=False, prefix_match=True)
 def cmd_onemap(message: Message):
-    assert message.match is not None
+    assert message.matched is not None
     query = message.argument
 
     if not query:
@@ -263,7 +263,7 @@ def cmd_about():
 @bot.command('postalcode', boundary=False, prefix_match=True)
 @bot.command('postal', boundary=False, prefix_match=True)
 def cmd_zip(message: Message):
-    assert message.match is not None
+    assert message.matched is not None
     query = message.argument
 
     zip_code, response = __fix_zip(query)
@@ -294,7 +294,7 @@ def cmd_zip(message: Message):
 @bot.command('nearby', noslash=True, prefix_match=True)
 @bot.command('near', noslash=True, prefix_match=True)
 def cmd_near(message: Message):
-    assert message.match is not None
+    assert message.matched is not None
     query = message.argument
 
     if not query:
@@ -315,15 +315,23 @@ def cmd_near(message: Message):
         logging.info(f'QUERY_NEAR_NO_RESULTS="{query}"')
         yield Text(f'No results for {query}', notification=False)
 
-    else:
-        address = re.sub(r'\b(' + '|'.join(map(re.escape, query.split())) + r')\b',
-                         r'*\1*',
-                         results[0].address,
-                         flags=re.I | re.U)
-        logging.info(f'NEARBY={query} LAT={results[0].latitude} LON={results[0].longitude} '
-                     f'ADDRESS="{results[0].address}" MARKDOWN="{address}')
-        yield Markdown(f'Displaying nearest 3 results to "{address}"', notification=False)
-        yield from __nearby(results[0])
+        if re.search(r'\bhawker\s*(centre|center)\b', query, flags=re.I) is None:
+            return
+
+        query = ' '.join(re.sub(r'\bhawker\s*(centre|center)\b', ' ', query, flags=re.I).split())
+        results = onemap_search(query)
+        if not results:
+            logging.info(f'QUERY_NEAR_RETRY_NO_RESULTS="{query}"')
+            return
+
+    address = re.sub(r'\b(' + '|'.join(map(re.escape, query.split())) + r')\b',
+                     r'*\1*',
+                     results[0].address,
+                     flags=re.I | re.U)
+    logging.info(f'NEARBY={query} LAT={results[0].latitude} LON={results[0].longitude} '
+                 f'ADDRESS="{results[0].address}" MARKDOWN="{address}')
+    yield Markdown(f'Displaying nearest 3 results to "{address}"', notification=False)
+    yield from __nearby(results[0])
 
 
 @bot.keyword('weather forecast')
@@ -490,7 +498,7 @@ def handle_text(message: Message):
         return
 
     # reuse the nearby handler
-    message.match = re.fullmatch(r'(?P<argument>.*)', message.text)
+    message.matched = re.fullmatch(r'(?P<argument>.*)', message.text)
     yield from cmd_near(message)
 
 
@@ -552,7 +560,7 @@ def handle_inline(message: InlineQuery) -> None:
                               )
     elif query:
         yield InlineArticle(title='No results found',
-                            content=f'No hawker centres match the provided search term:  \n`{query}`',
+                            content=f'No hawker centres matched the provided search term:  \n`{query}`',
                             )
     else:
         yield InlineArticle(title='Enter search query',

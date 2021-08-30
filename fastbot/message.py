@@ -15,7 +15,7 @@ from fastbot.response import Response
 class Message:
     update: Update
     context: CallbackContext
-    match: Optional[Match] = None  # matched command string
+    matched: Optional[Match] = None  # matched command string
     command: Optional[str] = None  # canonical command name
 
     @property
@@ -24,17 +24,17 @@ class Message:
 
     @property
     def argument(self) -> Optional[str]:
-        if self.match is not None:
-            assert len(self.match.groups()) > 0, (self.text, self.match)
-            assert len(self.match.groupdict()) > 0, (self.text, self.match)
+        if self.matched is not None:
+            assert len(self.matched.groups()) > 0, (self.text, self.matched)
+            assert len(self.matched.groupdict()) > 0, (self.text, self.matched)
 
-            if 'argument' in self.match.groupdict():
-                return self.match.group('argument')
+            if 'argument' in self.matched.groupdict():
+                return self.matched.group('argument')
 
-            assert 'command' in self.match.groupdict(), (self.text, self.match)
-            for group_idx, group_text in enumerate(self.match.groups()):
-                if group_text == self.match.group('command'):
-                    start_pos, end_pos = self.match.span(group_idx + 1)  # group 0 is the full match
+            assert 'command' in self.matched.groupdict(), (self.text, self.matched)
+            for group_idx, group_text in enumerate(self.matched.groups()):
+                if group_text == self.matched.group('command'):
+                    start_pos, end_pos = self.matched.span(group_idx + 1)  # group 0 is the full matched
                     return self.text[end_pos:].strip()
 
     @property

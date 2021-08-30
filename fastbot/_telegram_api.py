@@ -1,6 +1,6 @@
 """
 stuff all the python-telegram-bot imports in one file
-because `telegram` doesn't match the package name, so the linter thinks it's an undeclared dependency
+because `telegram` doesn't matched the package name, so the linter thinks it's an undeclared dependency
 and I don't want to have to deal with tagging every single import with a noinspection flag
 so I'll just leave them all here and ignore the linter warnings for this file
 """
