@@ -1,9 +1,13 @@
 import datetime
 from pprint import pprint
+from typing import Dict
+from typing import List
+from typing import Tuple
 
 import requests
 from dateutil.parser import parse
 
+from api_wrappers.caching import cache_1m
 from api_wrappers.weather import Forecast
 # unix_timestamp = 1633356000  # increments in 300 seconds
 from api_wrappers.weather import region_metadata
@@ -139,5 +143,90 @@ def get_forecasts():
             pprint(_forecast)
 
 
+@cache_1m
+def weather_2h() -> List[Forecast]:
+    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
+    data = r.json()
+
+    # 2-hour forecast timestamp
+    forecast_timestamp_date = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Date']).date()
+    forecast_timestamp_time = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Time']).time()
+    forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
+
+    # 2-hour forecast
+    return [Forecast(latitude=float(area_forecast['Lat']),
+                     longitude=float(area_forecast['Lon']),
+                     name=area_forecast['Name'],
+                     forecast=weather_abbreviations.get(area_forecast['Forecast'], area_forecast['Forecast']),
+                     last_update=forecast_timestamp,
+                     time_start=forecast_timestamp,
+                     time_end=forecast_timestamp + datetime.timedelta(hours=2),
+                     ) for area_forecast in data['Channel2HrForecast']['Item']['WeatherForecast']['Area']]
+
+
+@cache_1m
+def weather_24h() -> List[Forecast]:
+    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
+    data = r.json()
+    out = []
+
+    # 24-hour forecast timestamp
+    forecast_timestamp_date = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Date']).date()
+    forecast_timestamp_time = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Time']).time()
+    forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
+
+    # 24-hour forecast
+    for period_forecast in data['Channel24HrForecast']['Forecasts']:
+        start_str, sep, end_str = period_forecast['TimePeriod'].lower().partition(' to ')
+        assert sep is not None
+
+        for time_str in forecast_timings:
+            if time_str in start_str:
+                start_time = forecast_timings[time_str]
+                start_str = start_str.replace(time_str, '').strip()
+                break
+        else:
+            raise RuntimeError(start_str)
+
+        for time_str in forecast_timings:
+            if time_str in end_str:
+                end_time = forecast_timings[time_str]
+                end_str = end_str.replace(time_str, '').strip()
+                break
+        else:
+            raise RuntimeError(start_str)
+
+        assert len(end_str) > 0
+        end_date = parse(end_str).date()
+        start_date = parse(start_str).date() if start_str else end_date
+
+        start_timestamp = datetime.datetime.combine(start_date, start_time)
+        end_timestamp = datetime.datetime.combine(end_date, end_time)
+
+        for zone, zone_name in zone_rename.items():
+            loc = region_metadata[zone_name]
+            out.append(Forecast(latitude=loc.latitude,
+                                longitude=loc.longitude,
+                                name=zone_name,
+                                forecast=weather_abbreviations.get(period_forecast[zone],
+                                                                   period_forecast[zone]),
+                                last_update=forecast_timestamp,
+                                time_start=start_timestamp,
+                                time_end=end_timestamp,
+                                ))
+    return out
+
+
+@cache_1m
+def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], List[Forecast]]:
+    out = dict()
+    for forecast in weather_24h():
+        out.setdefault((forecast.time_start, forecast.time_end), []).append(forecast)
+    return out
+
+
 if __name__ == '__main__':
-    get_forecasts()
+    # get_forecasts()
+    pprint(weather_2h())
+    pprint(weather_24h())
+    pprint(weather_24h_grouped())
