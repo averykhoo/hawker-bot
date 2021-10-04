@@ -278,12 +278,16 @@ def cmd_zip(message: Message):
         yield Markdown(f'Postal code does not exist in Singapore: "{zip_code}"', notification=False)
         return
 
-    # noinspection PyTypeChecker
-    forecast: Forecast = loc.nearest(weather_2h())
-    yield Markdown('  \n'.join([
-        f'*Weather near your postal code ({forecast.name} Area)*',
-        f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
-    ]), notification=False, web_page_preview=False)
+    try:
+        # noinspection PyTypeChecker
+        forecast: Forecast = loc.nearest(weather_2h())
+        yield Markdown('  \n'.join([
+            f'*Weather near your postal code ({forecast.name} Area)*',
+            f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: {forecast.forecast}',
+        ]), notification=False, web_page_preview=False)
+
+    except KeyError:
+        yield Markdown('The `data.gov.sg` weather API is not responding')
 
     # found!
     logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
@@ -344,19 +348,22 @@ def cmd_near(message: Message):
 @bot.command('forecast', noslash=True)
 @bot.command('weather', noslash=True)
 def cmd_weather():
-    weather_data = weather_24h_grouped()
-    for time_start, time_end in sorted(weather_data.keys()):
-        start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
-        end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
+    try:
+        weather_data = weather_24h_grouped()
+        for time_start, time_end in sorted(weather_data.keys()):
+            start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
+            end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
 
-        # format message
-        lines = [f'*Weather forecast from {start_str} to {end_str}*']
-        for forecast in weather_data[time_start, time_end]:
-            lines.append(f'{forecast.name}: {forecast.forecast}')
+            # format message
+            lines = [f'*Weather forecast from {start_str} to {end_str}*']
+            for forecast in weather_data[time_start, time_end]:
+                lines.append(f'{forecast.name}: {forecast.forecast}')
 
-        # send message
-        yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
+            # send message
+            yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
 
+    except KeyError:
+        yield Markdown('The `data.gov.sg` weather API is not responding')
 
 @bot.keyword('list all')
 @bot.keyword('list everything')
@@ -382,19 +389,22 @@ def cmd_list():
 @bot.command('today', noslash=True)
 def cmd_today():
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
-    for (time_start, time_end), forecasts in weather_24h_grouped().items():
-        if time_start <= soon < time_end:
-            start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
-            end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
+    try:
+        for (time_start, time_end), forecasts in weather_24h_grouped().items():
+            if time_start <= soon < time_end:
+                start_str = format_datetime(time_start, use_deictic_temporal_pronouns=True)
+                end_str = format_datetime(time_end, use_deictic_temporal_pronouns=True)
 
-            # format message
-            lines = [f'*Weather forecast from {start_str} to {end_str}*']
-            for forecast in forecasts:
-                lines.append(f'{forecast.name}: {forecast.forecast}')
+                # format message
+                lines = [f'*Weather forecast from {start_str} to {end_str}*']
+                for forecast in forecasts:
+                    lines.append(f'{forecast.name}: {forecast.forecast}')
 
-            # send message
-            yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
-            break
+                # send message
+                yield Markdown('  \n'.join(lines), notification=False, web_page_preview=False)
+                break
+    except KeyError:
+        yield Markdown('The `data.gov.sg` weather API is not responding')
 
     # send what's closed today
     yield from __closed(datetime.date.today(), 'today')
@@ -403,13 +413,17 @@ def cmd_today():
 @bot.command('tomorrow', noslash=True)
 def cmd_tomorrow():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    for detailed_forecast in weather_4d():
-        if detailed_forecast.date == tomorrow:
-            yield Markdown('  \n'.join([
-                f'*Weather forecast for tomorrow, {format_date(tomorrow, print_day=True)}:*',
-                detailed_forecast.forecast,
-            ]), notification=False, web_page_preview=False)
-            break
+    try:
+        for detailed_forecast in weather_4d():
+            if detailed_forecast.date == tomorrow:
+                yield Markdown('  \n'.join([
+                    f'*Weather forecast for tomorrow, {format_date(tomorrow, print_day=True)}:*',
+                    detailed_forecast.forecast,
+                ]), notification=False, web_page_preview=False)
+                break
+
+    except KeyError:
+        yield Markdown('The `data.gov.sg` weather API is not responding')
 
     yield from __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
@@ -518,13 +532,17 @@ def handle_location(message: Message):
         yield Text('You appear to be outside of Singapore, so this bot will probably not be very useful to you',
                    notification=False)
 
-    # noinspection PyTypeChecker
-    forecast: Forecast = loc.nearest(weather_2h())
-    yield Markdown(f'*Weather near you ({forecast.name})*  \n'
-                   f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: '
-                   f'{forecast.forecast}',
-                   notification=False,
-                   web_page_preview=False)
+    try:
+        # noinspection PyTypeChecker
+        forecast: Forecast = loc.nearest(weather_2h())
+        yield Markdown(f'*Weather near you ({forecast.name})*  \n'
+                       f'{format_datetime(forecast.time_start)} to {format_datetime(forecast.time_end)}: '
+                       f'{forecast.forecast}',
+                       notification=False,
+                       web_page_preview=False)
+
+    except KeyError:
+        yield Markdown('The `data.gov.sg` weather API is not responding')
 
     yield Text('Displaying nearest 3 results to your location', notification=False)
     yield from __nearby(loc)
