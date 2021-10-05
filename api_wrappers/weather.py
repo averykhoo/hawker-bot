@@ -84,14 +84,14 @@ class Forecast(Location):
 
 
 @dataclass
-class DetailedForecast:
+class FourDayForecast:
     date: datetime.date
     forecast: str
-    relative_humidity: Tuple[int, int]
-    temperature: Tuple[int, int]
-    wind_direction: str
-    wind_speed: Tuple[int, int]
-    last_update: datetime.datetime
+    # relative_humidity: Tuple[int, int]
+    # temperature: Tuple[int, int]
+    # wind_direction: str
+    # wind_speed: Tuple[int, int]
+    # last_update: datetime.datetime
 
 
 @cache_1m
@@ -134,36 +134,36 @@ def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], L
     return out
 
 
-def weather_4d() -> List[DetailedForecast]:
+def weather_4d() -> List[FourDayForecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     out = []
     r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
     data = json.loads(r.content)
-    out.append(DetailedForecast(date=datetime.datetime.strptime(data['items'][0]['timestamp'], fmt).date(),
-                                forecast=data['items'][0]['general']['forecast'].rstrip('.'),
-                                relative_humidity=(data['items'][0]['general']['relative_humidity']['low'],
-                                                   data['items'][0]['general']['relative_humidity']['high']),
-                                temperature=(data['items'][0]['general']['temperature']['low'],
-                                             data['items'][0]['general']['temperature']['high']),
-                                wind_direction=data['items'][0]['general']['wind']['direction'],
-                                wind_speed=(data['items'][0]['general']['wind']['speed']['low'],
-                                            data['items'][0]['general']['wind']['speed']['high']),
-                                last_update=data['items'][0]['general']['forecast'],
-                                ))
+    out.append(FourDayForecast(date=datetime.datetime.strptime(data['items'][0]['timestamp'], fmt).date(),
+                               forecast=data['items'][0]['general']['forecast'].rstrip('.'),
+                               # relative_humidity=(data['items'][0]['general']['relative_humidity']['low'],
+                               #                    data['items'][0]['general']['relative_humidity']['high']),
+                               # temperature=(data['items'][0]['general']['temperature']['low'],
+                               #              data['items'][0]['general']['temperature']['high']),
+                               # wind_direction=data['items'][0]['general']['wind']['direction'],
+                               # wind_speed=(data['items'][0]['general']['wind']['speed']['low'],
+                               #             data['items'][0]['general']['wind']['speed']['high']),
+                               # last_update=data['items'][0]['general']['forecast'],
+                               ))
     r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast')
     data = json.loads(r.content)
     for forecast in data['items'][0]['forecasts']:
-        out.append(DetailedForecast(date=datetime.datetime.strptime(forecast['date'], '%Y-%m-%d').date(),
-                                    forecast=forecast['forecast'].rstrip('.'),
-                                    relative_humidity=(forecast['relative_humidity']['low'],
-                                                       forecast['relative_humidity']['high']),
-                                    temperature=(forecast['temperature']['low'],
-                                                 forecast['temperature']['high']),
-                                    wind_direction=forecast['wind']['direction'],
-                                    wind_speed=(forecast['wind']['speed']['low'],
-                                                forecast['wind']['speed']['high']),
-                                    last_update=forecast['forecast'],
-                                    ))
+        out.append(FourDayForecast(date=datetime.datetime.strptime(forecast['date'], '%Y-%m-%d').date(),
+                                   forecast=forecast['forecast'].rstrip('.'),
+                                   # relative_humidity=(forecast['relative_humidity']['low'],
+                                   #                    forecast['relative_humidity']['high']),
+                                   # temperature=(forecast['temperature']['low'],
+                                   #              forecast['temperature']['high']),
+                                   # wind_direction=forecast['wind']['direction'],
+                                   # wind_speed=(forecast['wind']['speed']['low'],
+                                   #             forecast['wind']['speed']['high']),
+                                   # last_update=forecast['forecast'],
+                                   ))
 
     return out
 

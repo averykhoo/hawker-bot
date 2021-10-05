@@ -4,14 +4,15 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
+import dateutil.parser
 import requests
-from dateutil.parser import parse
 
 from api_wrappers.caching import cache_1m
 from api_wrappers.weather import Forecast
-# unix_timestamp = 1633356000  # increments in 300 seconds
+from api_wrappers.weather import FourDayForecast
 from api_wrappers.weather import region_metadata
 
+# unix_timestamp = 1633356000  # increments in 300 seconds
 unix_timestamp = 0  # this field seems to be ignored entirely
 nea_urls = {
     f'https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/{unix_timestamp}',
@@ -73,87 +74,17 @@ zone_rename = {
 }
 
 
-def get_forecasts():
-    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
-    data = r.json()
-    pprint(data)
-
-    # 2-hour forecast timestamp
-    forecast_timestamp_date = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Date']).date()
-    forecast_timestamp_time = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Time']).time()
-    forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
-    print(forecast_timestamp)
-
-    # 2-hour forecast
-    for area_forecast in data['Channel2HrForecast']['Item']['WeatherForecast']['Area']:
-        _forecast = Forecast(latitude=float(area_forecast['Lat']),
-                             longitude=float(area_forecast['Lon']),
-                             name=area_forecast['Name'],
-                             forecast=weather_abbreviations.get(area_forecast['Forecast'], area_forecast['Forecast']),
-                             last_update=forecast_timestamp,
-                             time_start=forecast_timestamp,
-                             time_end=forecast_timestamp + datetime.timedelta(hours=2),
-                             )
-        pprint(_forecast)
-
-    # 24-hour forecast timestamp
-    forecast_timestamp_date = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Date']).date()
-    forecast_timestamp_time = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Time']).time()
-    forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
-
-    # 24-hour forecast
-    for period_forecast in data['Channel24HrForecast']['Forecasts']:
-        start_str, sep, end_str = period_forecast['TimePeriod'].lower().partition(' to ')
-        assert sep is not None
-
-        for time_str in forecast_timings:
-            if time_str in start_str:
-                start_time = forecast_timings[time_str]
-                start_str = start_str.replace(time_str, '').strip()
-                break
-        else:
-            raise RuntimeError(start_str)
-
-        for time_str in forecast_timings:
-            if time_str in end_str:
-                end_time = forecast_timings[time_str]
-                end_str = end_str.replace(time_str, '').strip()
-                break
-        else:
-            raise RuntimeError(start_str)
-
-        assert len(end_str) > 0
-        end_date = parse(end_str).date()
-        start_date = parse(start_str).date() if start_str else end_date
-
-        start_timestamp = datetime.datetime.combine(start_date, start_time)
-        end_timestamp = datetime.datetime.combine(end_date, end_time)
-
-        for zone, zone_name in zone_rename.items():
-            loc = region_metadata[zone_name]
-            _forecast = Forecast(latitude=loc.latitude,
-                                 longitude=loc.longitude,
-                                 name=zone_name,
-                                 forecast=weather_abbreviations.get(period_forecast[zone],
-                                                                    period_forecast[zone]),
-                                 last_update=forecast_timestamp,
-                                 time_start=start_timestamp,
-                                 time_end=end_timestamp,
-                                 )
-            pprint(_forecast)
-
-
 @cache_1m
 def weather_2h() -> List[Forecast]:
     r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
     data = r.json()
 
-    # 2-hour forecast timestamp
-    forecast_timestamp_date = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Date']).date()
-    forecast_timestamp_time = parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Time']).time()
+    # timestamp
+    forecast_timestamp_date = dateutil.parser.parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Date']).date()
+    forecast_timestamp_time = dateutil.parser.parse(data['Channel2HrForecast']['Item']['ForecastIssue']['Time']).time()
     forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
 
-    # 2-hour forecast
+    # forecast
     return [Forecast(latitude=float(area_forecast['Lat']),
                      longitude=float(area_forecast['Lon']),
                      name=area_forecast['Name'],
@@ -170,12 +101,12 @@ def weather_24h() -> List[Forecast]:
     data = r.json()
     out = []
 
-    # 24-hour forecast timestamp
-    forecast_timestamp_date = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Date']).date()
-    forecast_timestamp_time = parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Time']).time()
+    # timestamp
+    forecast_timestamp_date = dateutil.parser.parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Date']).date()
+    forecast_timestamp_time = dateutil.parser.parse(data['Channel24HrForecast']['Main']['ForecastIssue']['Time']).time()
     forecast_timestamp = datetime.datetime.combine(forecast_timestamp_date, forecast_timestamp_time)
 
-    # 24-hour forecast
+    # forecast
     for period_forecast in data['Channel24HrForecast']['Forecasts']:
         start_str, sep, end_str = period_forecast['TimePeriod'].lower().partition(' to ')
         assert sep is not None
@@ -197,8 +128,8 @@ def weather_24h() -> List[Forecast]:
             raise RuntimeError(start_str)
 
         assert len(end_str) > 0
-        end_date = parse(end_str).date()
-        start_date = parse(start_str).date() if start_str else end_date
+        end_date = dateutil.parser.parse(end_str).date()
+        start_date = dateutil.parser.parse(start_str).date() if start_str else end_date
 
         start_timestamp = datetime.datetime.combine(start_date, start_time)
         end_timestamp = datetime.datetime.combine(end_date, end_time)
@@ -218,6 +149,29 @@ def weather_24h() -> List[Forecast]:
 
 
 @cache_1m
+def weather_4d() -> List[FourDayForecast]:
+    # build a lookup table for which days we're likely to see as the FIRST DAY in the forecast
+    day_lookup = dict()
+    today = datetime.date.today()
+    for delta in [-4, -3, -2, -1, 0, 1]:  # list(range(-4, 2))
+        date = today + datetime.timedelta(days=delta)
+        day = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][int(date.strftime('%w'))]
+        day_lookup[day] = date
+
+    r = requests.get('https://www.nea.gov.sg/api/Weather4DayOutlook/GetData/0')
+    data = r.json()
+    first_date = day_lookup[data[0]['day']]
+    out = []
+
+    # forecast
+    for idx, daily_forecast in enumerate(data):
+        out.append(FourDayForecast(date=first_date + datetime.timedelta(days=idx),
+                                   forecast=daily_forecast['forecast'],
+                                   ))
+    return out
+
+
+@cache_1m
 def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], List[Forecast]]:
     out = dict()
     for forecast in weather_24h():
@@ -230,3 +184,4 @@ if __name__ == '__main__':
     pprint(weather_2h())
     pprint(weather_24h())
     pprint(weather_24h_grouped())
+    pprint(weather_4d())
