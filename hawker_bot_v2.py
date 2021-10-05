@@ -23,10 +23,8 @@ from api_wrappers.postal_code import locate_zipcode
 from api_wrappers.string_formatting import format_date
 from api_wrappers.string_formatting import format_datetime
 from api_wrappers.weather import Forecast
-# from api_wrappers.weather import weather_24h_grouped
-from api_wrappers.nea_gov_sg import weather_24h_grouped
-# from api_wrappers.weather import weather_2h
-from api_wrappers.nea_gov_sg import weather_2h
+from api_wrappers.weather import weather_24h_grouped
+from api_wrappers.weather import weather_2h
 from api_wrappers.weather import weather_4d
 from fastbot import FastBot
 from fastbot import Markdown
@@ -367,6 +365,7 @@ def cmd_weather():
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
 
+
 @bot.keyword('list all')
 @bot.keyword('list everything')
 @bot.command('everything', noslash=True)
@@ -416,11 +415,11 @@ def cmd_today():
 def cmd_tomorrow():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     try:
-        for detailed_forecast in weather_4d():
-            if detailed_forecast.date == tomorrow:
+        for _forecast in weather_4d():
+            if _forecast.date == tomorrow:
                 yield Markdown('  \n'.join([
                     f'*Weather forecast for tomorrow, {format_date(tomorrow, print_day=True)}:*',
-                    detailed_forecast.forecast,
+                    _forecast.forecast,
                 ]), notification=False, web_page_preview=False)
                 break
 
