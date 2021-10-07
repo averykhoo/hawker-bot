@@ -14,6 +14,9 @@ from api_wrappers.data_gov_sg.data_api import get_dataset_df
 from api_wrappers.location import Location
 from hawkers import Hawker
 
+# too lazy to write code, using global var instead
+last_loaded_date = datetime.datetime(1970, 1, 1)
+
 DATASET_IDS = {
     'Dates of Hawker Centres Closure':
         'f28a763e-2320-4969-b249-c23f21c33ffc',  # CSV
@@ -92,7 +95,8 @@ def load_hawker_data():
     # hawkers = [hawker for hawker in hawkers if hawker.no_of_food_stalls > 0]
 
     # df = pd.read_csv('data/dates-of-hawker-centres-closure/dates-of-hawker-centres-closure--2021-03-18--22-52-07.csv')
-    df = get_dataset_df(DATASET_IDS['Dates of Hawker Centres Closure'])
+    global last_loaded_date
+    _, last_loaded_date, df = get_dataset_df(DATASET_IDS['Dates of Hawker Centres Closure'])
     for i, row in df.iterrows():
         row_location = Location(float(row['latitude_hc']), float(row['longitude_hc']))
         for hawker in hawkers:

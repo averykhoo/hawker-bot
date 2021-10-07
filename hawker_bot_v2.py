@@ -499,7 +499,7 @@ def cmd_ping():
 def cmd_update():
     global hawker_data
     hawker_data = utils.load_hawker_data()
-    yield Text('updated', notification=False)
+    yield Text(f'updated to dataset published on {utils.last_loaded_date}', notification=False)
 
 
 @bot.default

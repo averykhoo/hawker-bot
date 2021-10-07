@@ -3,6 +3,7 @@ import logging
 from typing import Dict
 from typing import Optional
 from typing import Sequence
+from typing import Tuple
 from typing import Union
 from uuid import UUID
 
@@ -127,19 +128,19 @@ def get_datastore(resource_id: Union[str, UUID],
     return DataStoreResult.from_json(data['result'])
 
 
-def get_dataset_df(dataset_id: Union[str, UUID]) -> pd.DataFrame:
+def get_dataset_df(dataset_id: Union[str, UUID]) -> Tuple[str, datetime.datetime, pd.DataFrame]:
     dataset = get_dataset(dataset_id)
     assert len(dataset.resources) == 1, [rsc.name for rsc in dataset.resources]
     assert dataset.resources[0].format == ResourceFormat.CSV, dataset.resources[0]
-    logging.info(f'loading from dataset: {dataset.title}'
-                 f' ({dataset.resources[0].last_modified + datetime.timedelta(hours=8)})')  # "convert" from UTC
-    return get_datastore(dataset.resources[0].id).df
+    dataset_date = dataset.resources[0].last_modified + datetime.timedelta(hours=8)  # "convert" from UTC
+    logging.info(f'loading from dataset: {dataset.title} ({dataset_date})')
+    return dataset.title, dataset_date, get_datastore(dataset.resources[0].id).df
 
 
 if __name__ == '__main__':
     dataset_listing_id = 'dba9594b-fb5c-41c5-bb7c-92860ee31aeb'
 
-    df_dataset_listing = get_dataset_df(dataset_listing_id)
+    dataset_title, dataset_date, df_dataset_listing = get_dataset_df(dataset_listing_id)
     print(tabulate.tabulate(df_dataset_listing.head(20), headers=df_dataset_listing.columns))
     df_dataset_listing.to_csv('dataset-listing.csv', index=False, encoding='utf8')
 
