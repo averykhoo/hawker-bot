@@ -3,6 +3,7 @@ import datetime
 import logging
 import re
 from pathlib import Path
+from pprint import pformat
 from typing import Any
 from typing import Generator
 from typing import List
@@ -498,8 +499,29 @@ def cmd_ping():
 @bot.command('update')
 def cmd_update():
     global hawker_data
+    prev_data = {}
+    for hawker in hawker_data:
+        prev_data[hawker.name] = hawker
+
     hawker_data = utils.load_hawker_data()
-    yield Text(f'updated to dataset published on {utils.last_loaded_date}', notification=False)
+    yield Text(f'updated to dataset published on {utils.last_loaded_date.strftime("%Y-%m-%d %H:%M:%S")}',
+               notification=False)
+
+    new_hawkers = set()
+    for hawker in hawker_data:
+        if hawker.name not in prev_data:
+            yield Text(f'new hawker:\n{pformat(hawker.to_json())}')
+        elif hawker != prev_data[hawker.name]:
+            delta = dict()
+            new_json = hawker.to_json()
+            for key, val in prev_data[hawker.name].items():
+                if new_json[key] != val:
+                    delta[key] = (val, new_json[key])
+            yield Text(f'{hawker.name} changed:\n{pformat(delta)}')
+        new_hawkers.add(hawker.name)
+    for hawker_name, hawker in prev_data.items():
+        if hawker_name not in new_hawkers:
+            yield Text(f'removed hawker:\n{pformat(hawker.to_json())}')
 
 
 @bot.default
