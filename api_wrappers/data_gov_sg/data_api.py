@@ -1,5 +1,7 @@
 import datetime
 import logging
+import re
+from pathlib import Path
 from typing import Dict
 from typing import Optional
 from typing import Sequence
@@ -134,7 +136,15 @@ def get_dataset_df(dataset_id: Union[str, UUID]) -> Tuple[str, datetime.datetime
     assert dataset.resources[0].format == ResourceFormat.CSV, dataset.resources[0]
     dataset_date = dataset.resources[0].last_modified + datetime.timedelta(hours=8)  # "convert" from UTC
     logging.info(f'loading from dataset: {dataset.title} ({dataset_date})')
-    return dataset.title, dataset_date, get_datastore(dataset.resources[0].id).df
+    df = get_datastore(dataset.resources[0].id).df
+    safe_name = re.sub(r'[^a-z0-9]+', '-', dataset.title.casefold()).strip('-')
+    safe_date = dataset_date.strftime('%Y-%m-%d--%H-%M-%S')
+    backup_path = Path('data') / safe_name / f'{safe_name}--{safe_date}.csv'
+    if not backup_path.exists():
+        logging.info(f'backing up to {backup_path}')
+        backup_path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(backup_path, index=False)
+    return dataset.title, dataset_date, df
 
 
 if __name__ == '__main__':
