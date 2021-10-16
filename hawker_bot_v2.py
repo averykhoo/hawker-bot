@@ -514,7 +514,7 @@ def cmd_update():
         elif hawker != prev_data[hawker.name]:
             delta = dict()
             new_json = hawker.to_json()
-            for key, val in prev_data[hawker.name].items():
+            for key, val in prev_data[hawker.name].to_json():
                 if new_json[key] != val:
                     delta[key] = (val, new_json[key])
             yield Text(f'{hawker.name} changed:\n{pformat(delta)}')
