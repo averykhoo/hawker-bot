@@ -85,7 +85,7 @@ def setup_logging(app_name) -> logging.Logger:
     return logging.getLogger()
 
 
-def load_hawker_data():
+def load_hawker_data(csv_path:Optional[str] = None):
     hawkers = []
     df = pd.read_csv('data/hawker-centres/hawker-centres.csv')
     for i, row in df.iterrows():
@@ -95,8 +95,13 @@ def load_hawker_data():
     # hawkers = [hawker for hawker in hawkers if hawker.no_of_food_stalls > 0]
 
     # df = pd.read_csv('data/dates-of-hawker-centres-closure/dates-of-hawker-centres-closure--2021-03-18--22-52-07.csv')
-    global last_loaded_date
-    _, last_loaded_date, df = get_dataset_df(DATASET_IDS['Dates of Hawker Centres Closure'])
+    if csv_path is not None:
+        logging.debug(f'loading from {csv_path}')
+        df = pd.read_csv(csv_path)
+    else:
+        global last_loaded_date
+        _, last_loaded_date, df = get_dataset_df(DATASET_IDS['Dates of Hawker Centres Closure'])
+
     for i, row in df.iterrows():
         row_location = Location(float(row['latitude_hc']), float(row['longitude_hc']))
         for hawker in hawkers:

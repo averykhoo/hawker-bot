@@ -177,6 +177,25 @@ def __nearby(loc, num_results=3):
     return responses
 
 
+def _diff_hawkers(original_list, new_list):
+    original_data = {hawker.name: hawker for hawker in original_list}
+    new_hawkers = set()
+    for hawker in new_list:
+        if hawker.name not in original_data:
+            yield Text(f'new hawker:\n{pformat(hawker.name)}')
+        elif hawker != original_data[hawker.name]:
+            delta = dict()
+            new_json = hawker.to_json()
+            for key, val in original_data[hawker.name].to_json().items():
+                if new_json[key] != val:
+                    delta[key] = (val, new_json[key])
+            yield Text(f'{hawker.name} changed:\n{pformat(delta)}')
+        new_hawkers.add(hawker.name)
+    for hawker_name, hawker in original_data.items():
+        if hawker_name not in new_hawkers:
+            yield Text(f'removed hawker:\n{pformat(hawker.name)}')
+
+
 @bot.keyword('hi')
 @bot.keyword('hello')
 @bot.keyword('start')
@@ -499,29 +518,20 @@ def cmd_ping():
 @bot.command('update')
 def cmd_update():
     global hawker_data
-    prev_data = {}
-    for hawker in hawker_data:
-        prev_data[hawker.name] = hawker
+    prev_data = hawker_data[:]
 
     hawker_data = utils.load_hawker_data()
     yield Text(f'updated to dataset published on {utils.last_loaded_date.strftime("%Y-%m-%d %H:%M:%S")}',
                notification=False)
 
-    new_hawkers = set()
-    for hawker in hawker_data:
-        if hawker.name not in prev_data:
-            yield Text(f'new hawker:\n{pformat(hawker.to_json())}')
-        elif hawker != prev_data[hawker.name]:
-            delta = dict()
-            new_json = hawker.to_json()
-            for key, val in prev_data[hawker.name].to_json():
-                if new_json[key] != val:
-                    delta[key] = (val, new_json[key])
-            yield Text(f'{hawker.name} changed:\n{pformat(delta)}')
-        new_hawkers.add(hawker.name)
-    for hawker_name, hawker in prev_data.items():
-        if hawker_name not in new_hawkers:
-            yield Text(f'removed hawker:\n{pformat(hawker.to_json())}')
+    yield from _diff_hawkers(prev_data, hawker_data)
+
+
+@bot.command('diff')
+def cmd_diff():
+    data_dir = Path('data/dates-of-hawker-centres-closure')
+    paths = sorted(str(path) for path in data_dir.glob('dates-of-hawker-centres-closure*.csv'))
+    yield from _diff_hawkers(utils.load_hawker_data(paths[-2]), utils.load_hawker_data(paths[-1]))
 
 
 @bot.default
