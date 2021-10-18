@@ -333,8 +333,8 @@ class Hawker(Location):
             'cleaning_date_ranges':               self.cleaning_date_ranges,
             'other_works_period':                 self.other_works_period,
             'location_hc':                        self.location_hc,
-            'rnr_period':                         self.rnr_period,
-            'closure_dates':                      self.closure_dates,
+            # 'rnr_period':                         self.rnr_period,
+            # 'closure_dates':                      self.closure_dates,
         }
 
 

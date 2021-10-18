@@ -184,12 +184,14 @@ def _diff_hawkers(original_list, new_list):
         if hawker.name not in original_data:
             yield Text(f'new hawker:\n{pformat(hawker.name)}')
         elif hawker != original_data[hawker.name]:
-            delta = dict()
+            before = dict()
+            after = dict()
             new_json = hawker.to_json()
             for key, val in original_data[hawker.name].to_json().items():
                 if new_json[key] != val:
-                    delta[key] = (val, new_json[key])
-            yield Text(f'{hawker.name} changed:\n{pformat(delta)}')
+                    before[key] = val
+                    after[key] = new_json[key]
+            yield Text(f'{hawker.name} changed from:\n{pformat(before)}\nto:\n{pformat(after)}')
         new_hawkers.add(hawker.name)
     for hawker_name, hawker in original_data.items():
         if hawker_name not in new_hawkers:
