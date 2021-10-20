@@ -2,6 +2,7 @@ import math
 import time
 import warnings
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Iterable
 from typing import List
 
@@ -9,6 +10,11 @@ from geographiclib.geodesic import Geodesic
 
 # noinspection PyUnresolvedReferences
 WGS84 = Geodesic.WGS84
+
+
+@lru_cache(maxsize=0xFFFF)
+def wgs84_inverse_cache(lat1, lon1, lat2, lon2):
+    return WGS84.Inverse(lat1, lon1, lat2, lon2)
 
 
 @dataclass  # (unsafe_hash=True, frozen=True)
@@ -43,7 +49,7 @@ class Location:
         """
         if not isinstance(other, Location):
             raise TypeError(other)
-        return WGS84.Inverse(self.latitude, self.longitude, other.latitude, other.longitude)['s12']
+        return wgs84_inverse_cache(self.latitude, self.longitude, other.latitude, other.longitude)['s12']
 
     def direction(self, other: 'Location') -> float:
         """
@@ -54,7 +60,7 @@ class Location:
         """
         if not isinstance(other, Location):
             raise TypeError(other)
-        return WGS84.Inverse(self.latitude, self.longitude, other.latitude, other.longitude)['azi1']
+        return wgs84_inverse_cache(self.latitude, self.longitude, other.latitude, other.longitude)['azi1']
 
     def nearest(self, others: Iterable['Location']) -> 'Location':
         """
