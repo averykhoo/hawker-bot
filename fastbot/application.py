@@ -42,6 +42,8 @@ class FastBot:
     # todo: support broadcasting
     # todo: User / Group / Chat / Channel class (maybe based off sqlmodel)
 
+    _default_group = 10
+
     def __init__(self, api_key: str):
         # initialize python-telegram-bot with bot api key
         self._updater = Updater(api_key)
@@ -71,6 +73,7 @@ class FastBot:
 
         # unrecognized message type handler
         self._unrecognized: Optional[Route] = None
+        self._unrecognized_handler: Optional[MessageHandler] = None
 
         # error handler
         self._error: Optional[Route] = None
@@ -84,12 +87,21 @@ class FastBot:
     def add_message_handler(self,
                             callback: Callback,
                             message_filter: MessageFilter,
-                            group: int = 10,
+                            group: int = -1,
                             ) -> None:
-        # todo: warn about this, but it's catching the logger in a different group
-        # if getattr(self, '_unrecognized', None) is not None:
-        #     warnings.warn(f'{message_filter} handler {callback} added after unrecognized will not run')
-        self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+        if group < 0:
+            group = self._default_group
+        if getattr(self, '_unrecognized_handler', None) is None:
+            self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+        else:
+            assert self._unrecognized_handler is not None
+            try:
+                self._updater.dispatcher.remove_handler(self._unrecognized_handler, group)
+            except KeyError:
+                self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+            else:
+                self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
+                self._updater.dispatcher.add_handler(self._unrecognized_handler, group)
 
     def add_command_handler(self,
                             callback: Callback,
@@ -137,7 +149,8 @@ class FastBot:
     def unrecognized(self, endpoint: Endpoint) -> Endpoint:
         assert self._unrecognized is None
         self._unrecognized = Route(endpoint)
-        self.add_message_handler(self._unrecognized.callback, Filters.all)
+        self._unrecognized_handler = MessageHandler(Filters.all, self._unrecognized.callback)
+        self._updater.dispatcher.add_handler(self._unrecognized_handler, self._default_group)
         return endpoint
 
     def inline(self, endpoint: Endpoint) -> Endpoint:
