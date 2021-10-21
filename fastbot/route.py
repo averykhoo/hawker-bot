@@ -31,6 +31,9 @@ StrictEndpoint = TypeVar('StrictEndpoint', bound=Callable[[Message], List[Respon
 
 def normalize_responses(responses: ResponseIterator,
                         ) -> List[Response]:
+    # todo: this should be an iterator
+    # todo: this should handle errors and still send everything before the error
+    # todo: retry on error?
     if responses is None:
         return []
     if isinstance(responses, (Response, str, Path)):

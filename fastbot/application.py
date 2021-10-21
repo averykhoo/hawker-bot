@@ -36,6 +36,12 @@ def chat_migration(update, context):
 
 
 class FastBot:
+    # todo: support user preference storage
+    # todo: support chat / group / channel storage
+    # todo: use sqlmodel and sqlite
+    # todo: support broadcasting
+    # todo: User / Group / Chat / Channel class (maybe based off sqlmodel)
+
     def __init__(self, api_key: str):
         # initialize python-telegram-bot with bot api key
         self._updater = Updater(api_key)
@@ -141,12 +147,18 @@ class FastBot:
         return endpoint
 
     def error(self, endpoint: Endpoint) -> Endpoint:
+        # todo: log tracebacks
+        # todo: provide a logger and just ask for a filename?
         assert self._error is None
         self._error = Route(endpoint)
         self.add_error_handler(self._error.callback)
         return endpoint
 
     def run_forever(self):
+        # todo: schedule cron jobs
+        # todo: utc offset for cron jobs (default None=local, otherwise timedelta)
+        # todo: timer coalescing fudge factor
+
         # start the bot
         self._updater.start_polling()
 
