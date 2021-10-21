@@ -294,7 +294,7 @@ class Hawker(Location):
         if self.rnr_period:
             closed_dates.append((self.rnr_period, f'{self.rnr_period.month_name} renovation'))
         if self.other_works_period and self.other_works_period != self.rnr_period:
-            closed_dates.append((self.other_works_period, f'{self.other_works_period.month_name} repairs'))
+            closed_dates.append((self.other_works_period, f'{self.other_works_period.month_name} other works'))
         if closed_dates:
             closed_dates = sorted(closed_dates)
             for date_range, reason in closed_dates:
@@ -312,27 +312,27 @@ class Hawker(Location):
 
     def to_json(self):
         return {
-            'name':                               self.name,
-            'status':                             self.status,
-            'latitude':                           self.latitude,
-            'longitude':                          self.longitude,
-            'latitude_hc':                        self.latitude_hc,
-            'longitude_hc':                       self.longitude_hc,
-            'address_myenv':                      self.address_myenv,
-            'description_myenv':                  self.description_myenv,
-            'addressblockhousenumber':            self.addressblockhousenumber,
-            'addressstreetname':                  self.addressstreetname,
-            'addressbuildingname':                self.addressbuildingname,
-            'addresspostalcode':                  self.addresspostalcode,
-            'region':                             self.region,
-            'photourl':                           self.photourl,
-            'no_of_food_stalls':                  self.no_of_food_stalls,
-            'no_of_market_stalls':                self.no_of_market_stalls,
-            'rnr_status':                         self.rnr_status,
-            'est_original_completion_date':       self.est_original_completion_date,
-            'cleaning_date_ranges':               self.cleaning_date_ranges,
-            'other_works_period':                 self.other_works_period,
-            'location_hc':                        self.location_hc,
+            'name':                         self.name,
+            'status':                       self.status,
+            'latitude':                     self.latitude,
+            'longitude':                    self.longitude,
+            'latitude_hc':                  self.latitude_hc,
+            'longitude_hc':                 self.longitude_hc,
+            'address_myenv':                self.address_myenv,
+            'description_myenv':            self.description_myenv,
+            'addressblockhousenumber':      self.addressblockhousenumber,
+            'addressstreetname':            self.addressstreetname,
+            'addressbuildingname':          self.addressbuildingname,
+            'addresspostalcode':            self.addresspostalcode,
+            'region':                       self.region,
+            'photourl':                     self.photourl,
+            'no_of_food_stalls':            self.no_of_food_stalls,
+            'no_of_market_stalls':          self.no_of_market_stalls,
+            'rnr_status':                   self.rnr_status,
+            'est_original_completion_date': self.est_original_completion_date,
+            'cleaning_date_ranges':         self.cleaning_date_ranges,
+            'other_works_period':           self.other_works_period,
+            'location_hc':                  self.location_hc,
             # 'rnr_period':                         self.rnr_period,
             # 'closure_dates':                      self.closure_dates,
         }

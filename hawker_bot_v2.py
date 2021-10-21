@@ -191,7 +191,7 @@ def _diff_hawkers(original_list, new_list):
                 if new_json[key] != val:
                     before[key] = val
                     after[key] = new_json[key]
-            yield Text(f'{hawker.name} changed from:\n{pformat(before)}\nto:\n{pformat(after)}')
+            yield Markdown(f'{hawker.name} changed from:\n```{pformat(before)}```\nto:\n```{pformat(after)}```')
         new_hawkers.add(hawker.name)
     for hawker_name, hawker in original_data.items():
         if hawker_name not in new_hawkers:
@@ -202,6 +202,8 @@ def _diff_hawkers(original_list, new_list):
 @bot.keyword('hello')
 @bot.keyword('start')
 @bot.command('start', prefix_match=True)
+@bot.chat_created
+@bot.new_chat_members
 def cmd_start():
     return [Text('Hi!', notification=False),
             Markdown(utils.load_template('start'), notification=False)]
@@ -533,6 +535,7 @@ def cmd_update():
 def cmd_diff():
     data_dir = Path('data/dates-of-hawker-centres-closure')
     paths = sorted(str(path) for path in data_dir.glob('dates-of-hawker-centres-closure*.csv'))
+    yield Text(f'most recent dataset: {paths[-1]}')
     yield from _diff_hawkers(utils.load_hawker_data(paths[-2]), utils.load_hawker_data(paths[-1]))
 
 

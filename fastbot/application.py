@@ -1,15 +1,14 @@
 from typing import Callable
 from typing import Optional
 
-from fastbot._telegram_api import Update
 from fastbot._telegram_api import CallbackContext
 from fastbot._telegram_api import CommandHandler
 from fastbot._telegram_api import Filters
 from fastbot._telegram_api import InlineQueryHandler
 from fastbot._telegram_api import MessageFilter
 from fastbot._telegram_api import MessageHandler
+from fastbot._telegram_api import Update
 from fastbot._telegram_api import Updater
-
 from fastbot.inline import InlineRoute
 from fastbot.route import Endpoint
 from fastbot.route import Route
@@ -40,6 +39,7 @@ class FastBot:
     def __init__(self, api_key: str):
         # initialize python-telegram-bot with bot api key
         self._updater = Updater(api_key)
+        self.user_id = int(api_key.partition(':')[0])
 
         # migration handler
         self.add_message_handler(chat_migration, Filters.status_update.migrate)
@@ -56,6 +56,12 @@ class FastBot:
 
         # location handler
         self._location: Optional[Route] = None
+
+        # group created
+        self._chat_created: Optional[Route] = None
+
+        # self, other bot, or a user added to group
+        self._new_chat_members: Optional[Route] = None
 
         # unrecognized message type handler
         self._unrecognized: Optional[Route] = None
@@ -74,6 +80,9 @@ class FastBot:
                             message_filter: MessageFilter,
                             group: int = 10,
                             ) -> None:
+        # todo: warn about this, but it's catching the logger in a different group
+        # if getattr(self, '_unrecognized', None) is not None:
+        #     warnings.warn(f'{message_filter} handler {callback} added after unrecognized will not run')
         self._updater.dispatcher.add_handler(MessageHandler(message_filter, callback), group)
 
     def add_command_handler(self,
@@ -105,6 +114,18 @@ class FastBot:
         assert self._location is None
         self._location = Route(endpoint)
         self.add_message_handler(self._location.callback, Filters.location)
+        return endpoint
+
+    def chat_created(self, endpoint: Endpoint) -> Endpoint:
+        assert self._chat_created is None
+        self._chat_created = Route(endpoint)
+        self.add_message_handler(self._chat_created.callback, Filters.status_update.chat_created)
+        return endpoint
+
+    def new_chat_members(self, endpoint: Endpoint) -> Endpoint:
+        assert self._new_chat_members is None
+        self._new_chat_members = Route(endpoint)
+        self.add_message_handler(self._new_chat_members.callback, Filters.status_update.new_chat_members)
         return endpoint
 
     def unrecognized(self, endpoint: Endpoint) -> Endpoint:
