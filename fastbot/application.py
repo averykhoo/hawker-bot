@@ -41,6 +41,7 @@ class FastBot:
     # todo: use sqlmodel and sqlite
     # todo: support broadcasting
     # todo: User / Group / Chat / Channel class (maybe based off sqlmodel)
+    # todo: don't store all the handlers, or at worse use a dict because there are going to be more
 
     _default_group = 10
 
