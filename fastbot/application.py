@@ -179,7 +179,7 @@ class FastBot:
     def idle(self,
              stop_signals: Union[List, Tuple] = (SIGINT, SIGTERM, SIGABRT),
              function: Optional[Callable] = None,
-             delay: Union[int, float] = 60 * 60 * 24,
+             delay: Union[int, float] = 60 * 60,
              ) -> None:
         """
         Blocks until one of the signals are received and stops the updater.
@@ -199,7 +199,7 @@ class FastBot:
                     function()
                 next_run = time.time() + delay
 
-    def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60 * 24) -> None:
+    def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60) -> None:
         # todo: schedule cron jobs
         # todo: utc offset for cron jobs (default None=local, otherwise timedelta)
         # todo: timer coalescing fudge factor
