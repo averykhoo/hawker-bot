@@ -1,5 +1,13 @@
+import time
+from signal import SIGABRT
+from signal import SIGINT
+from signal import SIGTERM
+from signal import signal
+from typing import Union
 from typing import Callable
+from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastbot._telegram_api import CallbackContext
 from fastbot._telegram_api import CommandHandler
@@ -168,7 +176,30 @@ class FastBot:
         self.add_error_handler(self._error.callback)
         return endpoint
 
-    def run_forever(self):
+    def idle(self,
+             stop_signals: Union[List, Tuple] = (SIGINT, SIGTERM, SIGABRT),
+             function: Optional[Callable] = None,
+             delay: Union[int, float] = 60 * 60 * 24,
+             ) -> None:
+        """
+        Blocks until one of the signals are received and stops the updater.
+        runs some function every delay seconds
+        """
+        for sig in stop_signals:
+            # noinspection PyProtectedMember
+            signal(sig, self._updater._signal_handler)
+
+        self._updater.is_idle = True
+
+        next_run = time.time() + delay
+        while self._updater.is_idle:
+            time.sleep(1)
+            if time.time() >= next_run:
+                if function:
+                    function()
+                next_run = time.time() + delay
+
+    def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60 * 24) -> None:
         # todo: schedule cron jobs
         # todo: utc offset for cron jobs (default None=local, otherwise timedelta)
         # todo: timer coalescing fudge factor
@@ -179,4 +210,4 @@ class FastBot:
         # run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
         # this should be used most of the time,
         # since `start_polling()` is non-blocking and will stop the bot gracefully
-        self._updater.idle()
+        self.idle(function=function, delay=delay)

@@ -630,4 +630,4 @@ def handle_inline(message: InlineQuery) -> None:
 
 
 if __name__ == '__main__':
-    bot.run_forever()
+    bot.run_forever(lambda : list(cmd_update()))
