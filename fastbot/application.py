@@ -1,4 +1,5 @@
 import time
+import warnings
 from signal import SIGABRT
 from signal import SIGINT
 from signal import SIGTERM
@@ -196,7 +197,11 @@ class FastBot:
             time.sleep(1)
             if time.time() >= next_run:
                 if function:
-                    function()
+                    try:
+                        function()
+                    except Exception as e:
+                        warnings.warn(f'Error in idle function: {e}')
+
                 next_run = time.time() + delay
 
     def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60) -> None:
