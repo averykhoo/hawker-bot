@@ -535,6 +535,8 @@ def cmd_update():
 
 
 @bot.command('diff')
+@bot.command('delta')
+@bot.command('changed')
 def cmd_diff():
     data_dir = Path('data/dates-of-hawker-centres-closure')
     paths = sorted(str(path) for path in data_dir.glob('dates-of-hawker-centres-closure*.csv'))
