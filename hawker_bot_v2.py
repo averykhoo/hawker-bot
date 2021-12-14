@@ -410,6 +410,7 @@ def cmd_list():
         yield Markdown('  \n'.join(lines), notification=False)
 
 
+@bot.command('tdy', noslash=True)
 @bot.command('day', noslash=True)
 @bot.command('today', noslash=True)
 def cmd_today():
@@ -435,6 +436,7 @@ def cmd_today():
     yield from __closed(datetime.date.today(), 'today')
 
 
+@bot.command('tmr', noslash=True)
 @bot.command('tomorrow', noslash=True)
 def cmd_tomorrow():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
@@ -465,6 +467,7 @@ def cmd_this_week():
 
 @bot.keyword('next week')
 @bot.command('next_week', noslash=True)
+@bot.command('nxt', noslash=True)
 @bot.command('next', noslash=True)
 @bot.command('nextweek', noslash=True)
 def cmd_next_week():
