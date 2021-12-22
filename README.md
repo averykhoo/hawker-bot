@@ -143,6 +143,10 @@ A bot to find hawker centres and figure out when they are closed
     *   at location as optional argument
         *   mrt station
         *   grc / region / planning area name
-    *   current rain where
-        *   rain area maps
-        *   weather station data
+    *   where is it currently raining
+        * rain area maps
+            * maybe as gifs?
+                * "Overlay an image on another image in Python - GeeksforGeeks" https://www-geeksforgeeks-org.cdn.ampproject.org/v/s/www.geeksforgeeks.org/overlay-an-image-on-another-image-in-python/amp/?amp_gsa=1&amp_js_v=a6&usqp=mq331AQKKAFQArABIIACAw%3D%3D#amp_tf=From%2
+                * "Programmatically generate video or animated GIF in Python? - Stack Overflow" https://stackoverflow.com/questions/753190/programmatically-generate-video-or-animated-gif-in-python
+                * or maybe use deep learning to predict future maps and alert ahead of time?
+        * weather station data
