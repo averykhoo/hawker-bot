@@ -457,7 +457,17 @@ def cmd_tomorrow():
 
 @bot.command('yesterday', noslash=True)
 def cmd_yesterday():
-    yield from __closed(datetime.date.today() + datetime.timedelta(days=-1), 'yesterday')
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+
+    data_dir = Path('data/dates-of-hawker-centres-closure')
+    paths = sorted(str(path) for path in data_dir.glob('dates-of-hawker-centres-closure*.csv'))
+    timestamp_str = re.findall(r'\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2}', paths[-1])[0]
+    timestamp = datetime.datetime.strptime(timestamp_str, '%Y-%m-%d--%H-%M-%S')
+    if timestamp.date() >= yesterday:
+        yield Markdown(f'NEA last modified the hawker closure list at {yesterday.strftime("%d %b %Y")}, '
+                       f'and may have done housekeeping on previous closure dates', notification=False)
+
+    yield from __closed(yesterday, 'yesterday')
 
 
 @bot.keyword('this week')
