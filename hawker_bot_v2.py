@@ -464,8 +464,10 @@ def cmd_yesterday():
     timestamp_str = re.findall(r'\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2}', paths[-1])[0]
     timestamp = datetime.datetime.strptime(timestamp_str, '%Y-%m-%d--%H-%M-%S')
     if timestamp.date() >= yesterday:
-        yield Markdown(f'NEA last modified the hawker closure list at {yesterday.strftime("%d %b %Y")}, '
-                       f'and may have done housekeeping on previous closure dates', notification=False)
+        # note that %#d is a windows-only format specifier, for linux, use %-d
+        yield Markdown(f'NEA last modified the hawker closure list at around '
+                       f'{yesterday.strftime("%#I:%M%p")} on {yesterday.strftime("%#d %b %Y")}, '
+                       f"'and may have done housekeeping on yesterday's closure dates'", notification=False)
 
     yield from __closed(yesterday, 'yesterday')
 
