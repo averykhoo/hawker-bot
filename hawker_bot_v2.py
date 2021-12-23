@@ -455,6 +455,11 @@ def cmd_tomorrow():
     yield from __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
 
+@bot.command('yesterday', noslash=True)
+def cmd_yesterday():
+    yield from __closed(datetime.date.today() + datetime.timedelta(days=-1), 'yesterday')
+
+
 @bot.keyword('this week')
 @bot.command('this_week', noslash=True)
 @bot.command('thisweek', noslash=True)
@@ -635,4 +640,4 @@ def handle_inline(message: InlineQuery) -> None:
 
 
 if __name__ == '__main__':
-    bot.run_forever(lambda : list(cmd_update()))
+    bot.run_forever(lambda: list(cmd_update()))
