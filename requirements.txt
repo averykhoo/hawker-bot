@@ -1,10 +1,10 @@
 python-telegram-bot
 requests
 geographiclib
-
-pandas
 tabulate
 scipy
+
+pandas
 matplotlib
 cachetools
 pillow
