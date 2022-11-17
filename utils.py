@@ -12,6 +12,7 @@ import requests
 
 from api_wrappers.data_gov_sg.data_api import get_dataset_df
 from api_wrappers.location import Location
+from config import SECRETS
 from hawkers import Hawker
 
 # too lazy to write code, using global var instead
@@ -87,7 +88,7 @@ def setup_logging(app_name) -> logging.Logger:
 
 def load_hawker_data(csv_path:Optional[str] = None):
     # healthcheck start
-    requests.get('https://hc-ping.com/dbbab367-6b7b-4de9-b92b-31f075992e18/start', verify=False)
+    requests.get(SECRETS['healthcheck_url'] + '/start', verify=False)
 
     hawkers = []
     df = pd.read_csv('data/hawker-centres/hawker-centres.csv')
@@ -136,7 +137,7 @@ def load_hawker_data(csv_path:Optional[str] = None):
             logging.warning(f'could not find {row["name"]}')
 
     # healthcheck success
-    requests.get('https://hc-ping.com/dbbab367-6b7b-4de9-b92b-31f075992e18', verify=False)
+    requests.get(SECRETS['healthcheck_url'], verify=False)
     return hawkers
 
 
