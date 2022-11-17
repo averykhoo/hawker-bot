@@ -86,6 +86,9 @@ def setup_logging(app_name) -> logging.Logger:
 
 
 def load_hawker_data(csv_path:Optional[str] = None):
+    # healthcheck start
+    requests.get('https://hc-ping.com/dbbab367-6b7b-4de9-b92b-31f075992e18/start', verify=False)
+
     hawkers = []
     df = pd.read_csv('data/hawker-centres/hawker-centres.csv')
     for i, row in df.iterrows():
@@ -132,6 +135,8 @@ def load_hawker_data(csv_path:Optional[str] = None):
         else:
             logging.warning(f'could not find {row["name"]}')
 
+    # healthcheck success
+    requests.get('https://hc-ping.com/dbbab367-6b7b-4de9-b92b-31f075992e18', verify=False)
     return hawkers
 
 
