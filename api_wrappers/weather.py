@@ -97,7 +97,7 @@ class FourDayForecast:
 @cache_1m
 def weather_2h() -> List[Forecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
-    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast')
+    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast', verify=False)
     data = json.loads(r.content)
     tmp = {item['area']: item['forecast'] for item in data['items'][0]['forecasts']}
     return [Forecast(latitude=item['label_location']['latitude'],
@@ -113,7 +113,7 @@ def weather_2h() -> List[Forecast]:
 @cache_1m
 def weather_24h() -> List[Forecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
-    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
+    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast', verify=False)
     data = json.loads(r.content)
     return [Forecast(latitude=region_metadata[region_name.title()].latitude,
                      longitude=region_metadata[region_name.title()].longitude,
@@ -137,7 +137,7 @@ def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], L
 def weather_4d() -> List[FourDayForecast]:
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     out = []
-    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast')
+    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast', verify=False)
     data = json.loads(r.content)
     out.append(FourDayForecast(date=datetime.datetime.strptime(data['items'][0]['timestamp'], fmt).date(),
                                forecast=data['items'][0]['general']['forecast'].rstrip('.'),
@@ -150,7 +150,7 @@ def weather_4d() -> List[FourDayForecast]:
                                #             data['items'][0]['general']['wind']['speed']['high']),
                                # last_update=data['items'][0]['general']['forecast'],
                                ))
-    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast')
+    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast', verify=False)
     data = json.loads(r.content)
     for forecast in data['items'][0]['forecasts']:
         out.append(FourDayForecast(date=datetime.datetime.strptime(forecast['date'], '%Y-%m-%d').date(),

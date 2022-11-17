@@ -136,7 +136,7 @@ def onemap_search(query, result_limit=25) -> List[OneMapResult]:
                                          'returnGeom':     'Y',
                                          'getAddrDetails': 'Y',
                                          'pageNum':        page_num,
-                                         })
+                                         }, verify=False)
                 data = json.loads(r.content)
                 break
 
@@ -199,7 +199,7 @@ def onemap_reverse_geocode(lat, lon, buffer) -> List[OneMapResult]:
                              'buffer':        buffer,
                              'addressType':   'All',
                              'otherFeatures': 'Y',
-                             })
+                             }, verify=False)
     data = json.loads(r.content)
     return [OneMapResult(block_no=result['BLOCK'],
                          road_name=result['ROAD'],
@@ -230,7 +230,7 @@ def onemap_convert(lat: float, lon: float, input_epsg: int, output_epsg: int):
     r = requests.get(f'https://developers.onemap.sg/commonapi/convert/{input_epsg}to{output_epsg}',
                      params={'X': lat,
                              'Y': lon,
-                             })
+                             }, verify=False)
     data = json.loads(r.content)
     return data['latitude'], data['longitude']
 

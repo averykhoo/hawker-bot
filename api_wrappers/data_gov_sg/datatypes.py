@@ -67,7 +67,7 @@ class Resource:
             raise FileExistsError(path)
 
         # get file
-        r = requests.get(self.url)
+        r = requests.get(self.url, verify=False)
         if r.status_code != 200:
             raise RuntimeError(self.url)
 

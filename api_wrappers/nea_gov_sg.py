@@ -76,7 +76,7 @@ zone_rename = {
 
 @cache_1m
 def weather_2h() -> List[Forecast]:
-    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
+    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0', verify=False)
     data = r.json()
 
     # timestamp
@@ -97,7 +97,7 @@ def weather_2h() -> List[Forecast]:
 
 @cache_1m
 def weather_24h() -> List[Forecast]:
-    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0')
+    r = requests.get('https://www.nea.gov.sg/api/WeatherForecast/forecast24hrnowcast2hrs/0', verify=False)
     data = r.json()
     out = []
 
@@ -158,7 +158,7 @@ def weather_4d() -> List[FourDayForecast]:
         day = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][int(date.strftime('%w'))]
         day_lookup[day] = date
 
-    r = requests.get('https://www.nea.gov.sg/api/Weather4DayOutlook/GetData/0')
+    r = requests.get('https://www.nea.gov.sg/api/Weather4DayOutlook/GetData/0', verify=False)
     data = r.json()
     first_date = day_lookup[data[0]['day']]
     out = []

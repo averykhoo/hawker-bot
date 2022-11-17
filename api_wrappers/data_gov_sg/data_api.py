@@ -29,7 +29,7 @@ def get_resource(resource_id: Union[str, UUID]) -> Resource:
     r = requests.get('https://data.gov.sg/api/action/resource_show',
                      params={
                          'id': resource_id,
-                     })
+                     }, verify=False)
     data = r.json()
     if not data['success']:
         raise IndexError(resource_id)
@@ -45,7 +45,7 @@ def get_dataset(dataset_id: Union[str, UUID]) -> Dataset:
     r = requests.get('https://data.gov.sg/api/action/package_show',
                      params={
                          'id': dataset_id,
-                     })
+                     }, verify=False)
     data = r.json()
     if not data['success']:
         raise IndexError(dataset_id)
@@ -112,7 +112,7 @@ def get_datastore(resource_id: Union[str, UUID],
         params['sort'] = sort
 
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
-                     params=params)
+                     params=params, verify=False)
     if r.status_code != 200:
         raise IndexError(resource_id)
     data = r.json()
@@ -123,7 +123,7 @@ def get_datastore(resource_id: Union[str, UUID],
     if limit is None and data['result']['total'] > data['result']['limit']:
         params['limit'] = data['result']['total']
         r = requests.get('https://data.gov.sg/api/action/datastore_search',
-                         params=params)
+                         params=params, verify=False)
         data = r.json()
 
     # create a df
