@@ -86,7 +86,7 @@ def setup_logging(app_name) -> logging.Logger:
     return logging.getLogger()
 
 
-def load_hawker_data(csv_path:Optional[str] = None):
+def load_hawker_data(csv_path: Optional[str] = None):
     # healthcheck start
     requests.get(SECRETS['healthcheck_url'] + '/start', verify=False)
 
