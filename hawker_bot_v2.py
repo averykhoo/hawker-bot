@@ -313,6 +313,8 @@ def cmd_zip(message: Message):
 
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
+    except Exception:
+        yield Markdown('Not able to check the weather right now')
 
     # found!
     logging.info(f'ZIPCODE={zip_code} LAT={loc.latitude} LON={loc.longitude} ADDRESS="{loc.address}"')
@@ -389,6 +391,8 @@ def cmd_weather():
 
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
+    except Exception:
+        yield Markdown('Not able to check the weather right now')
 
 
 @bot.keyword('list all')
@@ -434,7 +438,7 @@ def cmd_today():
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
     except Exception:
-        yield Markdown('Unable to reach weather API, might be a weird network issue')
+        yield Markdown('Not able to check the weather right now')
 
     # send what's closed today
     yield from __closed(datetime.date.today(), 'today')
@@ -457,7 +461,7 @@ def cmd_tomorrow():
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
     except Exception:
-        yield Markdown('Unable to reach weather API, might be a weird network issue')
+        yield Markdown('Not able to check the weather right now')
 
     yield from __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
@@ -621,6 +625,8 @@ def handle_location(message: Message):
 
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
+    except Exception:
+        yield Markdown('Not able to check the weather right now')
 
     yield Text('Displaying nearest 3 results to your location', notification=False)
     yield from __nearby(loc)
