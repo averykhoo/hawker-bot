@@ -415,6 +415,7 @@ def cmd_list():
 @bot.command('today', noslash=True)
 def cmd_today():
     soon = datetime.datetime.now() + datetime.timedelta(minutes=30)
+    # noinspection PyBroadException
     try:
         for (time_start, time_end), forecasts in weather_24h_grouped().items():
             if time_start <= soon < time_end:
@@ -431,6 +432,8 @@ def cmd_today():
                 break
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
+    except Exception:
+        yield Markdown('Unable to reach weather API, might be a weird network issue')
 
     # send what's closed today
     yield from __closed(datetime.date.today(), 'today')
@@ -440,6 +443,7 @@ def cmd_today():
 @bot.command('tomorrow', noslash=True)
 def cmd_tomorrow():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    # noinspection PyBroadException
     try:
         for _forecast in weather_4d():
             if _forecast.date == tomorrow:
@@ -451,6 +455,8 @@ def cmd_tomorrow():
 
     except KeyError:
         yield Markdown('The `data.gov.sg` weather API is not responding')
+    except Exception:
+        yield Markdown('Unable to reach weather API, might be a weird network issue')
 
     yield from __closed(datetime.date.today() + datetime.timedelta(days=1), 'tomorrow')
 
