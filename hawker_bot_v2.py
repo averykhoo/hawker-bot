@@ -2,6 +2,7 @@ import calendar
 import datetime
 import logging
 import re
+import time
 from pathlib import Path
 from pprint import pformat
 from typing import Any
@@ -565,6 +566,17 @@ def cmd_diff():
     paths = sorted(str(path) for path in data_dir.glob('dates-of-hawker-centres-closure*.csv'))
     yield Text(f'most recent dataset: {paths[-1]}')
     yield from _diff_hawkers(utils.load_hawker_data(paths[-2]), utils.load_hawker_data(paths[-1]))
+
+
+@bot.command('shutdown')
+def cmd_shutdown(message: Message):
+    assert message.matched is not None
+    time.sleep(5)  # avoid brute-force attacks
+    if message.argument == config.SECRETS['hawker_bot_token']:
+        yield Text('shutting down...')
+        bot.shutdown()
+    else:
+        yield Text('incorrect bot token provided, will not shut down')
 
 
 @bot.default

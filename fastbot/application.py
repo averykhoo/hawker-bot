@@ -4,11 +4,11 @@ from signal import SIGABRT
 from signal import SIGINT
 from signal import SIGTERM
 from signal import signal
-from typing import Union
 from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from fastbot._telegram_api import CallbackContext
 from fastbot._telegram_api import CommandHandler
@@ -93,6 +93,9 @@ class FastBot:
         self.command = self._router.command
         self.regex = self._router.regex
         self.default = self._router.default
+
+        # shutdown flag
+        self.__shutdown_flag = None
 
     def add_message_handler(self,
                             callback: Callback,
@@ -195,24 +198,38 @@ class FastBot:
         next_run = time.time() + delay
         while self._updater.is_idle:
             time.sleep(1)
+
+            # run the idle function at the requested time intervals
             if time.time() >= next_run:
                 if function:
                     try:
                         function()
                     except Exception as e:
                         warnings.warn(f'Error in idle function: {e}')
-
                 next_run = time.time() + delay
 
+            # shutdown code copied from Updater._signal_handler()
+            if self.__shutdown_flag:
+                self._updater.is_idle = False
+                if self._updater.running:
+                    if self._updater.persistence:
+                        self._updater.dispatcher.update_persistence()
+                        self._updater.persistence.flush()
+                    self._updater.stop()
+
     def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60) -> None:
-        # todo: schedule cron jobs
+        # todo: schedule cron jobs - use cronsim?
         # todo: utc offset for cron jobs (default None=local, otherwise timedelta)
         # todo: timer coalescing fudge factor
 
         # start the bot
+        self.__shutdown_flag = False
         self._updater.start_polling()
 
         # run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
         # this should be used most of the time,
         # since `start_polling()` is non-blocking and will stop the bot gracefully
         self.idle(function=function, delay=delay)
+
+    def shutdown(self):
+        self.__shutdown_flag = True
