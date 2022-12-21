@@ -13,10 +13,10 @@ from typing import Union
 import pandas as pd
 from geographiclib.constants import Constants
 from geographiclib.geodesic import Geodesic
+from nmd.nmd_bow import bow_ngram_movers_distance
 
 from api_wrappers.location import Location
 from api_wrappers.string_formatting import format_date
-from nmd_bow import bow_ngram_movers_distance
 from tokenizer import unicode_tokenize
 
 WGS84 = Geodesic(Constants.WGS84_a, Constants.WGS84_f)
