@@ -50,7 +50,7 @@ utils.setup_logging(app_name='hawker-bot-v2')
 hawker_data = utils.load_hawker_data()
 
 # create bot
-bot = FastBot(config.SECRETS['hawker_bot_token'])
+bot = FastBot(config.SECRETS['hawker_centre_bot_token'])
 
 
 def __fix_zip(query: str) -> Tuple[Optional[str], Optional[Markdown]]:
@@ -576,7 +576,7 @@ def cmd_diff():
 def cmd_shutdown(message: Message):
     assert message.matched is not None
     time.sleep(5)  # avoid brute-force attacks
-    if message.argument == config.SECRETS['hawker_bot_token']:
+    if message.argument == config.SECRETS['hawker_centre_bot_token']:
         yield Text('shutting down...')
         bot.shutdown()
     else:
