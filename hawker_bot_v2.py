@@ -572,7 +572,7 @@ def cmd_diff():
     yield from _diff_hawkers(utils.load_hawker_data(paths[-2]), utils.load_hawker_data(paths[-1]))
 
 
-@bot.command('shutdown')
+@bot.command('shutdown', prefix_match=True)
 def cmd_shutdown(message: Message):
     assert message.matched is not None
     time.sleep(5)  # avoid brute-force attacks
@@ -580,6 +580,7 @@ def cmd_shutdown(message: Message):
         yield Text('shutting down...')
         bot.shutdown()
     else:
+        logging.info(f'got incorrect token "{message.argument}", not shutting down')
         yield Text('incorrect bot token provided, will not shut down')
 
 
