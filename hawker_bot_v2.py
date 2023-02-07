@@ -11,6 +11,8 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+import requests
+
 import config
 import utils
 from api_wrappers.location import Location
@@ -39,6 +41,9 @@ from fastbot.inline import InlineVenue
 from fastbot.response import Animation
 from hawkers import DateRange
 from hawkers import Hawker
+
+# noinspection PyUnresolvedReferences
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 # set up logging appropriately
 utils.setup_logging(app_name='hawker-bot-v2')
