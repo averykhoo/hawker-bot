@@ -555,6 +555,12 @@ def cmd_ping():
     yield Text('pong', notification=False)
 
 
+@bot.command('markdown')
+def cmd_near(message: Message):
+    assert message.matched is not None
+    yield Markdown(message.argument, notification=False)
+
+
 @bot.command('update')
 def cmd_update():
     global hawker_data
