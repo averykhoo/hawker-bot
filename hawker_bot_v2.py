@@ -555,10 +555,10 @@ def cmd_ping():
     yield Text('pong', notification=False)
 
 
-@bot.command('markdown', prefix_match=True)
-def cmd_near(message: Message):
-    assert message.matched is not None
-    yield Markdown(message.argument, notification=False)
+# @bot.command('markdown', prefix_match=True)
+# def cmd_near(message: Message):
+#     assert message.matched is not None
+#     yield Markdown(message.argument, notification=False)
 
 
 @bot.command('update')
