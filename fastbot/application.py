@@ -217,7 +217,7 @@ class FastBot:
                         self._updater.persistence.flush()
                     self._updater.stop()
 
-    def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 60 * 60) -> None:
+    def run_forever(self, function: Optional[Callable] = None, delay: Union[int, float] = 30 * 60) -> None:
         # todo: schedule cron jobs - use cronsim?
         # todo: utc offset for cron jobs (default None=local, otherwise timedelta)
         # todo: timer coalescing fudge factor
