@@ -239,3 +239,8 @@ def onemap_convert(lat: float, lon: float, input_epsg: int, output_epsg: int):
 
 if __name__ == '__main__':
     pprint(onemap_reverse_geocode(1.3038648897327096, 103.76421005561127, 500))
+    pprint(onemap_search('kranji camp'))
+    pprint(onemap_search('maxwell road'))
+    pprint(onemap_search('newton mrt'))
+    pprint(onemap_search('200640'))
+

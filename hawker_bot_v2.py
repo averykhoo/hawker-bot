@@ -16,7 +16,7 @@ import requests
 import config
 import utils
 from api_wrappers.location import Location
-from api_wrappers.onemap_sg import onemap_search
+from api_wrappers.onemap_sg_copy import onemap_search
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import RE_ZIPCODE
 from api_wrappers.postal_code import ZipBlank
