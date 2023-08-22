@@ -18,8 +18,8 @@ class OneMapResult(Location):
     road_name: str  # ROAD_NAME
     building_name: str  # BUILDING
     zipcode: str  # POSTAL
-    # latitude: float  # LATITUDE (inherited from Location)
-    # longitude: float  # LONGITUDE (inherited from Location)
+    # latitude: float  # LATITUDE (this attribute already exists, it's inherited from Location)
+    # longitude: float  # LONGITUDE (this attribute already exists, it's inherited from Location)
     svy21_x: float  # X
     svy21_y: float  # Y
 
