@@ -1,5 +1,6 @@
 # todo list
 
+* sort by walking distance instead of straight line distance
 * major refactoring
   * data api and datatypes
     * gracefully detect and handle api downtime
