@@ -193,12 +193,28 @@ def onemap_token() -> str:
 
 
 @cache_1m
-def onemap_reverse_geocode(lat, lon, buffer) -> List[OneMapResult]:
+def onemap_reverse_geocode(lat: float,
+                           lon: float,
+                           buffer: int = 50,
+                           address_type: str = 'All',
+                           other_features: bool = True,
+                           ) -> List[OneMapResult]:
+    """
+    returns at most the 10 nearest buildings/landmarks
+
+    :param lat: Longitude and Coordinates in WGS84 format.
+    :param lon: Latitude and Coordinates in WGS84 format.
+    :param buffer: Values: 0-500 (in meters). Like a compass, it will round up all buildings in a circumference from a point, and search building addresses within the buffer/radius range.
+    :param address_type: Values: `HDB` or `All`. Allows users to define property types within the buffer/radius. If HDB is chosen, this will filter to show all HDB buildings.
+    :param other_features: retrieve information on reservoirs, playgrounds, jetties, etc
+    :return:
+    """
+    assert 0 <= buffer <= 500
     r = requests.get('https://www.onemap.gov.sg/api/public/revgeocode',
                      params={'location':      f'{lat},{lon}',
                              'buffer':        buffer,
-                             'addressType':   'All',
-                             'otherFeatures': 'Y'},
+                             'addressType':   address_type,
+                             'otherFeatures': 'Y' if other_features else 'N'},
                      verify=False,
                      headers={'authorization': f'Bearer {onemap_token()}'})
     data = json.loads(r.content)
@@ -215,6 +231,16 @@ def onemap_reverse_geocode(lat, lon, buffer) -> List[OneMapResult]:
 
 @lru_cache
 def onemap_convert(lat: float, lon: float, input_epsg: int, output_epsg: int):
+    """
+    returns a dict with `X` and `Y` or `latitude` and `longitude`
+
+    :param lat: or X
+    :param lon: or Y
+    :param input_epsg:
+    :param output_epsg:
+    :return:
+    """
+
     supported = {
         3414,  # EPSG:3414 (SVY21)
         3857,  # EPSG:3857 (Google Web Mercator)
@@ -229,18 +255,44 @@ def onemap_convert(lat: float, lon: float, input_epsg: int, output_epsg: int):
 
     # query
     r = requests.get(f'https://www.onemap.gov.sg/api/common/convert/{input_epsg}to{output_epsg}',
-                     params={'X': lat,
-                             'Y': lon},
+                     params={'X':         lat,
+                             'latitude':  lat,
+                             'Y':         lon,
+                             'longitude': lon},
                      verify=False,
                      headers={'authorization': f'Bearer {onemap_token()}'})
     data = json.loads(r.content)
-    return data['latitude'], data['longitude']
+    return data
+
+
+@cache_1m
+def onemap_routing_service(start_lat: float,
+                           start_lon: float,
+                           end_lat: float,
+                           end_lon: float,
+                           route_type: str = 'walk',
+                           ):
+    if route_type not in {'walk', 'drive', 'cycle'}:
+        raise ValueError('unsupported route type')
+
+    # query
+    r = requests.get('https://www.onemap.gov.sg//api/public/routingsvc/route',
+                     params={'start':     f'{start_lat},{start_lon}',
+                             'end':       f'{end_lat},{end_lon}',
+                             'routeType': route_type},
+                     verify=False,
+                     headers={'authorization': f'Bearer {onemap_token()}'})
+    data = json.loads(r.content)
+    return data  # ['route_summary']
 
 
 if __name__ == '__main__':
-    pprint(onemap_reverse_geocode(1.3038648897327096, 103.76421005561127, 500))
-    pprint(onemap_search('kranji camp'))
-    pprint(onemap_search('maxwell road'))
-    pprint(onemap_search('newton mrt'))
-    pprint(onemap_search('200640'))
-
+    # pprint(onemap_reverse_geocode(1.407550, 103.741132))
+    # pprint(onemap_reverse_geocode(1.4040451,103.7438601))
+    # pprint(onemap_reverse_geocode(1.397511, 103.747441))
+    # pprint(onemap_search('kranji camp'))
+    # pprint(onemap_search('yew tee mrt'))
+    # pprint(onemap_search('688249'))
+    # pprint(onemap_search('95 Choa Chu Kang Way'))
+    pprint(onemap_routing_service(1.4040451, 103.7438601, 1.3975115670543203, 103.74744162337753))
+    # pprint(onemap_convert(1.319728905, 103.8421581, 4326, 3857))
