@@ -1,6 +1,9 @@
 # todo list
 
 * sort by walking distance instead of straight line distance
+  * maybe min is straight line and max is straight line * sqrt(2) or * pi/2? 
+  * clamping it should help avoid weird errors if the routing goes haywire
+  * but then if you want to cross a river it's not wrong - maybe error percentage should decrease with distance?
 * major refactoring
   * data api and datatypes
     * gracefully detect and handle api downtime
