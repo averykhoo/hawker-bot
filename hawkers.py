@@ -78,10 +78,11 @@ class Status(Enum):
 
 
 status_map = {
-    'Existing':           Status.EXISTING,
-    'Existing (new)':     Status.EXISTING,  # whatever
-    'Proposed':           Status.PROPOSED,
-    'Under Construction': Status.UNDER_CONSTRUCTION,
+    'Existing':               Status.EXISTING,
+    'Existing (new)':         Status.EXISTING,  # whatever
+    'Existing (replacement)': Status.EXISTING,  # whatever this works
+    'Proposed':               Status.PROPOSED,
+    'Under Construction':     Status.UNDER_CONSTRUCTION,
 }
 
 

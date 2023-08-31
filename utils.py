@@ -86,6 +86,14 @@ def setup_logging(app_name) -> logging.Logger:
     return logging.getLogger()
 
 
+def normalize_hawker_center_name(name):
+    name = f' {name.casefold()} '
+    name = name.replace('&', ' and ')
+    name = name.replace('@', ' at ')
+    name = name.replace(' the ', ' ')
+    return ' '.join(name.split())
+
+
 def load_hawker_data(csv_path: Optional[str] = None):
     # healthcheck start
     requests.get(SECRETS['healthcheck_url'] + '/start', verify=False)
@@ -110,7 +118,7 @@ def load_hawker_data(csv_path: Optional[str] = None):
         row_location = Location(float(row['latitude_hc']), float(row['longitude_hc']))
         for hawker in hawkers:
             # name exact matched
-            if hawker.name == row['name']:
+            if normalize_hawker_center_name(hawker.name) == normalize_hawker_center_name(row['name']):
                 hawker.add_cleaning_periods(row)
                 break
 
