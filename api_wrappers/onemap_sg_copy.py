@@ -178,7 +178,7 @@ def onemap_search(query, result_limit=25) -> List[OneMapResult]:
 
 @cache_1m
 def onemap_token() -> str:
-    with open('../secrets.json') as f:
+    with open('secrets.json') as f:
         secrets = json.load(f)
     r = requests.post('https://www.onemap.gov.sg/api/auth/post/getToken',
                       json={
@@ -293,6 +293,6 @@ if __name__ == '__main__':
     # pprint(onemap_search('kranji camp'))
     # pprint(onemap_search('yew tee mrt'))
     # pprint(onemap_search('688249'))
-    # pprint(onemap_search('95 Choa Chu Kang Way'))
-    pprint(onemap_routing_service(1.4040451, 103.7438601, 1.3975115670543203, 103.74744162337753))
+    pprint(onemap_search('95 Choa Chu Kang Way'))
+    # pprint(onemap_routing_service(1.4040451, 103.7438601, 1.3975115670543203, 103.74744162337753))
     # pprint(onemap_convert(1.319728905, 103.8421581, 4326, 3857))
