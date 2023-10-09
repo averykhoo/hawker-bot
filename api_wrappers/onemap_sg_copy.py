@@ -184,7 +184,8 @@ def onemap_token() -> str:
                       json={
                           'email':    secrets['onemap_email'],
                           'password': secrets['onemap_password'],
-                      })
+                      },
+                      verify=False)
     data = json.loads(r.content)
     logging.info(f'ONEMAP_TOKEN="{data["access_token"]}" '
                  f'EXPIRY={data["expiry_timestamp"]} '
