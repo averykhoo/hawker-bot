@@ -10,7 +10,7 @@ from typing import Tuple
 import pandas as pd
 import requests
 
-from api_wrappers.data_gov_sg.data_api import get_dataset_df
+from api_wrappers.data_gov_sg_v2.data_api import get_dataset_df
 from api_wrappers.location import Location
 from config import SECRETS
 from hawkers import Hawker
@@ -20,19 +20,21 @@ last_loaded_date = datetime.datetime(1970, 1, 1)
 
 DATASET_IDS = {
     'Dates of Hawker Centres Closure':
-        'f28a763e-2320-4969-b249-c23f21c33ffc',  # CSV
-
-    'Hawker Centres':
-        'aeaf4704-5be1-4b33-993d-c70d8dcc943e',  # KML and GeoJSON
-
-    'Eating Establishments':
-        '208edaa0-0e58-468a-b0ae-b47dd37cf923',  # KML
-
-    'List of Government Markets Hawker Centres':
-        'b6083025-58a6-41a4-8066-c51a3282218f',  # CSV
-
-    'List of NEA Licensed Eating Establishments with Grades, Demerit Points and Suspension History':
-        '012e8dc8-631f-433c-aaa2-a9e975dc2ce4',  # CSV
+        'd_bda4baa634dd1cc7a6c7cad5f19e2d68',  # CSV
+    # 'Dates of Hawker Centres Closure':
+    #     'f28a763e-2320-4969-b249-c23f21c33ffc',  # CSV
+    #
+    # 'Hawker Centres':
+    #     'aeaf4704-5be1-4b33-993d-c70d8dcc943e',  # KML and GeoJSON
+    #
+    # 'Eating Establishments':
+    #     '208edaa0-0e58-468a-b0ae-b47dd37cf923',  # KML
+    #
+    # 'List of Government Markets Hawker Centres':
+    #     'b6083025-58a6-41a4-8066-c51a3282218f',  # CSV
+    #
+    # 'List of NEA Licensed Eating Establishments with Grades, Demerit Points and Suspension History':
+    #     '012e8dc8-631f-433c-aaa2-a9e975dc2ce4',  # CSV
 }
 
 

@@ -1,0 +1,180 @@
+{
+  "": "https://api-production.data.gov.sg/v2/public/api/collections?page=0",
+  "code": 0,
+  "data": {
+    "collections": [
+      {
+        "": "https://api-production.data.gov.sg/v2/public/api/collections/1476/metadata",
+        "collectionId": "1476",
+        "createdAt": "2019-01-10T11:18:15+08:00",
+        "name": "NLB Name Authorities",
+        "description": "This is a list of standardised names established and maintained by National Library Board to be used uniquely and consistently when identifying and naming entities in resource description. Name authorities are created as a means of organising information so as to facilitate discovery of information. \r\n\r\nThis service establishes authorised forms of mainly Singapore-related names of People, Organisations, Buildings and Places to enable consistency of use in indexing or tagging of information resources, and to improve their discoverability. The names created are mainly names of Singapore personalities, organisations, buildings and places. Names included are usually of significance to Singapore’s political, economic, social, cultural or historical context. \r\n\r\nDifferent forms or variations of names and previously-known names are also included. ",
+        "lastUpdatedAt": "2023-05-11T15:38:43+08:00",
+        "coverageStart": "2019-02-15T08:00:00+08:00",
+        "coverageEnd": "2023-05-10T08:00:00+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "National Library Board"
+        ],
+        "managedByAgencyName": "National Library Board",
+        "childDatasets": [
+          "d_68955b7991bedbe6d888ad5182974e4f",
+          "d_a6d93a061d4148fe55106a28ddd6193c"
+        ]
+      },
+      {
+        "collectionId": "1275",
+        "createdAt": "2016-12-09T11:57:57+08:00",
+        "name": "Singapore Residents by Subzone, Age Group and Sex, June 2002 (Gender)",
+        "description": "Distribution of the resident population by planning area/subzone based on URA MP08, age group and sex, June 2002",
+        "lastUpdatedAt": "2016-12-09T11:58:00+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "Singapore Department of Statistics"
+        ],
+        "managedByAgencyName": "Singapore Department of Statistics",
+        "childDatasets": [
+          "d_ea7a8004d3fbe51ed92afc6d9e015c15",
+          "d_9336aef214399cafa762dd0a8f3cd75d"
+        ]
+      },
+      {
+        "collectionId": "673",
+        "createdAt": "2016-05-31T11:42:50+08:00",
+        "name": "Membership of Employees' Trade Unions by Membership Size",
+        "description": "Breakdown of membership of employees' trade unions by membership size",
+        "lastUpdatedAt": "2023-07-04T14:09:31+08:00",
+        "coverageStart": "2010-01-01T08:00:00+08:00",
+        "coverageEnd": "2022-12-31T08:00:00+08:00",
+        "frequency": "annual",
+        "sources": [
+          "Ministry of Manpower"
+        ],
+        "managedByAgencyName": "Ministry of Manpower",
+        "childDatasets": [
+          "d_f0b6868ab1c4b2fb1ac9aa7f0e722e4f",
+          "d_aa186615e980528f27cb5daabdf6cbfb"
+        ]
+      },
+      {
+        "collectionId": "349",
+        "createdAt": "2015-07-06T11:52:40+08:00",
+        "name": "Public Transport Utilisation - Average Daily Public Transport Ridership",
+        "description": "Average daily number of trips made islandwide on MRT, LRT, bus & taxi.\r\n\r\n* Only data from 2001 onwards had been updated when the methodology of estimating taxi ridership was revised in 2003.\r\n\r\n",
+        "lastUpdatedAt": "2021-01-13T14:11:28+08:00",
+        "coverageStart": "1995-01-01T08:00:00+08:00",
+        "coverageEnd": "2016-12-31T08:00:00+08:00",
+        "frequency": "annual",
+        "sources": [
+          "Land Transport Authority"
+        ],
+        "managedByAgencyName": "Land Transport Authority",
+        "childDatasets": [
+          "d_75248cf2fbf340de6a746dc91ec9223c"
+        ]
+      },
+      {
+        "collectionId": "1349",
+        "createdAt": "2016-04-25T11:59:08+08:00",
+        "name": "Air Accident Investigation Reports by Date",
+        "description": "Air Accident Investigation Reports available from the Transport Investigation Bureau of Singapore",
+        "lastUpdatedAt": "2019-07-30T11:16:30+08:00",
+        "coverageStart": "2000-10-19T08:00:00+08:00",
+        "coverageEnd": "2019-07-30T08:00:00+08:00",
+        "frequency": "annual",
+        "sources": [
+          "Ministry of Transport"
+        ],
+        "managedByAgencyName": "Ministry of Transport",
+        "childDatasets": [
+          "d_475cbf8a66dc80b7a19ef7999039869f"
+        ]
+      },
+      {
+        "collectionId": "149",
+        "createdAt": "2021-11-08T19:14:07+08:00",
+        "name": "HDB Bond Information",
+        "description": "Information on Fixed Rate Notes issued by HDB under its S$32 billion Multicurrency Medium Term Note Programme",
+        "lastUpdatedAt": "2022-06-24T18:13:09+08:00",
+        "coverageStart": "2018-01-24T08:00:00+08:00",
+        "coverageEnd": "2022-06-09T08:00:00+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "Housing and Development Board"
+        ],
+        "managedByAgencyName": "Housing and Development Board",
+        "childDatasets": [
+          "d_83ff203724fe94184ae5c172f26942e0"
+        ]
+      },
+      {
+        "collectionId": "309",
+        "createdAt": "2016-04-13T13:44:45+08:00",
+        "name": "Annual Goods Vehicle and Bus Population By Make",
+        "description": "All goods vehicles and buses including road tax payment or COE exempted goods vehicles registered in Singapore.",
+        "lastUpdatedAt": "2021-01-13T14:02:35+08:00",
+        "coverageStart": "2005-01-01T08:00:00+08:00",
+        "coverageEnd": "2017-12-31T08:00:00+08:00",
+        "frequency": "annual",
+        "sources": [
+          "Land Transport Authority"
+        ],
+        "managedByAgencyName": "Land Transport Authority",
+        "childDatasets": [
+          "d_f9fc45b610aa9d100db3abef789e3ef5"
+        ]
+      },
+      {
+        "collectionId": "96",
+        "createdAt": "2015-09-24T23:03:59+08:00",
+        "name": "Infocomm Accessibility",
+        "description": "Infocomm Accessibility Centre Trains People With Disabilities To Increase Independence And Employability.",
+        "lastUpdatedAt": "2023-10-18T17:08:18+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "Infocomm Media Development Authority"
+        ],
+        "managedByAgencyName": "Info-communications Media Development Authority",
+        "childDatasets": [
+          "d_9330a663989b380c8e9aad60fbbfeec6",
+          "d_007cefb2ae5e8c33618e781e68995556",
+          "d_b11ee9a784f0f233565946398570f72a"
+        ]
+      },
+      {
+        "collectionId": "1318",
+        "createdAt": "2016-12-09T11:59:47+08:00",
+        "name": "Singapore Residents by Subzone and Type of Dwelling, June 2004",
+        "description": "Distribution of the resident population by planning area/subzone based on URA MP08 and type of dwelling, June 2004",
+        "lastUpdatedAt": "2016-12-09T11:59:49+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "Singapore Department of Statistics"
+        ],
+        "managedByAgencyName": "Singapore Department of Statistics",
+        "childDatasets": [
+          "d_36161590f01a1683c662edc7c8b23791",
+          "d_fecfa945e6a2743bc11b1a18acdc623d"
+        ]
+      },
+      {
+        "collectionId": "1324",
+        "createdAt": "2016-12-09T12:00:12+08:00",
+        "name": "Singapore Residents by Subzone and Type of Dwelling, June 2010",
+        "description": "Distribution of the resident population by planning area/subzone based on URA MP08 and type of dwelling, June 2010",
+        "lastUpdatedAt": "2023-10-12T17:08:21+08:00",
+        "frequency": "ad-hoc",
+        "sources": [
+          "Singapore Department of Statistics"
+        ],
+        "managedByAgencyName": "Singapore Department of Statistics",
+        "childDatasets": [
+          "d_654da90015d182275e82efbe06c830a3",
+          "d_03e35c17a8360f5cdedef71c620f7436"
+        ]
+      }
+    ],
+    "pages": 199
+  },
+  "errorMsg": ""
+}

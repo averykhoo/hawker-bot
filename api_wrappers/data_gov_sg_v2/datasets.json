@@ -1,0 +1,106 @@
+{
+  "": "https://api-production.data.gov.sg/v2/public/api/datasets?page=0",
+  "code": 0,
+  "data": {
+    "datasets": [
+      {
+        "datasetId": "d_957300730389bb7144054a06e340696f",
+        "createdAt": "2022-09-22T10:06:08+08:00",
+        "name": "Newspapers 2022-Comrade-1946",
+        "status": "active",
+        "format": "CSV",
+        "lastUpdatedAt": "2022-09-22T10:06:43+08:00",
+        "managedByAgencyName": "National Library Board",
+        "coverageStart": "2022-09-01T08:00:00+08:00",
+        "coverageEnd": "2023-09-01T08:00:00+08:00"
+      },
+      {
+        "datasetId": "d_c2a4c3cef6d88625bf3a1da2d3634588",
+        "createdAt": "2023-02-17T18:48:54+08:00",
+        "name": "Resident Working Persons Aged 15 Years and Over by Usual Mode of Transport to Work, Gross Monthly Income from Work and Sex, 2015",
+        "status": "active",
+        "format": "CSV",
+        "lastUpdatedAt": "2023-02-17T18:49:30+08:00",
+        "managedByAgencyName": "Singapore Department of Statistics",
+        "coverageStart": "2023-01-01T08:00:00+08:00",
+        "coverageEnd": "2023-02-17T08:00:00+08:00"
+      },
+      {
+        "datasetId": "d_57db1094f0abfcb140fbcbd6d3839ebe",
+        "createdAt": "2023-08-01T20:03:01+08:00",
+        "name": "Master Plan 2003 Land Use",
+        "status": "active",
+        "format": "GEOJSON",
+        "lastUpdatedAt": "2023-08-01T20:03:01+08:00",
+        "managedByAgencyName": null
+      },
+      {
+        "datasetId": "d_0ba759c2bf54c9cd61e516162d2f4ce4",
+        "createdAt": "2023-08-03T20:04:07+08:00",
+        "name": "LTA Traffic Sign",
+        "status": "active",
+        "format": "GEOJSON",
+        "lastUpdatedAt": "2023-08-03T20:04:07+08:00",
+        "managedByAgencyName": null
+      },
+      {
+        "datasetId": "d_45869177b47cfa0929f3f75b672f09eb",
+        "createdAt": "2023-07-31T17:09:03+08:00",
+        "name": "NParks Skyrise Greenery",
+        "status": "active",
+        "format": "GEOJSON",
+        "lastUpdatedAt": "2023-07-31T17:09:03+08:00",
+        "managedByAgencyName": "National Parks Board"
+      },
+      {
+        "datasetId": "d_36149d0682172bc5e7c93ad44b8ab418",
+        "createdAt": "2016-04-08T21:55:10+08:00",
+        "name": "Live-Births By Educational Qualification, Ethnic Group of Mother and Birth Order",
+        "status": "active",
+        "format": "CSV",
+        "lastUpdatedAt": "2022-08-23T11:52:40+08:00",
+        "managedByAgencyName": "Immigration and Checkpoints Authority",
+        "coverageStart": "2019-01-01T08:00:00+08:00",
+        "coverageEnd": "2021-12-31T08:00:00+08:00"
+      },
+      {
+        "datasetId": "d_41dcf0e232c88d0bb0d492084db8edde",
+        "createdAt": "2019-12-11T00:00:00+08:00",
+        "name": "Master Plan 2019 SDCP Park Mall, Promenade and Public Link (KML)",
+        "status": "active",
+        "format": "KML",
+        "lastUpdatedAt": "2019-12-11T00:00:00+08:00",
+        "managedByAgencyName": "Urban Redevelopment Authority"
+      },
+      {
+        "datasetId": "d_9d6beac148712042016eeb55634a830b",
+        "createdAt": "2023-08-06T20:03:17+08:00",
+        "name": "LTA Traffic Sign",
+        "status": "active",
+        "format": "GEOJSON",
+        "lastUpdatedAt": "2023-08-06T20:03:17+08:00",
+        "managedByAgencyName": null
+      },
+      {
+        "datasetId": "d_ca97d63145a129f405d03e8045fb1016",
+        "createdAt": "2016-10-18T00:00:00+08:00",
+        "name": "Singapore Residents by Planning Area and Type of Dwelling, June 2008 (KML)",
+        "status": "active",
+        "format": "KML",
+        "lastUpdatedAt": "2016-10-18T00:00:00+08:00",
+        "managedByAgencyName": "Singapore Department of Statistics"
+      },
+      {
+        "datasetId": "d_8b72c584078e39f61d47376dc5a7fb78",
+        "createdAt": "2019-12-11T00:00:00+08:00",
+        "name": "Master Plan 2019 SDCP Park Connector Text layer (KML)",
+        "status": "active",
+        "format": "KML",
+        "lastUpdatedAt": "2019-12-11T00:00:00+08:00",
+        "managedByAgencyName": "Urban Redevelopment Authority"
+      }
+    ],
+    "pages": 419
+  },
+  "errorMsg": ""
+}

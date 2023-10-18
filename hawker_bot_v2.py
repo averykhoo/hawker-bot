@@ -15,6 +15,10 @@ import requests
 
 import config
 import utils
+from api_wrappers.data_gov_sg_v2.weather import Forecast
+from api_wrappers.data_gov_sg_v2.weather import weather_24h_grouped
+from api_wrappers.data_gov_sg_v2.weather import weather_2h
+from api_wrappers.data_gov_sg_v2.weather import weather_4d
 from api_wrappers.location import Location
 from api_wrappers.onemap_sg_copy import onemap_search
 from api_wrappers.postal_code import InvalidZip
@@ -26,10 +30,6 @@ from api_wrappers.postal_code import fix_zipcode
 from api_wrappers.postal_code import locate_zipcode
 from api_wrappers.string_formatting import format_date
 from api_wrappers.string_formatting import format_datetime
-from api_wrappers.weather import Forecast
-from api_wrappers.weather import weather_24h_grouped
-from api_wrappers.weather import weather_2h
-from api_wrappers.weather import weather_4d
 from fastbot import FastBot
 from fastbot import Markdown
 from fastbot import Message

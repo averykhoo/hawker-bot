@@ -1,0 +1,242 @@
+{
+  "": "https://api-production.data.gov.sg/v2/public/api/datasets/d_bda4baa634dd1cc7a6c7cad5f19e2d68/metadata",
+  "code": 0,
+  "data": {
+    "datasetId": "d_bda4baa634dd1cc7a6c7cad5f19e2d68",
+    "createdAt": "2020-11-02T11:13:49+08:00",
+    "name": "Dates of Hawker Centres Closure",
+    "format": "CSV",
+    "lastUpdatedAt": "2023-10-13T11:24:23+08:00",
+    "managedBy": "National Environment Agency",
+    "coverageStart": "2021-10-01T08:00:00+08:00",
+    "coverageEnd": "2024-03-31T08:00:00+08:00",
+    "contactEmails": [
+      "rajeswari_gunalan@nea.gov.sg"
+    ],
+    "columnMetadata": {
+      "order": [
+        "c_dn4jcqaqsyn4e59gbf7n6rsix",
+        "c_7xtc2cav9fhyjnfh5lbul4e2l",
+        "c_augt5p3jfc470nfclvhiwon2y",
+        "c_27fc3rnpz6hd5hsabouwmnzdi",
+        "c_9yy9pq2loi8lloqld75u41cvb",
+        "c_e09a8kqoop1i7qoy577xrefl0",
+        "c_3oaeg8hua8qdoa51ypzxfpcrd",
+        "c_51bty5nhdpswt7us48oyt88s1",
+        "c_80jokdp9lfqybm4j3osz1iu0f",
+        "c_6pe03kuxtwizo9wgknckgautt",
+        "c_bj2mg05f0sekmnyyj02asvy8j",
+        "c_8ly72jb9sicovue7ejvlxqrbp",
+        "c_3akbl7mipm2nxqdq78jvq902q",
+        "c_41crkjaoi1y92p9prmzyh5flj",
+        "c_cf9nexd5gyt5csams0zesod72",
+        "c_b0s4s8syqbhssu9guhojop1bh",
+        "c_8geo714paarfub861l5p7ydp2",
+        "c_810e06itebiqrdrz09yvh3e8d",
+        "c_a0xkm5gishyi85ofvs50dozav",
+        "c_2fj6k3mlvs4v3hzxbk5hdbfhy",
+        "c_aehkiubrmv06wty3s4ojd3uk3",
+        "c_117xwa0aqmqq798uqcs6hshxf",
+        "c_1fojq9an40gjxq2iwiza7e2bh",
+        "c_cjsls0hzrxemf2l2mp83qawnk",
+        "c_9x51quivcpyckb3oe54o3zt0l",
+        "c_11aia4y9ipsnp3se8vtrz1qwt",
+        "c_a9b4echdvw8y33bkkvs06hfl5"
+      ],
+      "map": {
+        "c_dn4jcqaqsyn4e59gbf7n6rsix": "serial_no",
+        "c_7xtc2cav9fhyjnfh5lbul4e2l": "name",
+        "c_augt5p3jfc470nfclvhiwon2y": "q1_cleaningstartdate",
+        "c_27fc3rnpz6hd5hsabouwmnzdi": "q1_cleaningenddate",
+        "c_9yy9pq2loi8lloqld75u41cvb": "remarks_q1",
+        "c_e09a8kqoop1i7qoy577xrefl0": "q2_cleaningstartdate",
+        "c_3oaeg8hua8qdoa51ypzxfpcrd": "q2_cleaningenddate",
+        "c_51bty5nhdpswt7us48oyt88s1": "remarks_q2",
+        "c_80jokdp9lfqybm4j3osz1iu0f": "q3_cleaningstartdate",
+        "c_6pe03kuxtwizo9wgknckgautt": "q3_cleaningenddate",
+        "c_bj2mg05f0sekmnyyj02asvy8j": "remarks_q3",
+        "c_8ly72jb9sicovue7ejvlxqrbp": "q4_cleaningstartdate",
+        "c_3akbl7mipm2nxqdq78jvq902q": "q4_cleaningenddate",
+        "c_41crkjaoi1y92p9prmzyh5flj": "remarks_q4",
+        "c_cf9nexd5gyt5csams0zesod72": "other_works_startdate",
+        "c_b0s4s8syqbhssu9guhojop1bh": "other_works_enddate",
+        "c_8geo714paarfub861l5p7ydp2": "remarks_other_works",
+        "c_810e06itebiqrdrz09yvh3e8d": "latitude_hc",
+        "c_a0xkm5gishyi85ofvs50dozav": "longitude_hc",
+        "c_2fj6k3mlvs4v3hzxbk5hdbfhy": "photourl",
+        "c_aehkiubrmv06wty3s4ojd3uk3": "address_myenv",
+        "c_117xwa0aqmqq798uqcs6hshxf": "no_of_market_stalls",
+        "c_1fojq9an40gjxq2iwiza7e2bh": "no_of_food_stalls",
+        "c_cjsls0hzrxemf2l2mp83qawnk": "description_myenv",
+        "c_9x51quivcpyckb3oe54o3zt0l": "status",
+        "c_11aia4y9ipsnp3se8vtrz1qwt": "google_3d_view",
+        "c_a9b4echdvw8y33bkkvs06hfl5": "google_for_stall"
+      },
+      "metaMapping": {
+        "c_dn4jcqaqsyn4e59gbf7n6rsix": {
+          "name": "serial_no",
+          "columnTitle": "Serial no",
+          "dataType": "Numeric",
+          "index": "0"
+        },
+        "c_7xtc2cav9fhyjnfh5lbul4e2l": {
+          "name": "name",
+          "columnTitle": "Name",
+          "dataType": "Text",
+          "index": "1"
+        },
+        "c_augt5p3jfc470nfclvhiwon2y": {
+          "name": "q1_cleaningstartdate",
+          "columnTitle": "Q1 cleaningstartdate",
+          "dataType": "Text",
+          "index": "2"
+        },
+        "c_27fc3rnpz6hd5hsabouwmnzdi": {
+          "name": "q1_cleaningenddate",
+          "columnTitle": "Q1 cleaningenddate",
+          "dataType": "Text",
+          "index": "3"
+        },
+        "c_9yy9pq2loi8lloqld75u41cvb": {
+          "name": "remarks_q1",
+          "columnTitle": "Remarks q1",
+          "dataType": "Text",
+          "index": "4"
+        },
+        "c_e09a8kqoop1i7qoy577xrefl0": {
+          "name": "q2_cleaningstartdate",
+          "columnTitle": "Q2 cleaningstartdate",
+          "dataType": "Text",
+          "index": "5"
+        },
+        "c_3oaeg8hua8qdoa51ypzxfpcrd": {
+          "name": "q2_cleaningenddate",
+          "columnTitle": "Q2 cleaningenddate",
+          "dataType": "Text",
+          "index": "6"
+        },
+        "c_51bty5nhdpswt7us48oyt88s1": {
+          "name": "remarks_q2",
+          "columnTitle": "Remarks q2",
+          "dataType": "Text",
+          "index": "7"
+        },
+        "c_80jokdp9lfqybm4j3osz1iu0f": {
+          "name": "q3_cleaningstartdate",
+          "columnTitle": "Q3 cleaningstartdate",
+          "dataType": "Text",
+          "index": "8"
+        },
+        "c_6pe03kuxtwizo9wgknckgautt": {
+          "name": "q3_cleaningenddate",
+          "columnTitle": "Q3 cleaningenddate",
+          "dataType": "Text",
+          "index": "9"
+        },
+        "c_bj2mg05f0sekmnyyj02asvy8j": {
+          "name": "remarks_q3",
+          "columnTitle": "Remarks q3",
+          "dataType": "Text",
+          "index": "10"
+        },
+        "c_8ly72jb9sicovue7ejvlxqrbp": {
+          "name": "q4_cleaningstartdate",
+          "columnTitle": "Q4 cleaningstartdate",
+          "dataType": "Text",
+          "index": "11"
+        },
+        "c_3akbl7mipm2nxqdq78jvq902q": {
+          "name": "q4_cleaningenddate",
+          "columnTitle": "Q4 cleaningenddate",
+          "dataType": "Text",
+          "index": "12"
+        },
+        "c_41crkjaoi1y92p9prmzyh5flj": {
+          "name": "remarks_q4",
+          "columnTitle": "Remarks q4",
+          "dataType": "Text",
+          "index": "13"
+        },
+        "c_cf9nexd5gyt5csams0zesod72": {
+          "name": "other_works_startdate",
+          "columnTitle": "Other works startdate",
+          "dataType": "Text",
+          "index": "14"
+        },
+        "c_b0s4s8syqbhssu9guhojop1bh": {
+          "name": "other_works_enddate",
+          "columnTitle": "Other works enddate",
+          "dataType": "Text",
+          "index": "15"
+        },
+        "c_8geo714paarfub861l5p7ydp2": {
+          "name": "remarks_other_works",
+          "columnTitle": "Remarks other works",
+          "dataType": "Text",
+          "index": "16"
+        },
+        "c_810e06itebiqrdrz09yvh3e8d": {
+          "name": "latitude_hc",
+          "columnTitle": "Latitude hc",
+          "dataType": "Numeric",
+          "index": "17"
+        },
+        "c_a0xkm5gishyi85ofvs50dozav": {
+          "name": "longitude_hc",
+          "columnTitle": "Longitude hc",
+          "dataType": "Numeric",
+          "index": "18"
+        },
+        "c_2fj6k3mlvs4v3hzxbk5hdbfhy": {
+          "name": "photourl",
+          "columnTitle": "Photourl",
+          "dataType": "Text",
+          "index": "19"
+        },
+        "c_aehkiubrmv06wty3s4ojd3uk3": {
+          "name": "address_myenv",
+          "columnTitle": "Address myenv",
+          "dataType": "Text",
+          "index": "20"
+        },
+        "c_117xwa0aqmqq798uqcs6hshxf": {
+          "name": "no_of_market_stalls",
+          "columnTitle": "No of market stalls",
+          "dataType": "Numeric",
+          "index": "21"
+        },
+        "c_1fojq9an40gjxq2iwiza7e2bh": {
+          "name": "no_of_food_stalls",
+          "columnTitle": "No of food stalls",
+          "dataType": "Numeric",
+          "index": "22"
+        },
+        "c_cjsls0hzrxemf2l2mp83qawnk": {
+          "name": "description_myenv",
+          "columnTitle": "Description myenv",
+          "dataType": "Text",
+          "index": "23"
+        },
+        "c_9x51quivcpyckb3oe54o3zt0l": {
+          "name": "status",
+          "columnTitle": "Status",
+          "dataType": "Text",
+          "index": "24"
+        },
+        "c_11aia4y9ipsnp3se8vtrz1qwt": {
+          "name": "google_3d_view",
+          "columnTitle": "Google 3d view",
+          "dataType": "Text",
+          "index": "25"
+        },
+        "c_a9b4echdvw8y33bkkvs06hfl5": {
+          "name": "google_for_stall",
+          "columnTitle": "Google for stall",
+          "dataType": "Text",
+          "index": "26"
+        }
+      }
+    }
+  },
+  "errorMsg": ""
+}

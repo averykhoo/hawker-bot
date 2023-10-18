@@ -1,5 +1,4 @@
 import datetime
-import json
 from dataclasses import dataclass
 from pprint import pprint
 from typing import Dict
@@ -96,9 +95,21 @@ class FourDayForecast:
 
 @cache_1m
 def weather_2h() -> List[Forecast]:
+    """
+    https://beta.data.gov.sg/datasets/d_91ffc58263cff535910c16a4166ccbc3/view
+    Updated half-hourly from NEA
+    Forecasts are given for multiple areas in Singapore
+    The area_metadata field in the response provides longitude/latitude information for the areas.
+    You can use that to place the forecasts on a map.
+    Use the date_time parameter to retrieve the latest forecast issued at that moment in time.
+    Use the date parameter to retrieve all of the forecasts issued for that day
+    """
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
-    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast', verify=False)
-    data = json.loads(r.content)
+    r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast',
+                     # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
+                     # params={'date': date.strftime('%Y-%m-%d')},
+                     verify=False)
+    data = r.json()
     tmp = {item['area']: item['forecast'] for item in data['items'][0]['forecasts']}
     return [Forecast(latitude=item['label_location']['latitude'],
                      longitude=item['label_location']['longitude'],
@@ -112,9 +123,20 @@ def weather_2h() -> List[Forecast]:
 
 @cache_1m
 def weather_24h() -> List[Forecast]:
+    """
+    https://beta.data.gov.sg/datasets/d_50d2bbe678607d78d74a0fe6e8b5b6dd/view
+    Updated multiple times throughout the day
+    A general forecast for the 24 hour period is provided
+    Forecasts for each major region in Singapore is also provided for 6/12 hour periods
+    Use the date_time parameter to retrieve the latest forecast issued at that moment in time.
+    Use the date parameter to retrieve all of the forecasts issued for that day
+    """
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
-    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast', verify=False)
-    data = json.loads(r.content)
+    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast',
+                     # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
+                     # params={'date': date.strftime('%Y-%m-%d')},
+                     verify=False)
+    data = r.json()
     return [Forecast(latitude=region_metadata[region_name.title()].latitude,
                      longitude=region_metadata[region_name.title()].longitude,
                      name=region_name.title(),
@@ -135,10 +157,21 @@ def weather_24h_grouped() -> Dict[Tuple[datetime.datetime, datetime.datetime], L
 
 
 def weather_4d() -> List[FourDayForecast]:
+    """
+    Updated twice a day from NEA
+    The forecast is for the next 4 days
+    Use the date_time parameter to retrieve the latest forecast issued at that moment in time.
+    Use the date parameter to retrieve all of the forecasts issued for that day
+    """
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     out = []
-    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast', verify=False)
-    data = json.loads(r.content)
+
+    # first we get today's current forecast
+    r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast',
+                     # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
+                     # params={'date': date.strftime('%Y-%m-%d')},
+                     verify=False)
+    data = r.json()
     out.append(FourDayForecast(date=datetime.datetime.strptime(data['items'][0]['timestamp'], fmt).date(),
                                forecast=data['items'][0]['general']['forecast'].rstrip('.'),
                                # relative_humidity=(data['items'][0]['general']['relative_humidity']['low'],
@@ -150,8 +183,13 @@ def weather_4d() -> List[FourDayForecast]:
                                #             data['items'][0]['general']['wind']['speed']['high']),
                                # last_update=data['items'][0]['general']['forecast'],
                                ))
-    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast', verify=False)
-    data = json.loads(r.content)
+
+    # then we get the forecast for the next 4 days
+    r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast',
+                     # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
+                     # params={'date': date.strftime('%Y-%m-%d')},
+                     verify=False)
+    data = r.json()
     for forecast in data['items'][0]['forecasts']:
         out.append(FourDayForecast(date=datetime.datetime.strptime(forecast['date'], '%Y-%m-%d').date(),
                                    forecast=forecast['forecast'].rstrip('.'),
@@ -170,5 +208,5 @@ def weather_4d() -> List[FourDayForecast]:
 
 if __name__ == '__main__':
     pprint(weather_2h())
-    pprint(weather_24h())
+    pprint(weather_24h_grouped())
     pprint(weather_4d())

@@ -8,9 +8,9 @@ import dateutil.parser
 import requests
 
 from api_wrappers.caching import cache_1m
-from api_wrappers.weather import Forecast
-from api_wrappers.weather import FourDayForecast
-from api_wrappers.weather import region_metadata
+from api_wrappers.data_gov_sg_v2.weather import Forecast
+from api_wrappers.data_gov_sg_v2.weather import FourDayForecast
+from api_wrappers.data_gov_sg_v2.weather import region_metadata
 
 # unix_timestamp = 1633356000  # increments in 300 seconds
 unix_timestamp = 0  # this field seems to be ignored entirely
