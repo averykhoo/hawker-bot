@@ -7,6 +7,7 @@ from typing import Tuple
 import pandas as pd
 import requests
 
+from api_wrappers.data_gov_sg.data_api import get_datastore
 from api_wrappers.data_gov_sg.datatypes import ResourceFormat
 from api_wrappers.data_gov_sg_v2.datatypes import DatasetMetadata
 
@@ -21,10 +22,9 @@ def get_dataset_df(dataset_id: str) -> Tuple[str, datetime.datetime, pd.DataFram
     assert metadata.format is ResourceFormat.CSV
 
     # get data
-    r = requests.get(f'https://data.gov.sg/api/action/datastore_search',
-                     params={'resource_id': dataset_id, 'limit': 9999},
-                     verify=False)
-    df = pd.DataFrame(r.json()['result']['records'])
+    # todo: ths has yet to be migrarted to v2 api
+    # see: https://guide.data.gov.sg/developers/api-v1
+    df = pd.DataFrame(get_datastore(dataset_id).records)
     df.drop('_id', axis=1, inplace=True)
 
     # backup data
