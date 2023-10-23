@@ -24,6 +24,8 @@ DATASET_IDS = {
     # 'Dates of Hawker Centres Closure':
     #     'f28a763e-2320-4969-b249-c23f21c33ffc',  # CSV
     #
+    'Hawker Centres':
+        'd_ccca3606c337a5c386b9c88dc0dd08b6',  # KML and GeoJSON
     # 'Hawker Centres':
     #     'aeaf4704-5be1-4b33-993d-c70d8dcc943e',  # KML and GeoJSON
     #

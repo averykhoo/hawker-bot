@@ -114,10 +114,10 @@ def get_datastore(resource_id: Union[str, UUID],
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
                      params=params, verify=False)
     if r.status_code != 200:
-        raise IndexError(resource_id)
+        raise IndexError(resource_id, r.status_code, r.content)
     data = r.json()
     if not data['success']:
-        raise IndexError(resource_id)
+        raise IndexError(resource_id, r.status_code, r.content)
 
     # there's more data to load
     if limit is None and data['result']['total'] > data['result']['limit']:
