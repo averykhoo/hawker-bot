@@ -1,5 +1,6 @@
 import datetime
 import json
+import time
 from pathlib import Path
 
 import requests
@@ -22,13 +23,14 @@ if __name__ == '__main__':
 
         # get data
         e = None
-        for _ in range(3):
+        for _attempt in range(5):
             try:
                 r = requests.get('https://api.data.gov.sg/v1/environment/air-temperature',
                                  params={'date': _date.strftime("%Y-%m-%d")})
                 assert r.status_code == 200
                 break
             except Exception as e:
+                time.sleep(_attempt + 1)
                 continue
         else:
             raise e
