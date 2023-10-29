@@ -1,5 +1,8 @@
 # todo list
 
+* support `python-telegram-bot` v20
+  * import `ChatAction`, `ParseMode` from `telegram.constants`
+  * recreate `Filters` class ()
 * sort by walking distance instead of straight line distance
   * maybe min is straight line and max is straight line * sqrt(2) or * pi/2? 
   * clamping it should help avoid weird errors if the routing goes haywire
