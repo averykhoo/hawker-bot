@@ -1,3 +1,4 @@
+import bz2
 import csv
 
 import orjson as json
@@ -13,7 +14,7 @@ if __name__ == '__main__':
                     'timestamp',
                     ])
 
-        with open('data--2023-10-26--23-16-37.jsonl') as f:  # total 2735 lines
+        with bz2.open('data--2023-10-26--23-16-37.jsonl.bz2') as f:  # total 2735 lines
             for i, line in enumerate(f):
                 if (i + 1) % 100 == 0:
                     print(f'processing line {i + 1}')
