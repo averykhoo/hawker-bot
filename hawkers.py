@@ -261,6 +261,17 @@ class Hawker(Location):
         return max(results), sum(results)
 
     def to_markdown(self) -> str:
+
+        # closure dates
+        closed_dates = []
+        for date_range in self.cleaning_date_ranges:
+            closed_dates.append((date_range, f'{date_range.month_name} cleaning'))
+        if self.rnr_period:
+            closed_dates.append((self.rnr_period, f'{self.rnr_period.month_name} renovation'))
+        if self.other_works_period and self.other_works_period != self.rnr_period:
+            closed_dates.append((self.other_works_period, f'{self.other_works_period.month_name} other works'))
+        closed_dates = sorted(closed_dates)
+
         # output markdown lines
         lines = []
 
@@ -277,7 +288,7 @@ class Hawker(Location):
             lines.append('_Under Construction_')
 
         # food stalls
-        if self.no_of_food_stalls + self.no_of_food_stalls > 0:
+        if self.no_of_food_stalls + self.no_of_market_stalls > 0:
             lines.append(f'_{self.no_of_food_stalls} food stalls, {self.no_of_market_stalls} market stalls_')
 
         # address
@@ -288,16 +299,16 @@ class Hawker(Location):
         if self.addressbuildingname:
             lines.append(f'(located in {self.addressbuildingname})')
 
-        # closure dates
-        closed_dates = []
-        for date_range in self.cleaning_date_ranges:
-            closed_dates.append((date_range, f'{date_range.month_name} cleaning'))
-        if self.rnr_period:
-            closed_dates.append((self.rnr_period, f'{self.rnr_period.month_name} renovation'))
-        if self.other_works_period and self.other_works_period != self.rnr_period:
-            closed_dates.append((self.other_works_period, f'{self.other_works_period.month_name} other works'))
+        # closure reason(s)
+        for date_range, reason in closed_dates:
+            if datetime.date.today() in date_range.dates:
+                lines.append(f'(Closed for {reason})')
+                break
+        else:
+            lines.append('(Open today)')
+
+        # print closed dates
         if closed_dates:
-            closed_dates = sorted(closed_dates)
             for date_range, reason in closed_dates:
                 lines.append(f'{reason}: {str(date_range)}')
         elif self.estimated_original_completion_date > datetime.datetime.today():
