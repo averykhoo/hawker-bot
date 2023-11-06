@@ -4,8 +4,8 @@ from functools import lru_cache
 from pprint import pprint
 from typing import Optional
 
-from api_wrappers.onemap_sg_copy import OneMapResult
-from api_wrappers.onemap_sg_copy import onemap_search
+from api_wrappers.onemap_sg_v2 import OneMapResult
+from api_wrappers.onemap_sg_v2 import onemap_search
 
 RE_ZIPCODE = re.compile(r'(?:(?:code|S(G|ingapore)?)\s{0,5})?(?P<zip>\d{6})', flags=re.I | re.U)
 

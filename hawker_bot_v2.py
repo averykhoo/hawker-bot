@@ -20,7 +20,7 @@ from api_wrappers.data_gov_sg_v2.weather import weather_24h_grouped
 from api_wrappers.data_gov_sg_v2.weather import weather_2h
 from api_wrappers.data_gov_sg_v2.weather import weather_4d
 from api_wrappers.location import Location
-from api_wrappers.onemap_sg_copy import onemap_search
+from api_wrappers.onemap_sg_v2 import onemap_search
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import RE_ZIPCODE
 from api_wrappers.postal_code import ZipBlank
