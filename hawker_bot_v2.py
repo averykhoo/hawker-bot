@@ -552,7 +552,7 @@ def cmd_next_year():
 
 @bot.command('ping')
 def cmd_ping():
-    yield Text('pong', notification=False)
+    yield Text(f'pong {datetime.datetime.now()}', notification=False)
 
 
 # @bot.command('markdown', prefix_match=True)
