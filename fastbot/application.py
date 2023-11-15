@@ -224,7 +224,7 @@ class FastBot:
 
         # start the bot
         self.__shutdown_flag = False
-        self._updater.start_polling()
+        self._updater.start_polling(timeout=5)
 
         # run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
         # this should be used most of the time,
