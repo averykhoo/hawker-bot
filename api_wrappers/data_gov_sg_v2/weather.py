@@ -110,13 +110,11 @@ def weather_2h() -> List[Forecast]:
                      # params={'date': date.strftime('%Y-%m-%d')},
                      verify=False)
     data = r.json()
-    print(data)
-    tmp = {item['area']: item['forecast'] for item in data['items'][0]['forecasts']}
-    print(tmp)
+    area_forecasts = {item['area']: item['forecast'] for item in data['items'][0]['forecasts']}
     return [Forecast(latitude=item['label_location']['latitude'],
                      longitude=item['label_location']['longitude'],
                      name=item['name'],
-                     forecast=tmp[item['name']],
+                     forecast=area_forecasts[item['name']],
                      last_update=datetime.datetime.strptime(data['items'][0]['update_timestamp'], fmt),
                      time_start=datetime.datetime.strptime(data['items'][0]['valid_period']['start'], fmt),
                      time_end=datetime.datetime.strptime(data['items'][0]['valid_period']['end'], fmt),
