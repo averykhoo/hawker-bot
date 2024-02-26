@@ -62,20 +62,20 @@ if __name__ == '__main__':
                    (df['message.from.username'] != 'averykhoo')
                    ].dropna(axis='columns', how='all')
 
-    # plot usage by day / hour
-    df_others['date'].value_counts().sort_index().plot(figsize=(20, 10))
-    plt.show()
-    df_others['time'].apply(lambda t: str(t)[:2]).value_counts().sort_index().plot(figsize=(20, 10))
-    plt.show()
+    # # plot usage by day / hour
+    # df_others['date'].value_counts().sort_index().plot(figsize=(20, 10))
+    # plt.show()
+    # df_others['time'].apply(lambda t: str(t)[:2]).value_counts().sort_index().plot(figsize=(20, 10))
+    # plt.show()
 
     # when was the first seen time of a user
     first_seen = dict(df_others.groupby('message.from.id')['datetime'].min())
     df_others['user_first_seen_datetime'] = [first_seen[user_id] for user_id in df_others['message.from.id']]
     df_others['is_first_seen'] = df_others['datetime'] <= df_others['user_first_seen_datetime']
 
-    # plot when new users first see the bot
-    df_others.groupby('date')['is_first_seen'].sum().sort_index().plot(figsize=(20, 10))
-    plt.show()
+    # # plot when new users first see the bot
+    # df_others.groupby('date')['is_first_seen'].sum().sort_index().plot(figsize=(20, 10))
+    # plt.show()
 
     # save dataframe
     df_others.to_excel('hawker-bot-logs.xlsx')
