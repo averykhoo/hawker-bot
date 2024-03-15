@@ -483,7 +483,7 @@ def cmd_yesterday():
         # note that %#d is a windows-only format specifier, for linux, use %-d
         yield Markdown(f'NEA last modified the hawker closure list at around '
                        f'{yesterday.strftime("%#I:%M%p")} on {yesterday.strftime("%#d %b %Y")}, '
-                       f"'and may have done housekeeping on yesterday's closure dates'", notification=False)
+                       f"and may have done housekeeping on yesterday's closure dates", notification=False)
 
     yield from __closed(yesterday, 'yesterday')
 
