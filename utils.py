@@ -150,6 +150,7 @@ def load_hawker_data(csv_path: Optional[str] = None):
 
     # healthcheck success
     requests.get(SECRETS['healthcheck_url'], verify=False)
+    logging.info(f'updated {len(hawkers)} hawker center details')
     return hawkers
 
 
