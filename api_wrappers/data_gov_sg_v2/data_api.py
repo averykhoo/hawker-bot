@@ -10,6 +10,7 @@ import requests
 from api_wrappers.data_gov_sg.data_api import get_datastore
 from api_wrappers.data_gov_sg.datatypes import ResourceFormat
 from api_wrappers.data_gov_sg_v2.datatypes import DatasetMetadata
+from config import DGS_HEADERS
 
 
 def get_dataset_df(dataset_id: str) -> Tuple[str, datetime.datetime, pd.DataFrame]:
@@ -17,6 +18,7 @@ def get_dataset_df(dataset_id: str) -> Tuple[str, datetime.datetime, pd.DataFram
 
     # get metadata
     r = requests.get(f'https://api-production.data.gov.sg/v2/public/api/datasets/{dataset_id}/metadata',
+                     headers=DGS_HEADERS,
                      verify=False)
     metadata = DatasetMetadata.from_json(r.json()['data'])
     assert metadata.format is ResourceFormat.CSV

@@ -5,6 +5,8 @@ from pathlib import Path
 
 import requests
 
+from config import DGS_HEADERS
+
 data_path = Path(f'data/live-weather/data--{datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")}.jsonl')
 
 if __name__ == '__main__':
@@ -26,6 +28,7 @@ if __name__ == '__main__':
         for _attempt in range(5):
             try:
                 r = requests.get('https://api.data.gov.sg/v1/environment/air-temperature',
+                                 headers=DGS_HEADERS,
                                  params={'date': _date.strftime("%Y-%m-%d")})
                 assert r.status_code == 200
                 break

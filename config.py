@@ -7,3 +7,5 @@ BOT_USERNAMES = {
 
 with open('secrets.json') as f:
     SECRETS = json.load(f)
+
+DGS_HEADERS = {"x-api-key": SECRETS.get('data_gov_sg_token')}

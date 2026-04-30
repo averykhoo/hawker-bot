@@ -9,6 +9,7 @@ import requests
 
 from api_wrappers.caching import cache_1m
 from api_wrappers.location import Location
+from config import DGS_HEADERS
 
 forecast_details = {  # http://www.weather.gov.sg/forecasting-2/#forecast_3
     # descriptors
@@ -106,6 +107,7 @@ def weather_2h() -> List[Forecast]:
     """
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     r = requests.get('https://api.data.gov.sg/v1/environment/2-hour-weather-forecast',
+                     headers=DGS_HEADERS,
                      # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
                      # params={'date': date.strftime('%Y-%m-%d')},
                      verify=False)
@@ -133,6 +135,7 @@ def weather_24h() -> List[Forecast]:
     """
     fmt = '%Y-%m-%dT%H:%M:%S+08:00'
     r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast',
+                     headers=DGS_HEADERS,
                      # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
                      # params={'date': date.strftime('%Y-%m-%d')},
                      verify=False)
@@ -168,6 +171,7 @@ def weather_4d() -> List[FourDayForecast]:
 
     # first we get today's current forecast
     r = requests.get('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast',
+                     headers=DGS_HEADERS,
                      # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
                      # params={'date': date.strftime('%Y-%m-%d')},
                      verify=False)
@@ -186,6 +190,7 @@ def weather_4d() -> List[FourDayForecast]:
 
     # then we get the forecast for the next 4 days
     r = requests.get('https://api.data.gov.sg/v1/environment/4-day-weather-forecast',
+                     headers=DGS_HEADERS,
                      # params={'date_time': dt.strftime('%Y-%m-%dT%H:%M:%S')} if dt else None,
                      # params={'date': date.strftime('%Y-%m-%d')},
                      verify=False)

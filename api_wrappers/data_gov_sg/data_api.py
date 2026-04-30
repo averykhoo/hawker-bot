@@ -17,6 +17,7 @@ from api_wrappers.data_gov_sg.datatypes import DataStoreResult
 from api_wrappers.data_gov_sg.datatypes import Dataset
 from api_wrappers.data_gov_sg.datatypes import Resource
 from api_wrappers.data_gov_sg.datatypes import ResourceFormat
+from config import DGS_HEADERS
 
 
 def get_resource(resource_id: Union[str, UUID]) -> Resource:
@@ -27,6 +28,7 @@ def get_resource(resource_id: Union[str, UUID]) -> Resource:
     :return:
     """
     r = requests.get('https://data.gov.sg/api/action/resource_show',
+                     headers=DGS_HEADERS,
                      params={
                          'id': resource_id,
                      }, verify=False)
@@ -43,6 +45,7 @@ def get_dataset(dataset_id: Union[str, UUID]) -> Dataset:
     :param dataset_id: the id or name of the dataset
     """
     r = requests.get('https://data.gov.sg/api/action/package_show',
+                     headers=DGS_HEADERS,
                      params={
                          'id': dataset_id,
                      }, verify=False)
@@ -91,8 +94,8 @@ def get_datastore(resource_id: Union[str, UUID],
     """
     params = {
         'resource_id': resource_id,
-        'offset':      offset,
-        'limit':       99999 if limit is None else limit,
+        'offset': offset,
+        'limit': 99999 if limit is None else limit,
     }
 
     # additional optional fields
@@ -112,6 +115,7 @@ def get_datastore(resource_id: Union[str, UUID],
         params['sort'] = sort
 
     r = requests.get('https://data.gov.sg/api/action/datastore_search',
+                     headers=DGS_HEADERS,
                      params=params, verify=False)
     if r.status_code != 200:
         raise IndexError(resource_id, r.status_code, r.content)
@@ -123,6 +127,7 @@ def get_datastore(resource_id: Union[str, UUID],
     if limit is None and data['result']['total'] > data['result']['limit']:
         params['limit'] = data['result']['total']
         r = requests.get('https://data.gov.sg/api/action/datastore_search',
+                         headers=DGS_HEADERS,
                          params=params, verify=False)
         data = r.json()
 
