@@ -75,14 +75,16 @@ class Status(Enum):
     EXISTING = auto()
     UNDER_CONSTRUCTION = auto()
     PROPOSED = auto()
+    INTERIM = auto()
 
 
 status_map = {
     'Existing':               Status.EXISTING,
-    'Existing (new)':         Status.EXISTING,  # whatever
-    'Existing (replacement)': Status.EXISTING,  # whatever this works
+    'Existing (new)':         Status.EXISTING,  # they used this value and i don't wanna write a parser
+    'Existing (replacement)': Status.EXISTING,  # whatever this works just add another variant
     'Proposed':               Status.PROPOSED,
     'Under Construction':     Status.UNDER_CONSTRUCTION,
+    'Interim Centre':         Status.INTERIM,
 }
 
 
@@ -286,6 +288,8 @@ class Hawker(Location):
             lines.append('_Planned_')
         if self.status == Status.UNDER_CONSTRUCTION:
             lines.append('_Under Construction_')
+        elif self.status == Status.INTERIM:
+            lines.append('_Interim Centre_')
 
         # food stalls
         if self.no_of_food_stalls + self.no_of_market_stalls > 0:
