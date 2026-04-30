@@ -688,4 +688,4 @@ def handle_inline(message: InlineQuery) -> None:
 
 
 if __name__ == '__main__':
-    bot.run_forever(lambda: list(cmd_update()))
+    bot.run_forever(lambda: list(cmd_update()), delay=12*60*60)
