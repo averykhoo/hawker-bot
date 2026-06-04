@@ -16,10 +16,10 @@ import requests
 import config
 import utils
 from api_wrappers.data_gov_sg_v2.weather import Forecast
-from api_wrappers.location import Location
 from api_wrappers.data_gov_sg_v2.weather import weather_24h_grouped
 from api_wrappers.data_gov_sg_v2.weather import weather_2h
 from api_wrappers.data_gov_sg_v2.weather import weather_4d
+from api_wrappers.location import Location
 from api_wrappers.onemap_sg_v2 import onemap_search
 from api_wrappers.postal_code import InvalidZip
 from api_wrappers.postal_code import RE_ZIPCODE
@@ -91,6 +91,7 @@ def __search(query: str, threshold=0.6, onemap=False, num_results=3) -> Tuple[Li
         return [], [Text('no search query received', notification=False)]
 
     # try exact matched for zip code
+    responses: list[Response]
     try:
         zip_code = fix_zipcode(query)
         results = [hawker for hawker in hawker_data if hawker.addresspostalcode == int(zip_code)]
@@ -234,6 +235,7 @@ def cmd_help():
 def cmd_search(message: Message):
     assert message.matched is not None
     query = message.argument
+    assert query is not None
 
     results, responses = __search(query, onemap=True)
     return responses
@@ -295,6 +297,7 @@ def cmd_about():
 def cmd_zip(message: Message):
     assert message.matched is not None
     query = message.argument
+    assert query is not None
 
     zip_code, response = __fix_zip(query)
     if zip_code is None:
@@ -664,13 +667,14 @@ def log_message(message: Message):
 
 
 @bot.inline
-def handle_inline(message: InlineQuery) -> None:
+def handle_inline(message: InlineQuery) -> Generator[InlineVenue | InlineArticle, Any, None]:
     query = message.text
     logging.info(f'INLINE="{query}"')
 
     results, responses = __search(query)
     if results:
         for hawker in results[:5]:
+            assert hawker.address_myenv is not None
             yield InlineVenue(title=hawker.name,
                               content=hawker.to_markdown(),
                               latitude=hawker.latitude,
@@ -688,4 +692,4 @@ def handle_inline(message: InlineQuery) -> None:
 
 
 if __name__ == '__main__':
-    bot.run_forever(lambda: list(cmd_update()), delay=12*60*60)
+    bot.run_forever(lambda: list(cmd_update()), delay=12 * 60 * 60)
