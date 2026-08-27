@@ -10,7 +10,8 @@ matplotlib
 cachetools
 pillow
 xmltodict
-setuptools
+# APScheduler 3.6.3 (pinned by python-telegram-bot 13.x) imports pkg_resources, dropped in setuptools 81
+setuptools<81
 python-dateutil
 types-python-dateutil
 mypy
